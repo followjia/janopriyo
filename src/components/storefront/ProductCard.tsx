@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { ShoppingCart, Heart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
+import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 interface ProductCardProps {
   product: {
@@ -24,6 +26,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const dispatch = useAppDispatch();
+  const { data: session } = useSession();
+  const wishlist = useAppSelector((state) => state.wishlist.items);
+  const isInWishlist = wishlist.includes(product._id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,10 +42,35 @@ export function ProductCard({ product }: ProductCardProps) {
     toast.success(`${product.name} added to cart`);
   };
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
-    // TODO: Implement Wishlist functionality
-    toast.info('Wishlist coming soon!');
+    
+    // Toggle locally (optimistic update)
+    dispatch(toggleWishlist(product._id));
+    
+    // Determine the message based on the NEW state
+    const willBeInWishlist = !isInWishlist;
+    toast.success(willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist');
+    
+    // If authenticated, also update database
+    if (session) {
+      try {
+        const res = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: product._id }),
+        });
+        
+        if (!res.ok) {
+           throw new Error('Failed to update wishlist server-side');
+        }
+      } catch (err) {
+        console.error('API toggle error:', err);
+        // Rollback optimistic update
+        dispatch(toggleWishlist(product._id));
+        toast.error('Failed to sync wishlist. Please try again.');
+      }
+    }
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -50,7 +80,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const discount = (product.salePrice !== undefined && product.salePrice !== null && product.price > 0) 
-    ? Math.round(((product.price - product.salePrice) / product.price) * 100) 
+    ? Math.max(0, Math.round(((product.price - product.salePrice) / product.price) * 100)) 
     : 0;
 
   return (
@@ -91,9 +121,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 variant="secondary" 
                 className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
                 onClick={handleFavorite}
-                aria-label={`Add ${product.name} to wishlist`}
+                aria-label={isInWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             >
-                <Heart className="h-4 w-4" />
+                <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-destructive text-destructive' : ''}`} />
             </Button>
             <Button 
                 size="icon" 

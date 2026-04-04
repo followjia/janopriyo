@@ -34,7 +34,7 @@ const checkoutSchema = z.object({
   zipCode: z.string().min(4, 'Invalid zip code'),
   country: z.string().min(2, 'Country is required'),
   paymentMethod: z.enum(['COD', 'Online'], {
-    required_error: 'Select a payment method'
+    message: 'Select a payment method'
   }),
 });
 
@@ -43,7 +43,7 @@ type CheckoutValues = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { items, totalAmount } = useAppSelector((state) => state.cart);
+  const { items, totalAmount, isHydrated } = useAppSelector((state) => state.cart);
   const [loading, setLoading] = useState(false);
 
   const form = useForm<CheckoutValues>({
@@ -64,10 +64,11 @@ export default function CheckoutPage() {
   const submissionSucceededRef = useRef(false);
 
   useEffect(() => {
-    if (items.length === 0 && !loading && !submissionSucceededRef.current) {
+    // Only redirect if hydration is complete and the cart is truly empty
+    if (isHydrated && items.length === 0 && !loading && !submissionSucceededRef.current) {
       router.push('/shop');
     }
-  }, [items, router, loading]);
+  }, [isHydrated, items, router, loading]);
 
   const onSubmit = async (values: CheckoutValues) => {
     setLoading(true);
@@ -101,9 +102,35 @@ export default function CheckoutPage() {
       if (response.ok) {
         const order = await response.json();
         submissionSucceededRef.current = true;
-        dispatch(clearCart());
-        toast.success('Order placed successfully!');
-        router.push(`/checkout/success?id=${order._id}`);
+        
+        if (values.paymentMethod === 'Online') {
+          // Initialize SSLCommerz Payment
+          const initRes = await fetch('/api/payment/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: order._id }),
+          });
+
+          if (initRes.ok) {
+            const { url } = await initRes.json();
+            // Clear cart ONLY after successful payment initialization
+            dispatch(clearCart());
+            // Redirect to SSLCommerz Gateway
+            window.location.href = url;
+            return; // Stop further execution
+          } else {
+            const initError = await initRes.json();
+            toast.error(initError.message || 'Failed to initialize payment gateway. Please try paying from your dashboard.');
+            // Still clear cart if the order was created successfully
+            dispatch(clearCart());
+            router.push(`/checkout/success?id=${order._id}`);
+          }
+        } else {
+          // COD Success - Clear cart and redirect
+          dispatch(clearCart());
+          toast.success('Order placed successfully!');
+          router.push(`/checkout/success?id=${order._id}`);
+        }
       } else {
         const error = await response.json();
         toast.error(error.message || 'Failed to place order');
@@ -114,6 +141,13 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   };
+
+  // Show loading state or nothing while hydrating to prevent flash of "empty cart" redirect
+  if (!isHydrated) return (
+    <div className="container min-h-[60vh] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   if (items.length === 0) return null;
 
@@ -127,7 +161,7 @@ export default function CheckoutPage() {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -305,7 +339,7 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4 items-center">
                     <div className="h-12 w-12 rounded border bg-muted flex-shrink-0">
-                      {item.image && <img src={item.image} alt="" className="h-full w-full object-cover rounded" />}
+                      {item.image && <img src={item.image} alt={item.name || 'Product'} className="h-full w-full object-cover rounded" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{item.name}</p>
@@ -334,9 +368,10 @@ export default function CheckoutPage() {
             </CardContent>
             <CardFooter>
               <Button 
+                type="submit"
+                form="checkout-form"
                 className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs" 
                 disabled={loading}
-                onClick={form.handleSubmit(onSubmit)}
               >
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingBag className="mr-2 h-4 w-4" />}
                 Place Your Order

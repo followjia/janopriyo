@@ -40,7 +40,7 @@ export default function UsersPage() {
               </TableCell>
               <TableCell>Jan 1, 2026</TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="More actions">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </TableCell>

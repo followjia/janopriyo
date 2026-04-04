@@ -64,23 +64,42 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings');
+        const res = await fetch('/api/settings', { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
-          form.reset(data);
+          
+          const result = settingsSchema.safeParse(data);
+          if (result.success) {
+            if (!controller.signal.aborted) {
+              form.reset(result.data);
+            }
+          } else {
+            console.error('Settings validation failed:', result.error);
+            toast.error('Received invalid settings from server');
+          }
         } else {
-          toast.error(`Failed to load settings: ${res.status} ${res.statusText}`);
-          return;
+          if (!controller.signal.aborted) {
+            toast.error(`Failed to load settings: ${res.status} ${res.statusText}`);
+          }
         }
-      } catch (error) {
-        toast.error('Failed to load settings');
+      } catch (error: any) {
+        if (error.name === 'AbortError') return;
+        if (!controller.signal.aborted) {
+          toast.error('Failed to load settings');
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
+
     fetchSettings();
+    return () => controller.abort();
   }, [form]);
 
   const onSubmit = async (values: SettingsFormValues) => {
@@ -125,11 +144,10 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
-              <TabsTrigger value="marketing">Marketing</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4">
@@ -319,55 +337,6 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="marketing" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>SEO & Marketing Tracking</CardTitle>
-                  <CardDescription>Configure external analytics and tracking tools.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="googleTagManagerId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>GTM ID</FormLabel>
-                        <FormControl>
-                          <Input placeholder="GTM-XXXXXXX" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="metaPixelId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Pixel ID</FormLabel>
-                        <FormControl>
-                          <Input placeholder="FB Pixel ID" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="searchConsoleMeta"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Google Search Console Meta Element</FormLabel>
-                        <FormControl>
-                          <Input placeholder="HTML verification tag" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
         </form>
       </Form>

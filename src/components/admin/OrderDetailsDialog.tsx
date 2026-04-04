@@ -31,20 +31,26 @@ export default function OrderDetailsDialog({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchOrderDetails = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/orders/${orderId}`);
+        const res = await fetch(`/api/orders/${orderId}`, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           setOrder(data);
         } else {
           toast.error('Failed to load order details');
         }
-      } catch (error) {
-        toast.error('Error loading order details');
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          toast.error('Error loading order details');
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -53,6 +59,8 @@ export default function OrderDetailsDialog({
     } else {
       setOrder(null);
     }
+
+    return () => controller.abort();
   }, [open, orderId]);
 
   if (!open) return null;
@@ -120,12 +128,18 @@ export default function OrderDetailsDialog({
                   <MapPin className="h-4 w-4" /> Shipping Address
                 </h4>
                 <div className="text-sm leading-relaxed">
-                  <p>{order.shippingAddress?.fullName || order.user?.name}</p>
-                  <p>{order.shippingAddress?.street}</p>
-                  <p>
-                    {order.shippingAddress?.city}, {order.shippingAddress?.state} {order.shippingAddress?.zipCode}
-                  </p>
-                  <p>{order.shippingAddress?.country}</p>
+                  {(order.shippingAddress?.fullName || order.user?.name) && (
+                    <p>{order.shippingAddress?.fullName || order.user?.name}</p>
+                  )}
+                  {order.shippingAddress?.street && <p>{order.shippingAddress?.street}</p>}
+                  {(order.shippingAddress?.city || order.shippingAddress?.state || order.shippingAddress?.zipCode) && (
+                    <p>
+                      {[order.shippingAddress?.city, order.shippingAddress?.state].filter(Boolean).join(', ')}
+                      {([order.shippingAddress?.city, order.shippingAddress?.state].some(Boolean) && order.shippingAddress?.zipCode) ? ' ' : ''}
+                      {order.shippingAddress?.zipCode}
+                    </p>
+                  )}
+                  {order.shippingAddress?.country && <p>{order.shippingAddress?.country}</p>}
                   {order.shippingAddress?.phone && (
                     <p className="flex items-center gap-1 mt-1 text-muted-foreground">
                       <Phone className="h-3 w-3" /> {order.shippingAddress.phone}

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Image as ImageIcon, Layout, Type } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CMSPage() {
   return (
@@ -20,7 +21,9 @@ export default function CMSPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">Manage Banners</Button>
+            <Link href="/admin/cms/banners">
+              <Button variant="outline" className="w-full">Manage Banners</Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -33,7 +36,9 @@ export default function CMSPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">Manage Sliders</Button>
+            <Link href="/admin/cms/sliders">
+              <Button variant="outline" className="w-full">Manage Sliders</Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -46,7 +51,9 @@ export default function CMSPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">Edit Pages</Button>
+            <Link href="/admin/cms/pages">
+              <Button variant="outline" className="w-full">Edit Pages</Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

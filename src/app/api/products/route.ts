@@ -9,10 +9,22 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     
-    // Pagination, searching, and filtering could be added here later
-    const products = await Product.find({})
+    const searchParams = req.nextUrl.searchParams;
+    const ids = searchParams.get('ids');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '12')));
+    const skip = (page - 1) * limit;
+
+    const query: any = {};
+    if (ids) {
+      query._id = { $in: ids.split(',') };
+    }
+
+    const products = await Product.find(query)
       .populate('categories')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     return NextResponse.json(products);
   } catch (error) {
@@ -30,7 +42,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      return NextResponse.json({ message: 'Invalid JSON request body' }, { status: 400 });
+    }
+
     const { name, slug, description, sku, categories, tags, images, attributes, isFeatured, isPublished } = body;
     let { price, salePrice, stock } = body;
 

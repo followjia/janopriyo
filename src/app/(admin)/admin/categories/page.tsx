@@ -35,11 +35,19 @@ import * as z from 'zod';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const categorySchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   slug: z.string().min(2, { message: 'Slug must be at least 2 characters.' }),
   image: z.string().optional(),
+  parentCategory: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -52,12 +60,13 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<CategoryFormValues>({
+  const form = useForm({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: '',
       slug: '',
       image: '',
+      parentCategory: '',
       isActive: true,
     },
   });
@@ -85,6 +94,10 @@ export default function CategoriesPage() {
   const onSubmit = async (values: CategoryFormValues) => {
     setSubmitting(true);
     try {
+      const payload = {
+        ...values,
+        parentCategory: (values.parentCategory === 'none' || !values.parentCategory) ? null : values.parentCategory
+      };
       const url = editingCategory 
         ? `/api/categories/${editingCategory._id}` 
         : '/api/categories';
@@ -93,7 +106,7 @@ export default function CategoriesPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -119,6 +132,7 @@ export default function CategoriesPage() {
       name: category.name,
       slug: category.slug,
       image: category.image || '',
+      parentCategory: category.parentCategory?._id || category.parentCategory || '',
       isActive: category.isActive,
     });
     setOpen(true);
@@ -166,9 +180,9 @@ export default function CategoriesPage() {
             form.reset();
           }
         }}>
-          <DialogTrigger render={<Button />}>
-            <Plus className="mr-2 h-4 w-4" /> Add Category
-          </DialogTrigger>
+        <DialogTrigger render={<Button />}>
+          <Plus className="mr-2 h-4 w-4" /> Add Category
+        </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingCategory ? 'Edit' : 'Add'} Category</DialogTitle>
@@ -208,6 +222,37 @@ export default function CategoriesPage() {
                 />
                 <FormField
                   control={form.control}
+                  name="parentCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parent Category</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || "none"}
+                        value={field.value || "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a parent category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None (Top Level)</SelectItem>
+                          {categories
+                            .filter((c) => c._id !== editingCategory?._id)
+                            .map((category) => (
+                              <SelectItem key={category._id} value={category._id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="image"
                   render={({ field }) => (
                     <FormItem>
@@ -241,6 +286,7 @@ export default function CategoriesPage() {
               <TableHead className="w-[100px]">Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead>Parent</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -274,6 +320,13 @@ export default function CategoriesPage() {
                   </TableCell>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell>{category.slug}</TableCell>
+                  <TableCell>
+                    {category.parentCategory ? (
+                      <Badge variant="outline">{category.parentCategory.name || 'Parent'}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={category.isActive ? 'default' : 'secondary'}>
                       {category.isActive ? 'Active' : 'Inactive'}

@@ -48,9 +48,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        token.role = (user as any).role || 'user';
+        // When user logs in, ensure we get their actual MongoDB _id and role
+        if (user.email) {
+           await connectToDatabase();
+           const dbUser = await User.findOne({ email: user.email });
+           if (dbUser) {
+             token.id = dbUser._id.toString();
+             token.role = dbUser.role || 'user';
+           } else {
+             token.id = user.id;
+             token.role = (user as any).role || 'user';
+           }
+        } else {
+           token.id = user.id;
+           token.role = (user as any).role || 'user';
+        }
       }
 
       // Update session if requested (e.g. name update)
@@ -70,18 +82,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
+        if (!user.email) return false;
+        
         await connectToDatabase();
         try {
-          const existingUser = await User.findOne({ email: user.email });
-          if (!existingUser) {
-            await User.create({
-              name: user.name || 'Unknown',
-              email: user.email || '',
-              image: user.image || '',
-              role: 'user',
-              googleId: account.providerAccountId,
-            });
-          }
+          await User.findOneAndUpdate(
+            { email: user.email },
+            { 
+              $setOnInsert: {
+                name: user.name || 'Unknown',
+                email: user.email,
+                image: user.image || '',
+                role: 'user',
+                googleId: account.providerAccountId,
+              }
+            },
+            { upsert: true, new: true }
+          );
           return true;
         } catch (error) {
           console.error('Error in Google signIn callback', error);

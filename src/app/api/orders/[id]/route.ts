@@ -6,16 +6,17 @@ import { auth } from '@/auth';
 // GET single order details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
-    const order = await Order.findById(params.id)
+    const order = await Order.findById(id)
       .populate('user', 'name email image')
       .populate('items.product', 'name price images');
 
@@ -41,9 +42,10 @@ export async function GET(
 // PATCH update order status (Admin Only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
@@ -52,7 +54,7 @@ export async function PATCH(
     const { status, paymentStatus } = await req.json();
 
     await connectToDatabase();
-    const order = await Order.findById(params.id);
+    const order = await Order.findById(id);
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
@@ -92,16 +94,17 @@ export async function PATCH(
 // DELETE order (Admin Only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
     await connectToDatabase();
-    const deletedOrder = await Order.findByIdAndDelete(params.id);
+    const deletedOrder = await Order.findByIdAndDelete(id);
 
     if (!deletedOrder) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });

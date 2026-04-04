@@ -142,7 +142,9 @@ function ShopContent() {
           value={priceRange} 
           max={5000} 
           step={50}
-          onValueChange={(val) => setPriceRange(val)}
+          onValueChange={(val) => {
+            if (Array.isArray(val)) setPriceRange([...val]);
+          }}
           className="mb-4"
         />
         <div className="flex items-center justify-between text-sm font-medium">
@@ -191,7 +193,9 @@ function ShopContent() {
                 </SheetContent>
               </Sheet>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={(val) => {
+                if (val) setSortBy(val);
+              }}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -237,9 +241,11 @@ function ShopContent() {
                   Search: {searchTerm} <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm('')} />
                 </Badge>
               )}
-               <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
-                  Price: ${priceRange[0]} - ${priceRange[1]}
-              </Badge>
+              {(priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+                <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
+                   Price: ${priceRange[0]} - ${priceRange[1]}
+                </Badge>
+              )}
               <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={clearFilters}>
                 Clear All
               </Button>

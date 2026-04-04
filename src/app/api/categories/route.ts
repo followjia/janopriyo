@@ -8,7 +8,7 @@ import { auth } from '@/auth';
 export async function GET() {
   try {
     await connectToDatabase();
-    const categories = await Category.find({}).sort({ createdAt: -1 });
+    const categories = await Category.find({}).populate('parentCategory', 'name').sort({ createdAt: -1 });
     return NextResponse.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);

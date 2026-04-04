@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ShoppingBag, Users, LayoutDashboard, Settings, FileText, Image as ImageIcon, Tag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function AdminSidebar() {
   return (

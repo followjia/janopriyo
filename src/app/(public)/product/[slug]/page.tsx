@@ -14,6 +14,10 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import ProductDetailsClient from './ProductDetailsClient'; // We'll create this for interaction
+ 
+const sanitizeForScript = (json: any) => {
+  return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+};
 
 async function getProduct(slug: string) {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -80,8 +84,8 @@ export default async function ProductDetailsPage({ params }: { params: { slug: s
 
   return (
     <div className="container px-4 md:px-6 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizeForScript(productSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizeForScript(breadcrumbSchema) }} />
       
       <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>

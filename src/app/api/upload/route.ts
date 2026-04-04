@@ -5,8 +5,8 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Auth check - currently only admins upload images for products/settings
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    // Auth check - any authenticated user can upload images (e.g. profile pictures or product/setting images)
+    if (!session || !session.user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
       body: imgbbFormData,
     });
 
+    const text = await response.text();
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(text);
     } catch {
-      const text = await response.text();
       return NextResponse.json({ 
         message: `Image upload failed: Unexpected response from provider. Status: ${response.status}`,
         details: text 
@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('Error in /api/upload:', error);
-    return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

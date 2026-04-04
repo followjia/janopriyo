@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-export function Marquee() {
-  const [marqueeText, setMarqueeText] = useState('');
+export function Marquee({ marqueeText: initialText }: { marqueeText?: string }) {
+  const [marqueeText, setMarqueeText] = useState(initialText || '');
 
   useEffect(() => {
+    if (initialText) return; // Skip fetch if provided as prop
+
     const controller = new AbortController();
 
     async function fetchSettings() {
@@ -25,7 +27,7 @@ export function Marquee() {
     fetchSettings();
 
     return () => controller.abort();
-  }, []);
+  }, [initialText]);
 
   if (!marqueeText) return null;
 

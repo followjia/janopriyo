@@ -12,12 +12,14 @@ interface CartState {
   items: CartItem[];
   totalQuantity: number;
   totalAmount: number;
+  isHydrated: boolean;
 }
 
 const initialState: CartState = {
   items: [],
   totalQuantity: 0,
   totalAmount: 0,
+  isHydrated: false,
 };
 
 const cartSlice = createSlice({
@@ -30,11 +32,11 @@ const cartSlice = createSlice({
 
       if (!existingItem) {
         state.totalQuantity += newItem.quantity;
-        state.totalAmount += newItem.price * newItem.quantity;
+        state.totalAmount = Math.round((state.totalAmount + newItem.price * newItem.quantity) * 100) / 100;
         state.items.push(newItem);
       } else {
         state.totalQuantity += newItem.quantity;
-        state.totalAmount += existingItem.price * newItem.quantity;
+        state.totalAmount = Math.round((state.totalAmount + existingItem.price * newItem.quantity) * 100) / 100;
         existingItem.quantity += newItem.quantity;
       }
     },
@@ -44,7 +46,7 @@ const cartSlice = createSlice({
 
       if (existingItem) {
         state.totalQuantity -= existingItem.quantity;
-        state.totalAmount -= existingItem.price * existingItem.quantity;
+        state.totalAmount = Math.round((state.totalAmount - existingItem.price * existingItem.quantity) * 100) / 100;
         state.items = state.items.filter((item) => item.id !== id);
       }
     },
@@ -53,8 +55,17 @@ const cartSlice = createSlice({
       state.totalQuantity = 0;
       state.totalAmount = 0;
     },
+    hydrateCart(state, action: PayloadAction<CartState>) {
+      return {
+        ...action.payload,
+        isHydrated: true
+      };
+    },
+    setHydrated(state) {
+      state.isHydrated = true;
+    }
   },
 });
 
-export const { addToCart, removeFromCart, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, clearCart, hydrateCart, setHydrated } = cartSlice.actions;
 export default cartSlice.reducer;

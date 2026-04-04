@@ -23,9 +23,9 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const router = useRouter();
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (signal?: AbortSignal) => {
     try {
-      const response = await fetch('/api/products');
+      const response = await fetch('/api/products', { signal });
       if (!response.ok) {
         toast.error(`Failed to fetch products: ${response.status} ${response.statusText}`);
         return;
@@ -40,7 +40,9 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
+    const controller = new AbortController();
+    fetchProducts(controller.signal);
+    return () => controller.abort();
   }, []);
 
   const handleDelete = async (id: string) => {

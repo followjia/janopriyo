@@ -20,12 +20,12 @@ export async function uploadToImgBB(file: File | string): Promise<string> {
       body: formData,
     });
 
+    const text = await response.text();
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(text);
     } catch {
-      const text = await response.text();
-      throw new Error(`Image upload failed: Unexpected response from server. Status: ${response.status} (Details: ${text || 'non-JSON response'})`);
+      throw new Error(`Image upload failed: Unexpected response from server. Status: ${response.status} (Details: ${text || 'empty response'})`);
     }
 
     if (response.ok && data.url) {

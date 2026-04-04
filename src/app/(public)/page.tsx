@@ -104,10 +104,10 @@ export default async function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6" data-aos="fade-right">
               <h2 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight">
-                Don't Miss Out on <br /> Our Exclusive Offers
+                Join the Janopriyo <br /> Shop Community
               </h2>
               <p className="text-primary-foreground/80 md:text-xl">
-                Subscribe to our newsletter and get the latest updates on new collections and special promotions.
+                Create an account today to track your orders, manage your wishlist, and stay updated with our newest collections.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/shop">

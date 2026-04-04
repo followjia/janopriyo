@@ -27,13 +27,18 @@ const orderItemSchema = z.object({
 const orderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   shippingAddress: z.object({
+    fullName: z.string().min(2, 'Full name is required'),
+    phone: z.string().min(10, 'Invalid phone number'),
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
     zipCode: z.string().min(4, 'Invalid zip code'),
     country: z.string().min(1, 'Country is required'),
   }),
-  paymentMethod: z.enum(['Cash on Delivery', 'Online']),
+  paymentMethod: z.preprocess(
+    (val) => (val === 'Cash on Delivery' ? 'COD' : val),
+    z.enum(['COD', 'Online'])
+  ),
 });
 
 export async function POST(req: NextRequest) {
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 3. Re-calculate price using server source of truth
-      const itemPrice = product.salePrice || product.price;
+      const itemPrice = product.salePrice ?? product.price;
       const lineTotal = itemPrice * item.quantity;
       serverComputedTotal += lineTotal;
 
@@ -106,8 +111,8 @@ export async function POST(req: NextRequest) {
           shippingAddress,
           paymentMethod,
           paymentStatus: 'Pending',
-          status: 'Pending',
-          transactionId: paymentMethod === 'Online' ? `ORDER-${crypto.randomUUID().slice(0, 8).toUpperCase()}` : undefined,
+          status: 'Order Placed',
+          transactionId: paymentMethod === 'Online' ? `ORDER-${crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 16)}` : undefined,
         },
       ],
       { session }
@@ -121,9 +126,10 @@ export async function POST(req: NextRequest) {
       await session.abortTransaction();
     }
     console.error('Error creating order (Hardened):', error);
+    const isClientError = error instanceof StockError;
     return NextResponse.json({ 
-        message: error.message || 'Internal Server Error' 
-    }, { status: error instanceof StockError ? 400 : 500 });
+        message: isClientError ? error.message : 'Internal Server Error' 
+    }, { status: isClientError ? 400 : 500 });
   } finally {
     if (session) {
       await session.endSession();
@@ -153,7 +159,11 @@ export async function GET(req: NextRequest) {
       query = {};
     } else {
       // Normal users (or admins without ?all=true) see their own orders
-      query = { user: (session.user as any).id };
+      const userId = (session.user as any).id;
+      if (!userId) {
+        return NextResponse.json({ message: 'User ID missing from session' }, { status: 400 });
+      }
+      query = { user: userId };
     }
 
     const orders = await Order.find(query)

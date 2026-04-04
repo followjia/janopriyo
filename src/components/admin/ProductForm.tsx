@@ -142,20 +142,32 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const addImage = (url: string) => {
     const currentImages = form.getValues('images');
-    form.setValue('images', [...currentImages, url]);
+    form.setValue('images', [...currentImages, url], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const removeImage = (url: string) => {
     const currentImages = form.getValues('images');
-    form.setValue('images', currentImages.filter(i => i !== url));
+    form.setValue('images', currentImages.filter(i => i !== url), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const toggleCategory = (catId: string) => {
     const currentCats = form.getValues('categories');
     if (currentCats.includes(catId)) {
-      form.setValue('categories', currentCats.filter(id => id !== catId));
+      form.setValue('categories', currentCats.filter(id => id !== catId), {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     } else {
-      form.setValue('categories', [...currentCats, catId]);
+      form.setValue('categories', [...currentCats, catId], {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   };
 
@@ -251,14 +263,14 @@ export function ProductForm({ initialData }: ProductFormProps) {
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <FormLabel>Gallery Images</FormLabel>
+                  <Label>Gallery Images</Label>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                   {form.watch('images').map((url, index) => (
                     <div key={`${url}-${index}`} className="relative aspect-square rounded-md overflow-hidden border bg-muted">
                       <Image 
                         src={url} 
-                        alt="product" 
+                        alt={`Product image ${index + 1}`} 
                         fill
                         className="object-cover" 
                       />
@@ -266,6 +278,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                         type="button"
                         onClick={() => removeImage(url)}
                         className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 z-10"
+                        aria-label={`Remove product image ${index + 1}`}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -273,14 +286,18 @@ export function ProductForm({ initialData }: ProductFormProps) {
                   ))}
                   <ImageUpload onUpload={addImage} />
                 </div>
-                <FormMessage>{form.formState.errors.images?.message}</FormMessage>
+                {form.formState.errors.images?.message && (
+                  <p className="text-[0.8rem] font-medium text-destructive">
+                    {form.formState.errors.images.message}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <FormLabel>Attributes (Size, Color, etc.)</FormLabel>
+                  <Label>Attributes (Size, Color, etc.)</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => append({ key: '', value: '' })}>
                     <Plus className="mr-2 h-4 w-4" /> Add Attribute
                   </Button>
@@ -360,20 +377,74 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <FormLabel>Categories</FormLabel>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {categories.map((cat) => (
-                    <Badge
-                      key={cat._id}
-                      variant={form.watch('categories').includes(cat._id) ? 'default' : 'outline'}
-                      className="cursor-pointer py-1 px-3"
-                      onClick={() => toggleCategory(cat._id)}
-                    >
-                      {cat.name}
-                    </Badge>
-                  ))}
+                <Label>Categories</Label>
+                <div className="space-y-4 pt-2">
+                  {/* Root Categories (no parent) */}
+                  {categories
+                    .filter((cat) => !cat.parentCategory)
+                    .map((mainCat) => (
+                      <div key={mainCat._id} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={form.watch('categories').includes(mainCat._id) ? 'default' : 'outline'}
+                            className="cursor-pointer py-1 px-3"
+                            onClick={() => toggleCategory(mainCat._id)}
+                          >
+                            {mainCat.name}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Main</span>
+                        </div>
+                        
+                        {/* Sub Categories of this Main Category */}
+                        <div className="flex flex-wrap gap-2 pl-6 border-l ml-3">
+                          {categories
+                            .filter((sub) => (sub.parentCategory?._id || sub.parentCategory) === mainCat._id)
+                            .map((subCat) => (
+                              <Badge
+                                key={subCat._id}
+                                variant={form.watch('categories').includes(subCat._id) ? 'default' : 'outline'}
+                                className="cursor-pointer py-1 px-3 text-xs"
+                                onClick={() => toggleCategory(subCat._id)}
+                              >
+                                {subCat.name}
+                              </Badge>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+
+                  {/* Orphans (if any, though should be rare if data is clean) */}
+                  {categories.filter(cat => 
+                    cat.parentCategory && 
+                    !categories.some(parent => parent._id === (cat.parentCategory?._id || cat.parentCategory))
+                  ).length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] text-muted-foreground uppercase">Other</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {categories
+                          .filter(cat => 
+                            cat.parentCategory && 
+                            !categories.some(parent => parent._id === (cat.parentCategory?._id || cat.parentCategory))
+                          )
+                          .map((orphan) => (
+                            <Badge
+                              key={orphan._id}
+                              variant={form.watch('categories').includes(orphan._id) ? 'default' : 'outline'}
+                              className="cursor-pointer py-1 px-3"
+                              onClick={() => toggleCategory(orphan._id)}
+                            >
+                              {orphan.name}
+                            </Badge>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <FormMessage>{form.formState.errors.categories?.message}</FormMessage>
+                {form.formState.errors.categories?.message && (
+                  <p className="text-[0.8rem] font-medium text-destructive">
+                    {form.formState.errors.categories.message}
+                  </p>
+                )}
               </CardContent>
             </Card>
 

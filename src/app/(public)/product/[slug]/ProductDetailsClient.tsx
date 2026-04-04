@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAppDispatch } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
 import { toast } from 'sonner';
+import ReviewsSection from '@/components/storefront/ReviewsSection';
 
 interface ProductDetailsClientProps {
   product: any;
@@ -29,19 +30,28 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
   // Reset image selection when product changes
   useEffect(() => {
+    if (!product) return;
     setSelectedImage(0);
     setQuantity(1);
-  }, [product._id]);
+  }, [product?._id]);
 
   const handleAddToCart = () => {
+    const stock = product.stock || 0;
+    const finalQuantity = Math.min(quantity, stock);
+
+    if (finalQuantity <= 0) {
+      toast.error('This item is currently out of stock');
+      return;
+    }
+
     dispatch(addToCart({
       id: product._id,
       name: product.name,
       price: product.salePrice || product.price,
-      quantity: quantity,
+      quantity: finalQuantity,
       image: product.images?.[0]
     }));
-    toast.success(`Added ${quantity} ${product.name} to cart`);
+    toast.success(`Added ${finalQuantity} ${product.name} to cart`);
   };
 
   const discount = (product.price > 0 && product.salePrice && product.salePrice < product.price) 
@@ -116,7 +126,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
             <span className="text-3xl font-extrabold text-primary">
               ${(product.salePrice || product.price).toFixed(2)}
             </span>
-            {product.salePrice && (
+            {product.salePrice && product.salePrice !== product.price && (
               <span className="text-xl text-muted-foreground line-through font-medium">
                 ${product.price.toFixed(2)}
               </span>
@@ -158,7 +168,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                   variant="ghost" 
                   size="icon" 
                   className="h-full rounded-none px-4 hover:bg-muted"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(Math.min(product.stock || 0, quantity + 1))}
+                  disabled={quantity >= (product.stock || 0)}
               >
                   <Plus className="h-4 w-4" />
               </Button>
@@ -197,6 +208,11 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                 <span className="text-xs font-bold uppercase tracking-tighter">Easy Returns</span>
             </div>
         </div>
+      </div>
+      
+      {/* Reviews Section */}
+      <div className="col-span-full mt-24 space-y-10 border-t pt-20">
+        <ReviewsSection productId={product._id} />
       </div>
     </div>
   );

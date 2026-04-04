@@ -43,8 +43,8 @@ export function HeroSlider({ banners }: HeroSliderProps) {
           <CarouselItem key={banner._id || index}>
             <div className="relative h-[400px] md:h-[600px] w-full overflow-hidden">
               <img 
-                src={banner.image} 
-                alt={banner.title} 
+                src={banner.image || '/placeholder-banner.jpg'} 
+                alt={banner.title || 'Promotional banner'} 
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-black/40 flex items-center">

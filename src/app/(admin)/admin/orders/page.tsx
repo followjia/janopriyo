@@ -19,7 +19,8 @@ import {
   Package, 
   Truck, 
   CheckCircle, 
-  Trash2 
+  Trash2,
+  XCircle 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -51,28 +52,31 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-  const filteredOrders = orders.filter((order) => 
-    order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOrders = orders.filter((order) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      (order._id?.toLowerCase() || '').includes(search) ||
+      (order.user?.email?.toLowerCase() || '').includes(search) ||
+      (order.user?.name?.toLowerCase() || '').includes(search)
+    );
+  });
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, extraData: any = {}) => {
     try {
       const res = await fetch(`/api/orders/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, ...extraData }),
       });
 
       if (res.ok) {
-        toast.success(`Order status updated to ${status}`);
+        toast.success(`Order updated successfully`);
         fetchOrders();
       } else {
-        toast.error('Failed to update order status');
+        toast.error('Failed to update order');
       }
     } catch (error) {
-      toast.error('Error updating order status');
+      toast.error('Error updating order');
     }
   };
 
@@ -102,10 +106,12 @@ export default function OrdersPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pending': return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-none">Pending</Badge>;
-      case 'Processing': return <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-none">Processing</Badge>;
-      case 'Shipped': return <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-none">Shipped</Badge>;
-      case 'Delivered': return <Badge variant="default" className="bg-green-100 text-green-800 border-none">Delivered</Badge>;
+      case 'Order Placed': return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-none">Placed</Badge>;
+      case 'Confirmed': return <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-none">Confirmed</Badge>;
+      case 'Paid': return <Badge variant="secondary" className="bg-green-100 text-green-800 border-none text-[10px]">Paid</Badge>;
+      case 'Ready for Delivery': return <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-none text-[10px]">Ready</Badge>;
+      case 'Released for Delivery': return <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-none text-[10px]">Released</Badge>;
+      case 'Delivered': return <Badge variant="default" className="bg-green-600 text-white border-none">Delivered</Badge>;
       case 'Cancelled': return <Badge variant="destructive">Cancelled</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }
@@ -163,7 +169,9 @@ export default function OrdersPage() {
                     >
                       <span className="font-bold text-primary hover:underline">#{order._id.slice(-8).toUpperCase()}</span>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(order.createdAt), 'MMM dd, p')}
+                        {order.createdAt && !isNaN(new Date(order.createdAt).getTime()) 
+                          ? format(new Date(order.createdAt), 'MMM dd, p')
+                          : 'N/A'}
                       </span>
                     </button>
                   </TableCell>
@@ -189,24 +197,51 @@ export default function OrdersPage() {
                         <Eye className="h-4 w-4" />
                       </Button>
                       
-                      {/* Quick Actions */}
-                      {order.status === 'Pending' && (
-                        <Button variant="ghost" size="icon" title="Processing" onClick={() => updateStatus(order._id, 'Processing')}>
-                          <Package className="h-4 w-4" />
+                      {/* Sequential Quick Actions */}
+                      {order.status === 'Order Placed' && (
+                        <Button variant="ghost" size="icon" title="Confirm Order" onClick={() => updateStatus(order._id, 'Confirmed')}>
+                          <CheckCircle className="h-4 w-4 text-blue-600" />
                         </Button>
                       )}
-                      {order.status === 'Processing' && (
-                        <Button variant="ghost" size="icon" title="Shipped" onClick={() => updateStatus(order._id, 'Shipped')}>
-                          <Truck className="h-4 w-4" />
+                      {order.status === 'Confirmed' && (
+                        <Button variant="ghost" size="icon" title="Mark as Paid" onClick={() => updateStatus(order._id, 'Paid', { paymentStatus: 'Paid' })}>
+                          <div className="h-4 w-4 rounded-full border-2 border-green-600 flex items-center justify-center text-[10px] font-bold text-green-600">$</div>
                         </Button>
                       )}
-                      {order.status === 'Shipped' && (
-                        <Button variant="ghost" size="icon" title="Delivered" onClick={() => updateStatus(order._id, 'Delivered')}>
-                          <CheckCircle className="h-4 w-4" />
+                      {order.status === 'Paid' && (
+                        <Button variant="ghost" size="icon" title="Ready for Delivery" onClick={() => updateStatus(order._id, 'Ready for Delivery')}>
+                          <Package className="h-4 w-4 text-purple-600" />
+                        </Button>
+                      )}
+                      {order.status === 'Ready for Delivery' && (
+                        <Button variant="ghost" size="icon" title="Release for Delivery" onClick={() => updateStatus(order._id, 'Released for Delivery')}>
+                          <Truck className="h-4 w-4 text-orange-600" />
+                        </Button>
+                      )}
+                      {order.status === 'Released for Delivery' && (
+                        <Button variant="ghost" size="icon" title="Mark Delivered" onClick={() => updateStatus(order._id, 'Delivered')}>
+                          <CheckCircle className="h-4 w-4 text-green-600 fill-green-600/10" />
+                        </Button>
+                      )}
+
+                      {/* Cancel Option (Available until Released) */}
+                      {!['Released for Delivery', 'Delivered', 'Cancelled'].includes(order.status) && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Cancel Order" 
+                          className="text-destructive/50 hover:text-destructive" 
+                          onClick={() => {
+                            if (confirm('Are you sure you want to cancel this order?')) {
+                              updateStatus(order._id, 'Cancelled');
+                            }
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" />
                         </Button>
                       )}
                       
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteOrder(order._id)}>
+                      <Button variant="ghost" size="icon" className="text-destructive/30 hover:text-destructive" onClick={() => deleteOrder(order._id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

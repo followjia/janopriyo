@@ -2,8 +2,15 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  image?: string;
+}
+
 interface CategoryShowcaseProps {
-  categories: any[];
+  categories: Category[];
 }
 
 export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
@@ -24,7 +31,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
           {categories.map((category, index) => (
             <Link 
                 key={category._id} 
-                href={`/shop?category=${category.slug}`}
+                href={`/shop?category=${encodeURIComponent(category.slug)}`}
                 className="group"
                 // AOS attributes work fine because AOS is initialized globally in a provider
                 data-aos="zoom-in"

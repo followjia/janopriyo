@@ -42,7 +42,7 @@ export function generateProductSchema(product: any) {
       url: `${process.env.NEXTAUTH_URL || 'https://janopriyoshop.com'}/product/${product.slug}`,
       priceCurrency: 'USD',
       price: price,
-      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability: Number.isFinite(product.stock) && product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
     },
   };

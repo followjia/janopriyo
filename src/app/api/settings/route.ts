@@ -39,7 +39,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      return NextResponse.json({ message: 'Invalid JSON request body' }, { status: 400 });
+    }
     
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = [
