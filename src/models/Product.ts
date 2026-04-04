@@ -19,6 +19,12 @@ export interface IProduct extends Document {
   isPublished: boolean;
   ratings: number;
   numReviews: number;
+  deliveryCharge: {
+    type: 'all_over_country' | 'location_based';
+    amount: number;
+    insideDhaka: number;
+    outsideDhaka: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +54,16 @@ const ProductSchema: Schema<IProduct> = new Schema(
     isPublished: { type: Boolean, default: true },
     ratings: { type: Number, default: 0, min: [0, 'Rating cannot be below 0'], max: [5, 'Rating cannot be above 5'] },
     numReviews: { type: Number, default: 0, min: [0, 'Number of reviews cannot be negative'] },
+    deliveryCharge: {
+      type: { 
+        type: String, 
+        enum: ['all_over_country', 'location_based'], 
+        default: 'all_over_country' 
+      },
+      amount: { type: Number, default: 100 },
+      insideDhaka: { type: Number, default: 60 },
+      outsideDhaka: { type: Number, default: 120 }
+    }
   },
   { timestamps: true }
 );

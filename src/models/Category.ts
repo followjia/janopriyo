@@ -2,7 +2,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface ICategory extends Document {
   name: string;
-  slug: string;
+  slug?: string;
   image?: string;
   parentCategory?: mongoose.Types.ObjectId;
   isActive: boolean;
@@ -13,13 +13,25 @@ export interface ICategory extends Document {
 const CategorySchema: Schema<ICategory> = new Schema(
   {
     name: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, unique: true },
     image: { type: String },
     parentCategory: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
+
+CategorySchema.pre('save', function (this: any, next: any) {
+  if (!this.slug && this.name) {
+    this.slug = this.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  next();
+});
 
 const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
 

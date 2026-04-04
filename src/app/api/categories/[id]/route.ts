@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Category from '@/models/Category';
+import Product from '@/models/Product';
 import { auth } from '@/auth';
 
 // GET a single category
@@ -89,6 +90,19 @@ export async function DELETE(
     }
 
     await connectToDatabase();
+    
+    // 1. Remove this category from all products ($pull removes the ID from the array)
+    await Product.updateMany(
+      { categories: id },
+      { $pull: { categories: id } }
+    );
+    
+    // 2. Rescue subcategories: update them to have no parent category
+    await Category.updateMany(
+      { parentCategory: id },
+      { $set: { parentCategory: null } }
+    );
+
     const deletedCategory = await Category.findByIdAndDelete(id);
 
     if (!deletedCategory) {

@@ -22,6 +22,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -45,7 +46,7 @@ import {
 
 const categorySchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  slug: z.string().min(2, { message: 'Slug must be at least 2 characters.' }),
+  slug: z.string().optional(),
   image: z.string().optional(),
   parentCategory: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
@@ -207,19 +208,24 @@ export default function CategoriesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <Input placeholder="category-slug" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!form.watch('parentCategory') || form.watch('parentCategory') === 'none' ? (
+                  <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Slug</FormLabel>
+                        <FormControl>
+                          <Input placeholder="category-slug" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Unique URL-friendly name.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
                 <FormField
                   control={form.control}
                   name="parentCategory"
@@ -251,22 +257,24 @@ export default function CategoriesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category Image</FormLabel>
-                      <FormControl>
-                        <ImageUpload 
-                          value={field.value} 
-                          onUpload={(url) => field.onChange(url)} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!form.watch('parentCategory') || form.watch('parentCategory') === 'none' ? (
+                  <FormField
+                    control={form.control}
+                    name="image"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category Image</FormLabel>
+                        <FormControl>
+                          <ImageUpload 
+                            value={field.value} 
+                            onUpload={(url) => field.onChange(url)} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
                 <DialogFooter>
                   <Button type="submit" disabled={submitting}>
                     {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

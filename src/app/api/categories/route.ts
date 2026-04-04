@@ -28,16 +28,18 @@ export async function POST(req: NextRequest) {
 
     const { name, slug, image, parentCategory, isActive } = await req.json();
 
-    if (!name || !slug) {
-      return NextResponse.json({ message: 'Name and Slug are required' }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ message: 'Name is required' }, { status: 400 });
     }
 
     await connectToDatabase();
     
-    // Check if slug already exists
-    const existingCategory = await Category.findOne({ slug });
-    if (existingCategory) {
-      return NextResponse.json({ message: 'Category with this slug already exists' }, { status: 400 });
+    // Check if slug already exists (if provided)
+    if (slug) {
+      const existingCategory = await Category.findOne({ slug });
+      if (existingCategory) {
+        return NextResponse.json({ message: 'Category with this slug already exists' }, { status: 400 });
+      }
     }
 
     const newCategory = await Category.create({

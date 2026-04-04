@@ -31,6 +31,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { 
+  RadioGroup, 
+  RadioGroupItem 
+} from '@/components/ui/radio-group';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Name is required'),
@@ -40,14 +44,20 @@ const productSchema = z.object({
   salePrice: z.coerce.number().min(0).optional(),
   sku: z.string().min(3, 'SKU is required'),
   stock: z.coerce.number().int().min(0, 'Stock must be at least 0'),
-  categories: z.array(z.string()).min(1, 'Select at least one category'),
+  categories: z.array(z.string()),
   images: z.array(z.string()).min(1, 'Upload at least one image'),
   isPublished: z.boolean(),
   isFeatured: z.boolean(),
   attributes: z.array(z.object({
     key: z.string(),
     value: z.string()
-  }))
+  })),
+  deliveryCharge: z.object({
+    type: z.enum(['all_over_country', 'location_based']),
+    amount: z.coerce.number().min(0),
+    insideDhaka: z.coerce.number().min(0),
+    outsideDhaka: z.coerce.number().min(0)
+  })
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -73,7 +83,13 @@ export function ProductForm({ initialData }: ProductFormProps) {
     images: initialData?.images || [],
     isPublished: initialData?.isPublished ?? true,
     isFeatured: initialData?.isFeatured ?? false,
-    attributes: initialData?.attributes || []
+    attributes: initialData?.attributes || [],
+    deliveryCharge: initialData?.deliveryCharge || {
+      type: 'all_over_country',
+      amount: 100,
+      insideDhaka: 60,
+      outsideDhaka: 120
+    }
   };
 
   const form = useForm<ProductFormValues>({
@@ -158,18 +174,43 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const toggleCategory = (catId: string) => {
     const currentCats = form.getValues('categories');
+    const category = categories.find(c => c._id === catId);
+    if (!category) return;
+
     if (currentCats.includes(catId)) {
-      form.setValue('categories', currentCats.filter(id => id !== catId), {
+      // Removing category
+      let newCats = currentCats.filter(id => id !== catId);
+      
+      // If it's a main category (no parent), also remove its subcategories
+      if (!category.parentCategory) {
+        newCats = newCats.filter(id => {
+          const sub = categories.find(c => c._id === id);
+          const parentId = sub?.parentCategory?._id || sub?.parentCategory;
+          return parentId !== catId;
+        });
+      }
+
+      form.setValue('categories', newCats, {
         shouldValidate: true,
         shouldDirty: true,
       });
     } else {
+      // Adding category
       form.setValue('categories', [...currentCats, catId], {
         shouldValidate: true,
         shouldDirty: true,
       });
     }
   };
+
+  const selectedCats = form.watch('categories');
+  const mainCategories = categories.filter((cat) => !cat.parentCategory);
+  const selectedMainCategoryIds = mainCategories
+    .filter(mc => selectedCats.includes(mc._id))
+    .map(mc => mc._id);
+
+  // Validation Check: ensure at least one main category is selected
+  const hasMainCategory = selectedMainCategoryIds.length > 0;
 
   return (
     <Form {...form}>
@@ -377,74 +418,145 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <Label>Categories</Label>
-                <div className="space-y-4 pt-2">
-                  {/* Root Categories (no parent) */}
-                  {categories
-                    .filter((cat) => !cat.parentCategory)
-                    .map((mainCat) => (
-                      <div key={mainCat._id} className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={form.watch('categories').includes(mainCat._id) ? 'default' : 'outline'}
-                            className="cursor-pointer py-1 px-3"
-                            onClick={() => toggleCategory(mainCat._id)}
-                          >
-                            {mainCat.name}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Main</span>
-                        </div>
-                        
-                        {/* Sub Categories of this Main Category */}
-                        <div className="flex flex-wrap gap-2 pl-6 border-l ml-3">
-                          {categories
-                            .filter((sub) => (sub.parentCategory?._id || sub.parentCategory) === mainCat._id)
-                            .map((subCat) => (
-                              <Badge
-                                key={subCat._id}
-                                variant={form.watch('categories').includes(subCat._id) ? 'default' : 'outline'}
-                                className="cursor-pointer py-1 px-3 text-xs"
-                                onClick={() => toggleCategory(subCat._id)}
-                              >
-                                {subCat.name}
-                              </Badge>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-
-                  {/* Orphans (if any, though should be rare if data is clean) */}
-                  {categories.filter(cat => 
-                    cat.parentCategory && 
-                    !categories.some(parent => parent._id === (cat.parentCategory?._id || cat.parentCategory))
-                  ).length > 0 && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] text-muted-foreground uppercase">Other</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {categories
-                          .filter(cat => 
-                            cat.parentCategory && 
-                            !categories.some(parent => parent._id === (cat.parentCategory?._id || cat.parentCategory))
-                          )
-                          .map((orphan) => (
-                            <Badge
-                              key={orphan._id}
-                              variant={form.watch('categories').includes(orphan._id) ? 'default' : 'outline'}
-                              className="cursor-pointer py-1 px-3"
-                              onClick={() => toggleCategory(orphan._id)}
-                            >
-                              {orphan.name}
-                            </Badge>
-                          ))}
-                      </div>
-                    </div>
+                <Label className="text-base font-bold">Delivery Charges</Label>
+                <FormField
+                  control={form.control}
+                  name="deliveryCharge.type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-2"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="all_over_country" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              All over the country
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="location_based" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              Location Based (Dhaka/Outside)
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
+                
+                {form.watch('deliveryCharge.type') === 'all_over_country' ? (
+                  <FormField
+                    control={form.control}
+                    name="deliveryCharge.amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Regular Delivery Charge (TK)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="deliveryCharge.insideDhaka"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Inside Dhaka (TK)</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deliveryCharge.outsideDhaka"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Outside Dhaka (TK)</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-bold">Product Category</Label>
+                  <span className="text-[10px] text-destructive uppercase font-bold">Required</span>
                 </div>
-                {form.formState.errors.categories?.message && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {mainCategories.map((mainCat) => (
+                    <Badge
+                      key={mainCat._id}
+                      variant={selectedCats.includes(mainCat._id) ? 'default' : 'outline'}
+                      className="cursor-pointer py-1.5 px-4 text-sm"
+                      onClick={() => toggleCategory(mainCat._id)}
+                    >
+                      {mainCat.name}
+                    </Badge>
+                  ))}
+                </div>
+                {!hasMainCategory && form.formState.isSubmitted && (
                   <p className="text-[0.8rem] font-medium text-destructive">
-                    {form.formState.errors.categories.message}
+                    Select at least one product category
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-bold">Sub Category</Label>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold">Optional</span>
+                </div>
+                <div className="space-y-4 pt-2">
+                  {selectedMainCategoryIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {categories
+                        .filter((sub) => {
+                          const parentId = sub.parentCategory?._id || sub.parentCategory;
+                          return selectedMainCategoryIds.includes(parentId);
+                        })
+                        .map((subCat) => (
+                          <Badge
+                            key={subCat._id}
+                            variant={selectedCats.includes(subCat._id) ? 'default' : 'outline'}
+                            className="cursor-pointer py-1 px-3 text-xs"
+                            onClick={() => toggleCategory(subCat._id)}
+                          >
+                            {subCat.name}
+                          </Badge>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      Select a product category to see available subcategories
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
