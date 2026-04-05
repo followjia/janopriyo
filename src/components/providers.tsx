@@ -7,6 +7,8 @@ import { SessionProvider } from 'next-auth/react';
 import { store } from '@/store/store';
 
 import { AnimationProvider } from './animation-provider';
+import { CartHydrator } from './CartHydrator';
+import { WishlistHydrator } from './WishlistHydrator';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +21,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <AnimationProvider>
-            {children}
+            <CartHydrator>
+              <WishlistHydrator>
+                {children}
+              </WishlistHydrator>
+            </CartHydrator>
           </AnimationProvider>
         </NextThemesProvider>
       </ReduxProvider>

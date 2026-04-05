@@ -181,7 +181,7 @@ export default function OrdersPage() {
                       <span className="text-muted-foreground">{order.user?.email || 'N/A'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold">${(order.totalAmount ?? 0).toFixed(2)}</TableCell>
+                  <TableCell className="font-semibold">৳{Math.round(order.totalAmount ?? 0)}</TableCell>
                   <TableCell>
                     <Badge 
                         variant="outline" 
@@ -205,7 +205,7 @@ export default function OrdersPage() {
                       )}
                       {order.status === 'Confirmed' && (
                         <Button variant="ghost" size="icon" title="Mark as Paid" onClick={() => updateStatus(order._id, 'Paid', { paymentStatus: 'Paid' })}>
-                          <div className="h-4 w-4 rounded-full border-2 border-green-600 flex items-center justify-center text-[10px] font-bold text-green-600">$</div>
+                          <div className="h-4 w-4 rounded-full border-2 border-green-600 flex items-center justify-center text-[10px] font-bold text-green-600">৳</div>
                         </Button>
                       )}
                       {order.status === 'Paid' && (

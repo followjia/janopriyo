@@ -182,8 +182,10 @@ function ShopContent() {
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Sheet>
-                <SheetTrigger render={<Button variant="outline" size="sm" className="md:hidden" />}>
-                  <Filter className="mr-2 h-4 w-4" /> Filters
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="md:hidden flex items-center gap-1">
+                    <Filter className="h-4 w-4" /> Filters
+                  </Button>
                 </SheetTrigger>
                 <SheetContent side="left">
                     <SheetHeader className="mb-6">

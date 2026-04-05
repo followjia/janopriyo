@@ -190,11 +190,11 @@ export default function OrderDetailsDialog({
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium line-clamp-1">{item.name}</span>
-                        <span className="text-xs text-muted-foreground">${(Number(item.price) || 0).toFixed(2)} × {item.quantity}</span>
+                        <span className="text-xs text-muted-foreground">৳{Math.round(Number(item.price) || 0)} × {item.quantity}</span>
                       </div>
                     </div>
                     <div className="font-bold">
-                      ${(Number(item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                      ৳{Math.round(Number(item.price || 0) * (item.quantity || 0))}
                     </div>
                   </div>
                 ))}
@@ -202,7 +202,7 @@ export default function OrderDetailsDialog({
               
               <div className="pt-4 border-t flex justify-between items-center text-lg">
                 <span className="font-bold">Total Amount:</span>
-                <span className="font-black text-primary">${(Number(order.totalAmount) || 0).toFixed(2)}</span>
+                <span className="font-black text-primary">৳{Math.round(Number(order.totalAmount) || 0)}</span>
               </div>
             </div>
           </div>

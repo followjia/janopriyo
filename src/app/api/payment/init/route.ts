@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
-import { sslcommerz } from '@/lib/sslcommerz';
+import { initPayment } from '@/lib/sslcommerz';
 import { auth } from '@/auth';
 
 export async function POST(req: NextRequest) {
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     };
 
     // Initialize SSLCommerz Payment
-    const response = await sslcommerz.init(data);
+    const response = await initPayment(data);
 
     if (response?.GatewayPageURL) {
       // Update order with transactionId if not set

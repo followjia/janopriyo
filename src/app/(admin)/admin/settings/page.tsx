@@ -298,7 +298,7 @@ export default function SettingsPage() {
                       name="socialLinks.twitter"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Twitter URL</FormLabel>
+                          <FormLabel>X (Twitter) URL</FormLabel>
                           <FormControl>
                             <Input placeholder="https://twitter.com/your-handle" {...field} />
                           </FormControl>

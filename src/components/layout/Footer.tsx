@@ -59,7 +59,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} Janopriyo Shop. All rights reserved.</p>
           <div className="flex gap-4 mt-4 sm:mt-0">
             <a href="https://facebook.com/janopriyoshop" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label="Facebook">Facebook</a>
-            <a href="https://twitter.com/janopriyoshop" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label="Twitter">Twitter</a>
+            <a href="https://twitter.com/janopriyoshop" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label="X">X</a>
             <a href="https://instagram.com/janopriyoshop" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors" aria-label="Instagram">Instagram</a>
           </div>
         </div>

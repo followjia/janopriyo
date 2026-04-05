@@ -35,8 +35,9 @@ async function getProduct(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-    const product = await getProduct(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const product = await getProduct(slug);
     if (!product) return { title: 'Product Not Found' };
 
     const safeDescription = (product.description ?? '').slice(0, 160);
@@ -61,8 +62,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
 }
 
-export default async function ProductDetailsPage({ params }: { params: { slug: string } }) {
-  const product = await getProduct(params.slug);
+export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
 
   if (!product) {
     return (

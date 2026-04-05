@@ -108,7 +108,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {jsonLd && (
-          <script
+          <Script
             id="json-ld"
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     // Auth check - any authenticated user can upload images (e.g. profile pictures or product/setting images)
     if (!session || !session.user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
     try {
       data = JSON.parse(text);
     } catch {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: `Image upload failed: Unexpected response from provider. Status: ${response.status}`,
-        details: text 
+        details: text
       }, { status: 502 }); // Bad Gateway for vendor error
     }
 

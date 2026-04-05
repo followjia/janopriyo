@@ -105,7 +105,7 @@ export default function OrdersPage() {
                   <TableCell className="font-mono text-xs">#{order?._id?.slice(-8).toUpperCase() || 'N/A'}</TableCell>
                   <TableCell className="text-xs">{order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell className="text-xs">{Array.isArray(order?.items) ? order.items.length : 0} items</TableCell>
-                  <TableCell className="font-bold">${typeof order?.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</TableCell>
+                  <TableCell className="font-bold">৳{typeof order?.totalAmount === 'number' ? Math.round(order.totalAmount) : '0'}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusColor(order.status) as any}>
                       {order.status}

@@ -2,21 +2,33 @@
 
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+function SheetTrigger({ asChild, ...props }: SheetPrimitive.Trigger.Props & { asChild?: boolean }) {
+  return (
+    <SheetPrimitive.Trigger
+      data-slot="sheet-trigger"
+      render={asChild ? <Slot /> : undefined}
+      {...props}
+    />
+  )
 }
 
-function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+function SheetClose({ asChild, ...props }: SheetPrimitive.Close.Props & { asChild?: boolean }) {
+  return (
+    <SheetPrimitive.Close
+      data-slot="sheet-close"
+      render={asChild ? <Slot /> : undefined}
+      {...props}
+    />
+  )
 }
 
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
@@ -62,16 +74,13 @@ function SheetContent({
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-3 right-3"
-                size="icon-sm"
-              />
-            }
+            className={cn(
+              "absolute top-3 right-3 inline-flex items-center justify-center",
+              "h-8 w-8 rounded-sm opacity-70 transition-opacity hover:opacity-100",
+              "focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+            )}
           >
-            <XIcon
-            />
+            <XIcon className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

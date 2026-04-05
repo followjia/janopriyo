@@ -118,6 +118,62 @@ const data = {
   ],
 }
 
+interface NavGroupProps {
+  item: typeof data.navMain[0]
+  pathname: string
+}
+
+function NavGroup({ item, pathname }: NavGroupProps) {
+  const isParentActive = React.useMemo(() => 
+    item.items.some(subItem => pathname === subItem.url) || pathname === item.url,
+    [item.items, item.url, pathname]
+  )
+  
+  const [open, setOpen] = React.useState(isParentActive)
+
+  // Sync open state with navigation
+  React.useEffect(() => {
+    if (isParentActive) {
+      setOpen(true)
+    }
+  }, [isParentActive])
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="group/collapsible"
+    >
+      <SidebarGroup>
+        <SidebarGroupLabel
+          render={<CollapsibleTrigger />}
+          className="group/label text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <item.icon className="mr-2 h-4 w-4" />
+          {item.title}
+          <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+        </SidebarGroupLabel>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {item.items.map((subItem) => (
+                <SidebarMenuItem key={subItem.title}>
+                  <SidebarMenuButton 
+                    render={<Link href={subItem.url} />} 
+                    isActive={pathname === subItem.url}
+                  >
+                    {subItem.title}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
+  )
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
 
@@ -130,42 +186,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Link>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        {data.navMain.map((item) => {
-          const isParentActive = item.items.some(subItem => pathname === subItem.url) || pathname === item.url;
-          
-          return (
-            <Collapsible
-              key={item.title}
-              title={item.title}
-              defaultOpen={isParentActive}
-              className="group/collapsible"
-            >
-              <SidebarGroup>
-                <SidebarGroupLabel
-                render={<CollapsibleTrigger />}
-                className="group/label text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.title}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {item.items.map((subItem) => (
-                        <SidebarMenuItem key={subItem.title}>
-                        <SidebarMenuButton render={<Link href={subItem.url} />} isActive={pathname === subItem.url}>
-                          {subItem.title}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
-          )
-        })}
+        {data.navMain.map((item) => (
+          <NavGroup key={item.title} item={item} pathname={pathname} />
+        ))}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

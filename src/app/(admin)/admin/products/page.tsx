@@ -145,11 +145,11 @@ export default function ProductsPage() {
                   <TableCell>
                     <div className="flex flex-col">
                       <span className={product.salePrice ? 'text-xs line-through text-muted-foreground' : ''}>
-                        ${product.price ? product.price.toFixed(2) : '0.00'}
+                        ৳{product.price ? Math.round(product.price) : '0'}
                       </span>
                       {product.salePrice && (
                         <span className="font-semibold text-primary">
-                          ${product.salePrice.toFixed(2)}
+                          ৳{Math.round(product.salePrice)}
                         </span>
                       )}
                     </div>

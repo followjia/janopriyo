@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
-import { sslcommerz } from '@/lib/sslcommerz';
+import { validatePayment } from '@/lib/sslcommerz';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const data = Object.fromEntries(body.entries());
 
     // Verify Payment with SSLCommerz IPN
-    const response = await sslcommerz.validate(data);
+    const response = await validatePayment(data);
 
     if (response?.status === 'VALID' || response?.status === 'VALIDATED') {
       const tran_id = data.tran_id?.toString();

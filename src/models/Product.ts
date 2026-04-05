@@ -60,21 +60,20 @@ const ProductSchema: Schema<IProduct> = new Schema(
         enum: ['all_over_country', 'location_based'], 
         default: 'all_over_country' 
       },
-      amount: { type: Number, default: 100 },
-      insideDhaka: { type: Number, default: 60 },
-      outsideDhaka: { type: Number, default: 120 }
+      amount: { type: Number, default: 100, min: [0, 'must be non-negative'] },
+      insideDhaka: { type: Number, default: 60, min: [0, 'must be non-negative'] },
+      outsideDhaka: { type: Number, default: 120, min: [0, 'must be non-negative'] }
     }
   },
   { timestamps: true }
 );
 
-ProductSchema.pre('validate', function (this: any, next: any) {
+ProductSchema.pre('validate', function(this: any) {
   if (this.salePrice !== undefined && this.salePrice !== null && this.salePrice > this.price) {
-    return next(
-      new Error(`Sale price (${this.salePrice}) should be lower than or equal to regular price (${this.price})`)
+    throw new Error(
+      `Sale price (${this.salePrice}) should be lower than or equal to regular price (${this.price})`
     );
   }
-  next();
 });
 
 const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

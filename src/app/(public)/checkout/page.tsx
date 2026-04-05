@@ -83,6 +83,8 @@ export default function CheckoutPage() {
         })),
         totalAmount,
         shippingAddress: {
+            fullName: values.fullName,
+            phone: values.phone,
             street: values.street,
             city: values.city,
             state: values.state,
@@ -343,9 +345,9 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.quantity} x ${item.price.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">{item.quantity} x ৳{Math.round(item.price)}</p>
                     </div>
-                    <p className="text-sm font-bold">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm font-bold">৳{Math.round(item.price * item.quantity)}</p>
                   </div>
                 ))}
               </div>
@@ -353,7 +355,7 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>৳{Math.round(totalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
@@ -362,7 +364,7 @@ export default function CheckoutPage() {
                 <Separator className="mt-4" />
                 <div className="flex justify-between text-lg font-black pt-2">
                   <span>Total</span>
-                  <span className="text-primary">${totalAmount.toFixed(2)}</span>
+                  <span className="text-primary">৳{Math.round(totalAmount)}</span>
                 </div>
               </div>
             </CardContent>

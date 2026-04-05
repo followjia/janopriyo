@@ -44,7 +44,7 @@ const productSchema = z.object({
   salePrice: z.coerce.number().min(0).optional(),
   sku: z.string().min(3, 'SKU is required'),
   stock: z.coerce.number().int().min(0, 'Stock must be at least 0'),
-  categories: z.array(z.string()),
+  categories: z.array(z.string()).min(1, 'Select at least one category'),
   images: z.array(z.string()).min(1, 'Upload at least one image'),
   isPublished: z.boolean(),
   isFeatured: z.boolean(),
@@ -76,7 +76,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     slug: initialData?.slug || '',
     description: initialData?.description || '',
     price: initialData?.price || 0,
-    salePrice: initialData?.salePrice || undefined,
+    salePrice: initialData?.salePrice ?? undefined,
     sku: initialData?.sku || '',
     stock: initialData?.stock || 0,
     categories: initialData?.categories?.map((c: any) => typeof c === 'object' ? c._id : c) || [],
@@ -93,7 +93,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
   };
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema) as unknown as Resolver<ProductFormValues>,
+    resolver: zodResolver(productSchema) as any,
     defaultValues
   });
 
@@ -313,6 +313,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                         src={url} 
                         alt={`Product image ${index + 1}`} 
                         fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                         className="object-cover" 
                       />
                       <button
@@ -348,11 +349,11 @@ export function ProductForm({ initialData }: ProductFormProps) {
                     <div key={item.id} className="flex gap-4 items-end">
                       <div className="flex-1">
                         <Label>Label</Label>
-                        <Input {...form.register(`attributes.${index}.key` as const)} placeholder="e.g. Color" />
+                        <Input {...form.register(`attributes.${index}.key` as const)} placeholder="e.g. Material" />
                       </div>
                       <div className="flex-1">
                         <Label>Value</Label>
-                        <Input {...form.register(`attributes.${index}.value` as const)} placeholder="e.g. Red" />
+                        <Input {...form.register(`attributes.${index}.value` as const)} placeholder="e.g. Cotton" />
                       </div>
                       <Button 
                         type="button"
@@ -394,7 +395,12 @@ export function ProductForm({ initialData }: ProductFormProps) {
                     <FormItem>
                       <FormLabel>Sale Price ($)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} />
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          {...field} 
+                          value={field.value ?? ''} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

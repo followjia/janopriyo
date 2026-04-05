@@ -32,7 +32,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
 
   return (
     <Sheet>
-      <SheetTrigger render={children} />
+      <SheetTrigger nativeButton={false} render={children} />
       <SheetContent className="flex flex-col w-full sm:max-w-md bg-background border-l shadow-2xl">
         <SheetHeader className="pb-6 border-b">
           <div className="flex items-center justify-between">
@@ -52,10 +52,9 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
               </div>
               <h3 className="text-xl font-bold">Your cart is empty</h3>
               <p className="text-muted-foreground text-sm max-w-[200px]">Looks like you haven't added anything to your cart yet.</p>
-              <SheetClose 
-                render={
-                  <Button variant="outline" render={<Link href="/shop">Start Shopping</Link>} />
-                }
+              <SheetClose
+                nativeButton={false}
+                render={<Link href="/shop" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">Start Shopping</Link>}
               />
             </div>
           ) : (
@@ -108,7 +107,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                         <Plus className="h-3 w-3" />
                       </Button>
                     </div>
-                    <p className="text-sm font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm font-bold text-primary">৳{Math.round(item.price * item.quantity)}</p>
                   </div>
                 </div>
               </div>
@@ -121,7 +120,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-bold">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold">৳{Math.round(totalAmount)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
@@ -130,12 +129,13 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
               <Separator className="my-2" />
               <div className="flex items-center justify-between text-lg font-extrabold tracking-tight">
                 <span>Total Amount</span>
-                <span className="text-primary">${totalAmount.toFixed(2)}</span>
+                <span className="text-primary">৳{Math.round(totalAmount)}</span>
               </div>
             </div>
             <div className="flex flex-col gap-2 w-full">
                 <Button 
                     className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs group"
+                    nativeButton={false}
                     render={<Link href="/checkout">Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>}
                 />
                 <Button 
