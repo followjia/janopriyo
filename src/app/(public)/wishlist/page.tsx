@@ -83,7 +83,7 @@ export default function WishlistPage() {
                 : `You have ${products.length} item${products.length === 1 ? '' : 's'} in your wishlist.`}
           </p>
         </div>
-        <Button render={<Link href="/shop" />} variant="outline">
+        <Button render={<Link href="/shop" />} variant="outline" nativeButton={false}>
           Continue Shopping
         </Button>
       </div>
@@ -100,6 +100,7 @@ export default function WishlistPage() {
           </p>
           <Button 
             render={<Link href="/shop" />}
+            nativeButton={false}
             size="lg" 
             className="rounded-full px-8"
           >

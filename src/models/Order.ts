@@ -6,12 +6,15 @@ export interface IOrderItem {
   quantity: number;
   price: number;
   image?: string;
+  color?: string;
+  size?: string;
 }
 
 export interface IOrder extends Document {
   user?: mongoose.Types.ObjectId;
   items: IOrderItem[];
   totalAmount: number;
+  deliveryCharge: number;
   shippingAddress: {
     fullName: string;
     phone: string;
@@ -39,9 +42,12 @@ const OrderSchema: Schema<IOrder> = new Schema(
         quantity: { type: Number, required: true, min: [1, 'Quantity must be at least 1'] },
         price: { type: Number, required: true, min: [0.01, 'Price must be at least 0.01'] },
         image: { type: String },
+        color: { type: String },
+        size: { type: String },
       },
     ],
     totalAmount: { type: Number, required: true, min: [0, 'Total amount cannot be negative'] },
+    deliveryCharge: { type: Number, required: true, min: [0, 'Delivery charge cannot be negative'] },
     shippingAddress: {
       type: {
         fullName: { type: String, required: true },

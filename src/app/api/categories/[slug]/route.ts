@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
+import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
@@ -8,17 +10,17 @@ import { auth } from '@/auth';
 // GET a single category
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     await connectToDatabase();
-    const category = await Category.findById(id);
-    
+    const category = await Category.findOne({ slug });
+
     if (!category) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
-    
+
     return NextResponse.json(category);
   } catch (error) {
     console.error('Error fetching category:', error);
@@ -29,22 +31,22 @@ export async function GET(
 // PUT update a category (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
-    
+
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    
+
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = ['name', 'slug', 'image', 'parentCategory', 'isActive'];
     const updateData: any = {};
-    
+
     Object.keys(body).forEach((key) => {
       if (allowedFields.includes(key)) {
         updateData[key] = body[key];
@@ -57,17 +59,17 @@ export async function PUT(
 
     await connectToDatabase();
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true, runValidators: true }
+    const updatedCategory = await Category.findOneAndUpdate(
+      { slug },
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
 
     if (!updatedCategory) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    revalidateTag('categories', 'default');
+    await revalidateTag('categories', 'default');
 
     return NextResponse.json(updatedCategory);
   } catch (error) {
@@ -79,39 +81,55 @@ export async function PUT(
 // DELETE a category (Admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
-    const session = await auth();
-    
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    const { slug } = await params;
+    const authSession = await auth();
+
+    if (!authSession || !authSession.user || (authSession.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
-    
-    // 1. Remove this category from all products ($pull removes the ID from the array)
-    await Product.updateMany(
-      { categories: id },
-      { $pull: { categories: id } }
-    );
-    
-    // 2. Rescue subcategories: update them to have no parent category
-    await Category.updateMany(
-      { parentCategory: id },
-      { $set: { parentCategory: null } }
-    );
 
-    const deletedCategory = await Category.findByIdAndDelete(id);
-
-    if (!deletedCategory) {
+    // 1. Verify existence first
+    const category = await Category.findOne({ slug });
+    if (!category) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    revalidateTag('categories', 'default');
+    // 2. Perform deletion operations in a transaction
+    const dbSession = await mongoose.startSession();
+    try {
+      await dbSession.withTransaction(async () => {
+        // Remove this category from all products ($pull removes the ID from the array)
+        await Product.updateMany(
+          { categories: category._id },
+          { $pull: { categories: category._id } },
+          { session: dbSession }
+        );
 
-    return NextResponse.json({ message: 'Category deleted successfully' });
+        // Rescue subcategories: update them to have no parent category
+        await Category.updateMany(
+          { parentCategory: category._id },
+          { $set: { parentCategory: null } },
+          { session: dbSession }
+        );
+
+        await Category.findByIdAndDelete(category._id, { session: dbSession });
+      });
+
+      try {
+        await revalidateTag('categories', 'default');
+      } catch (e) {
+        console.error('Revalidation error:', e);
+      }
+
+      return NextResponse.json({ message: 'Category deleted successfully' });
+    } finally {
+      await dbSession.endSession();
+    }
   } catch (error) {
     console.error('Error deleting category:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { 
     ShoppingCart, 
     Heart, 
@@ -13,27 +14,32 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
-import ProductDetailsClient from './ProductDetailsClient'; // We'll create this for interaction
+import { cache } from 'react';
+import connectToDatabase from '@/lib/db';
+import Product from '@/models/Product';
+import ProductDetailsClient from './ProductDetailsClient'; 
  
 const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 };
 
-async function getProduct(slug: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const getProduct = cache(async (slug: string) => {
   try {
-    const res = await fetch(`${baseUrl}/api/products`, { 
-        cache: 'force-cache', 
-        next: { tags: ['products'] } 
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!Array.isArray(data)) return null;
-    return data.find((p: any) => p.slug === slug);
+    await connectToDatabase();
+    // Use lean() for better performance and plain object return
+    const product = await Product.findOne({ slug })
+      .populate('categories')
+      .lean();
+    
+    if (!product) return null;
+
+    // Stringify ObjectIDs and other non-serializable fields for client components
+    return JSON.parse(JSON.stringify(product));
   } catch (error) {
+    console.error('Error fetching product by slug:', error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -70,7 +76,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     return (
       <div className="container py-20 text-center">
         <h1 className="text-2xl font-bold">Product not found</h1>
-        <Button variant="link" className="mt-4" render={<Link href="/shop" />}>
+        <Button variant="link" className="mt-4" render={<Link href="/shop" />} nativeButton={false}>
           Back to Shop
         </Button>
       </div>
@@ -86,8 +92,18 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
   return (
     <div className="container px-4 md:px-6 py-10">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizeForScript(productSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizeForScript(breadcrumbSchema) }} />
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: sanitizeForScript(productSchema) }}
+        />
+      )}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: sanitizeForScript(breadcrumbSchema) }}
+        />
+      )}
       
       <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>

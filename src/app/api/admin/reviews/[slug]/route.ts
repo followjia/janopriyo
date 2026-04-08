@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Review from '@/models/Review';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
+import mongoose from 'mongoose';
 
 // Update review status
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session || (session.user as any)?.role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -19,30 +21,33 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     await connectToDatabase();
-    const review = await Review.findById(id);
+    if (!mongoose.isValidObjectId(slug)) {
+      return NextResponse.json({ message: 'Invalid review ID' }, { status: 400 });
+    }
+    const review = await Review.findOne({ _id: slug });
 
     if (!review) {
       return NextResponse.json({ message: 'Review not found' }, { status: 404 });
     }
 
     const oldStatus = review.status;
-    review.status = status;
+    review.status = status as any;
     await review.save();
 
     // If status changed to/from 'approved', recalculate product ratings
     if (oldStatus === 'approved' || status === 'approved') {
       const productId = review.product;
-      const approvedReviews = await Review.find({ 
-        product: productId, 
-        status: 'approved' 
+      const approvedReviews = await Review.find({
+        product: productId,
+        status: 'approved'
       });
 
       const numReviews = approvedReviews.length;
-      const ratings = numReviews > 0 
-        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews 
+      const ratings = numReviews > 0
+        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
         : 0;
 
-      await Product.findByIdAndUpdate(productId, {
+      await Product.findOneAndUpdate({ _id: productId }, {
         ratings,
         numReviews
       });
@@ -56,16 +61,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 // Delete review
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session || (session.user as any)?.role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
-    const review = await Review.findById(id);
+    if (!mongoose.isValidObjectId(slug)) {
+      return NextResponse.json({ message: 'Invalid review ID' }, { status: 400 });
+    }
+    const review = await Review.findOne({ _id: slug });
 
     if (!review) {
       return NextResponse.json({ message: 'Review not found' }, { status: 404 });
@@ -74,21 +82,21 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const productId = review.product;
     const wasApproved = review.status === 'approved';
 
-    await Review.findByIdAndDelete(id);
+    await Review.deleteOne({ _id: slug });
 
     // If deleted review was approved, recalculate product ratings
     if (wasApproved) {
-      const approvedReviews = await Review.find({ 
-        product: productId, 
-        status: 'approved' 
+      const approvedReviews = await Review.find({
+        product: productId,
+        status: 'approved'
       });
 
       const numReviews = approvedReviews.length;
-      const ratings = numReviews > 0 
-        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews 
+      const ratings = numReviews > 0
+        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
         : 0;
 
-      await Product.findByIdAndUpdate(productId, {
+      await Product.findOneAndUpdate({ _id: productId }, {
         ratings,
         numReviews
       });

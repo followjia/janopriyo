@@ -34,6 +34,7 @@ export default function PaymentFailPage() {
         <CardFooter className="flex flex-col gap-3">
           <Button 
             render={<Link href="/checkout" />}
+            nativeButton={false}
             className="w-full h-11 rounded-full font-bold"
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
@@ -41,6 +42,7 @@ export default function PaymentFailPage() {
           </Button>
           <Button 
             render={<Link href="/shop" />}
+            nativeButton={false}
             variant="ghost" 
             className="w-full"
           >

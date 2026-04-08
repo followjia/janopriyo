@@ -81,7 +81,6 @@ export default function CheckoutPage() {
             price: item.price,
             image: item.image
         })),
-        totalAmount,
         shippingAddress: {
             fullName: values.fullName,
             phone: values.phone,
@@ -92,7 +91,7 @@ export default function CheckoutPage() {
             country: values.country
         },
         paymentMethod: values.paymentMethod,
-        // paymentStatus is determined server-side for security
+        deliveryCharge: deliveryCharge,
       };
 
       const response = await fetch('/api/orders', {
@@ -143,6 +142,12 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   };
+
+  const city = form.watch('city');
+  const state = form.watch('state');
+  const isDhaka = city?.toLowerCase().includes('dhaka') || state?.toLowerCase().includes('dhaka');
+  const deliveryCharge = items.length > 0 ? (isDhaka ? 60 : 120) : 0;
+  const finalTotal = totalAmount + deliveryCharge;
 
   // Show loading state or nothing while hydrating to prevent flash of "empty cart" redirect
   if (!isHydrated) return (
@@ -359,12 +364,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-green-600 font-bold">FREE</span>
+                  <span className="text-primary font-bold">৳{deliveryCharge}</span>
                 </div>
                 <Separator className="mt-4" />
                 <div className="flex justify-between text-lg font-black pt-2">
                   <span>Total</span>
-                  <span className="text-primary">৳{Math.round(totalAmount)}</span>
+                  <span className="text-primary">৳{Math.round(finalTotal)}</span>
                 </div>
               </div>
             </CardContent>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,24 +41,31 @@ const productSchema = z.object({
   name: z.string().min(3, 'Name is required'),
   slug: z.string().min(3, 'Slug is required'),
   description: z.string().min(10, 'Description is required'),
-  price: z.coerce.number().positive('Price must be greater than zero'),
-  salePrice: z.coerce.number().min(0).optional(),
+  price: z.union([z.coerce.number().positive('Price must be greater than zero'), z.literal('')]),
+  discountRate: z.union([z.coerce.number().min(0).max(100), z.literal('')]).optional(),
+  salePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
   sku: z.string().min(3, 'SKU is required'),
-  stock: z.coerce.number().int().min(0, 'Stock must be at least 0'),
+  stock: z.union([z.coerce.number().int().min(0, 'Stock must be at least 0'), z.literal('')]),
   categories: z.array(z.string()).min(1, 'Select at least one category'),
   images: z.array(z.string()).min(1, 'Upload at least one image'),
-  isPublished: z.boolean(),
   isFeatured: z.boolean(),
+  isNewArrival: z.boolean(),
+  isPublished: z.boolean(),
   attributes: z.array(z.object({
     key: z.string(),
     value: z.string()
   })),
-  deliveryCharge: z.object({
-    type: z.enum(['all_over_country', 'location_based']),
-    amount: z.coerce.number().min(0),
-    insideDhaka: z.coerce.number().min(0),
-    outsideDhaka: z.coerce.number().min(0)
-  })
+  variants: z.array(z.object({
+    color: z.string().optional(),
+    size: z.string().optional(),
+    others: z.string().optional().default(''),
+    price: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
+    discountRate: z.union([z.coerce.number().min(0).max(100), z.literal('')]).optional(),
+    salePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
+    stock: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
+    sku: z.string().optional(),
+    image: z.string().optional()
+  })).default([]),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -71,25 +79,34 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const calculateDiscount = (price: number, salePrice?: number) => {
+    if (!price || !salePrice || salePrice >= price) return 0;
+    return Math.round((1 - salePrice / price) * 100);
+  };
+
   const defaultValues: ProductFormValues = {
     name: initialData?.name || '',
     slug: initialData?.slug || '',
     description: initialData?.description || '',
-    price: initialData?.price || 0,
-    salePrice: initialData?.salePrice ?? undefined,
+    price: initialData?.price ?? '',
+    discountRate: calculateDiscount(initialData?.price, initialData?.salePrice) || '',
+    salePrice: initialData?.salePrice ?? '',
     sku: initialData?.sku || '',
-    stock: initialData?.stock || 0,
+    stock: initialData?.stock ?? '',
     categories: initialData?.categories?.map((c: any) => typeof c === 'object' ? c._id : c) || [],
     images: initialData?.images || [],
     isPublished: initialData?.isPublished ?? true,
     isFeatured: initialData?.isFeatured ?? false,
+    isNewArrival: initialData?.isNewArrival ?? false,
     attributes: initialData?.attributes || [],
-    deliveryCharge: initialData?.deliveryCharge || {
-      type: 'all_over_country',
-      amount: 100,
-      insideDhaka: 60,
-      outsideDhaka: 120
-    }
+    variants: initialData?.variants?.map((v: any) => ({
+      ...v,
+      others: v.others || '',
+      price: v.price ?? '',
+      stock: v.stock ?? '',
+      discountRate: calculateDiscount(v.price, v.salePrice) || '',
+      salePrice: v.salePrice ?? '',
+    })) || [],
   };
 
   const form = useForm<ProductFormValues>({
@@ -101,6 +118,13 @@ export function ProductForm({ initialData }: ProductFormProps) {
     control: form.control,
     name: "attributes"
   });
+  
+  const { fields: variantFields, append: appendVariant, remove: removeVariant, replace: replaceVariants } = useFieldArray({
+    control: form.control,
+    name: "variants"
+  });
+
+  // Generation tool removed as variants are now managed directly
 
   useEffect(() => {
     async function fetchCategories() {
@@ -131,6 +155,23 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const onSubmit = async (values: ProductFormValues) => {
     setLoading(true);
+    // Clean up values: convert empty strings to undefined or numbers
+    const cleanValues = {
+      ...values,
+      price: values.price === '' ? 0 : Number(values.price),
+      salePrice: values.salePrice === '' ? undefined : Number(values.salePrice),
+      discountRate: values.discountRate === '' || isNaN(Number(values.discountRate)) ? undefined : Number(values.discountRate),
+      stock: values.stock === '' ? 0 : Number(values.stock),
+      variants: (values.variants || []).map(v => ({
+        ...v,
+        others: v.others || '',
+        price: v.price === '' ? 0 : Number(v.price),
+        salePrice: v.salePrice === '' ? undefined : Number(v.salePrice),
+        discountRate: v.discountRate === '' || isNaN(Number(v.discountRate)) ? undefined : Number(v.discountRate),
+        stock: v.stock === '' ? 0 : Number(v.stock),
+      }))
+    };
+
     try {
       const url = initialData ? `/api/products/${initialData._id}` : '/api/products';
       const method = initialData ? 'PUT' : 'POST';
@@ -138,7 +179,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(cleanValues),
       });
 
       if (response.ok) {
@@ -150,6 +191,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         toast.error(error.message || 'Something went wrong');
       }
     } catch (error) {
+      console.error('Error saving product:', error);
       toast.error('Failed to save product');
     } finally {
       setLoading(false);
@@ -235,9 +277,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Main Info */}
-          <div className="md:col-span-2 space-y-6">
+        <div className="max-w-5xl mx-auto w-full space-y-6">
+          {/* Product Information */}
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <FormField
@@ -369,140 +410,294 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar Info */}
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price ($)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="salePrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sale Price ($)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          {...field} 
-                          value={field.value ?? ''} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stock"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Stock Quantity</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Card className="border-primary/20 shadow-sm overflow-hidden">
+              <div className="bg-primary/5 px-6 py-4 border-b border-primary/10 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                    <PlusCircle className="h-5 w-5" /> 
+                    Variation Manager
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Manage stock, price, and images for every variation.</p>
+                </div>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-background hover:bg-primary hover:text-white transition-all border-primary/20"
+                  onClick={() => appendVariant({ color: '', size: '', others: '', price: form.getValues('price') || '', stock: '', sku: '' })}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add New Variation
+                </Button>
+              </div>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-muted/50 border-b text-muted-foreground font-medium">
+                          <th className="px-4 py-3 text-left w-[120px]">Image</th>
+                          <th className="px-4 py-3 text-left">Color</th>
+                          <th className="px-4 py-3 text-left">Size</th>
+                          <th className="px-4 py-3 text-left">Others</th>
+                          <th className="px-4 py-3 text-left w-[100px]">Price</th>
+                          <th className="px-4 py-3 text-left w-[80px]">Disc (%)</th>
+                          <th className="px-4 py-3 text-left w-[100px]">Sale</th>
+                          <th className="px-4 py-3 text-left w-[80px]">Stock</th>
+                          <th className="px-4 py-3 text-left">SKU</th>
+                          <th className="px-4 py-3 text-center w-[50px]"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {variantFields.map((field, index) => (
+                          <tr key={field.id} className="hover:bg-muted/20 transition-colors group">
+                            <td className="px-4 py-3">
+                              <div className="relative h-14 w-14 rounded-lg overflow-hidden border bg-background flex items-center justify-center group/img">
+                                {form.watch(`variants.${index}.image`) ? (
+                                  <>
+                                    <Image 
+                                      src={form.watch(`variants.${index}.image`) || ''} 
+                                      alt="" 
+                                      fill 
+                                      className="object-cover" 
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => form.setValue(`variants.${index}.image`, '')}
+                                      className="absolute top-0.5 right-0.5 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover/img:opacity-100 transition-opacity z-10"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <ImageUpload 
+                                    onUpload={(url) => form.setValue(`variants.${index}.image`, url)} 
+                                    className="p-0 border-none h-full w-full rounded-none"
+                                    iconClassName="h-4 w-4"
+                                  />
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                {...form.register(`variants.${index}.color` as const)} 
+                                placeholder="Yellow" 
+                                className="h-9 border-muted-foreground/20 focus:border-primary transition-all"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                {...form.register(`variants.${index}.size` as const)} 
+                                placeholder="XL" 
+                                className="h-9 border-muted-foreground/20 focus:border-primary transition-all"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                {...form.register(`variants.${index}.others` as const)} 
+                                placeholder="Others" 
+                                className="h-9 border-muted-foreground/20 focus:border-primary transition-all"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                type="number" 
+                                value={form.watch(`variants.${index}.price`) ?? ''}
+                                className="h-9 border-muted-foreground/20"
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                                  form.setValue(`variants.${index}.price`, val);
+                                  const disc = form.getValues(`variants.${index}.discountRate`) || 0;
+                                  if (disc > 0 && val !== '') {
+                                      form.setValue(`variants.${index}.salePrice`, Math.round(val * (1 - disc / 100)));
+                                  }
+                                }}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                                <Input 
+                                    type="number" 
+                                    value={form.watch(`variants.${index}.discountRate`) ?? ''}
+                                    placeholder="0"
+                                    className="h-9 border-muted-foreground/20"
+                                    onChange={(e) => {
+                                        const disc = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                                        form.setValue(`variants.${index}.discountRate`, disc);
+                                        const prc = form.getValues(`variants.${index}.price`) || 0;
+                                        if (prc > 0 && disc !== undefined) {
+                                            form.setValue(`variants.${index}.salePrice`, Math.round(prc * (1 - disc / 100)));
+                                        } else {
+                                            form.setValue(`variants.${index}.salePrice`, undefined);
+                                        }
+                                    }}
+                                />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                type="number" 
+                                value={form.watch(`variants.${index}.salePrice`) ?? ''}
+                                placeholder="Optional"
+                                className="h-9 border-muted-foreground/20"
+                                onChange={(e) => {
+                                    const sale = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                                    form.setValue(`variants.${index}.salePrice`, sale);
+                                    const prc = form.getValues(`variants.${index}.price`) || 0;
+                                    if (prc > 0 && sale !== undefined && sale > 0 && sale < prc) {
+                                        form.setValue(`variants.${index}.discountRate`, Math.round((1 - sale / prc) * 100));
+                                    } else {
+                                        form.setValue(`variants.${index}.discountRate`, undefined);
+                                    }
+                                }}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                type="number" 
+                                value={form.watch(`variants.${index}.stock`) ?? ''}
+                                className="h-9 border-muted-foreground/20"
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? undefined : (parseInt(e.target.value) || 0);
+                                  form.setValue(`variants.${index}.stock`, val);
+                                }}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                {...form.register(`variants.${index}.sku` as const)} 
+                                placeholder="SKU"
+                                className="h-9 border-muted-foreground/20"
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                onClick={() => removeVariant(index)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
               </CardContent>
             </Card>
-
             <Card>
-              <CardContent className="pt-6 space-y-4">
-                <Label className="text-base font-bold">Delivery Charges</Label>
-                <FormField
-                  control={form.control}
-                  name="deliveryCharge.type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-2"
-                        >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="all_over_country" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              All over the country
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="location_based" />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              Location Based (Dhaka/Outside)
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {form.watch('deliveryCharge.type') === 'all_over_country' ? (
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
-                    name="deliveryCharge.amount"
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Regular Delivery Charge (TK)</FormLabel>
+                        <FormLabel>Regular Price (Tk)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input 
+                            type="number" 
+                            placeholder="0.00" 
+                            {...field} 
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                              field.onChange(value);
+                              // Sync sale price if discount exists
+                              const prc = value === '' ? 0 : value;
+                              const discount = form.getValues('discountRate') || 0;
+                              if (discount > 0 && prc > 0) {
+                                const newSale = prc * (1 - discount / 100);
+                                form.setValue('salePrice', Math.round(newSale));
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="deliveryCharge.insideDhaka"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Inside Dhaka (TK)</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="deliveryCharge.outsideDhaka"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Outside Dhaka (TK)</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
+                  <FormField
+                    control={form.control}
+                    name="discountRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discount (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0"
+                            {...field} 
+                            value={field.value || ''}
+                            onChange={(e) => {
+                              const discount = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                              field.onChange(discount);
+                              const price = form.getValues('price') || 0;
+                              if (price > 0 && discount !== undefined) {
+                                const newSale = price * (1 - discount / 100);
+                                form.setValue('salePrice', Math.round(newSale));
+                              } else {
+                                form.setValue('salePrice', undefined);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="salePrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sale Price (Tk)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0.00"
+                            {...field} 
+                            value={field.value || ''}
+                            onChange={(e) => {
+                              const sale = parseFloat(e.target.value) || 0;
+                              field.onChange(sale);
+                              const price = form.getValues('price') || 0;
+                              if (price > 0 && sale > 0 && sale < price) {
+                                const newDiscount = Math.round((1 - sale / price) * 100);
+                                form.setValue('discountRate', newDiscount);
+                              } else {
+                                form.setValue('discountRate', undefined);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="mt-6">
+                  <FormField
+                    control={form.control}
+                    name="stock"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Stock Quantity</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            {...field} 
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                          />
+                        </FormControl>
+                        <FormDescription>Physical stock available for sale</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -574,7 +769,16 @@ export function ProductForm({ initialData }: ProductFormProps) {
                         type="checkbox" 
                         id="featured"
                         {...form.register('isFeatured')} 
-                        className="h-4 w-4" 
+                        className="h-4 w-4 accent-primary cursor-pointer hover:scale-110 transition-transform" 
+                    />
+                </div>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="new-arrival">New Arrival</Label>
+                    <input 
+                        type="checkbox" 
+                        id="new-arrival"
+                        {...form.register('isNewArrival')} 
+                        className="h-4 w-4 accent-primary cursor-pointer hover:scale-110 transition-transform" 
                     />
                 </div>
                 <div className="flex items-center justify-between">
@@ -589,8 +793,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </form>
+        </form>
     </Form>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Order, { IOrderItem } from '@/models/Order';
@@ -35,10 +36,16 @@ const orderSchema = z.object({
     zipCode: z.string().min(4, 'Invalid zip code'),
     country: z.string().min(1, 'Country is required'),
   }),
-  paymentMethod: z.preprocess(
-    (val) => (val === 'Cash on Delivery' ? 'COD' : val),
-    z.enum(['COD', 'Online'])
-  ),
+  paymentMethod: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      const normalized = val.trim().toLowerCase();
+      if (normalized === 'cash on delivery' || normalized === 'cod') {
+        return 'COD';
+      }
+    }
+    return val;
+  }, z.enum(['COD', 'Online'])),
+  deliveryCharge: z.number().min(0).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -58,6 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { items, shippingAddress, paymentMethod } = validation.data;
+    const clientProvidedDeliveryCharge = validation.data.deliveryCharge;
 
     const conn = await connectToDatabase();
     session = await conn.startSession();
@@ -101,13 +109,29 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Create the order within the transaction
+    // 4. Calculate Delivery Charge
+    const isDhaka = 
+      shippingAddress.city.toLowerCase().includes('dhaka') || 
+      shippingAddress.state.toLowerCase().includes('dhaka');
+    const serverComputedDeliveryCharge = isDhaka ? 60 : 120;
+
+    // 5. Verify Delivery Charge (if provided by client)
+    if (clientProvidedDeliveryCharge !== undefined && clientProvidedDeliveryCharge !== serverComputedDeliveryCharge) {
+      if (session) await session.abortTransaction();
+      return NextResponse.json({ 
+        message: 'Delivery charge mismatch. Please refresh your cart.',
+        serverCharge: serverComputedDeliveryCharge
+      }, { status: 400 });
+    }
+
+    // 6. Create the order within the transaction
     const [newOrder] = (await Order.create(
       [
         {
           user: (sessionUser?.user?.id as any) || undefined, // Allow guest checkout
           items: validatedItems,
-          totalAmount: serverComputedTotal,
+          deliveryCharge: serverComputedDeliveryCharge,
+          totalAmount: serverComputedTotal + serverComputedDeliveryCharge,
           shippingAddress,
           paymentMethod,
           paymentStatus: 'Pending',

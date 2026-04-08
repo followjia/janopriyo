@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
     ShoppingCart, 
     Heart, 
@@ -35,16 +36,114 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
   const [selectedImage, setSelectedImage] = useState(0);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0, percentageX: 0, percentageY: 0 });
   const [showZoom, setShowZoom] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedOthers, setSelectedOthers] = useState<string | null>(null);
 
-  // Reset image selection when product changes
+  // Derive available options from variants
+  const uniqueColors = useMemo(() => 
+    Array.from(new Set((product.variants || []).map((v: any) => v.color))).filter(Boolean) as string[],
+    [product.variants]
+  );
+  
+  const uniqueSizes = useMemo(() => 
+    Array.from(new Set((product.variants || []).map((v: any) => v.size))).filter(Boolean) as string[],
+    [product.variants]
+  );
+  
+  const uniqueOthers = useMemo(() => 
+    Array.from(new Set((product.variants || []).map((v: any) => v.others))).filter(Boolean) as string[],
+    [product.variants]
+  );
+  
+  // Hierarchical filtering
+  const availableSizes = useMemo(() => 
+    (product.variants || [])
+      .filter((v: any) => !selectedColor || v.color === selectedColor)
+      .map((v: any) => v.size)
+      .filter(Boolean) as string[],
+    [product.variants, selectedColor]
+  );
+
+  const availableOthers = useMemo(() => 
+    (product.variants || [])
+      .filter((v: any) => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize))
+      .map((v: any) => v.others)
+      .filter(Boolean) as string[],
+    [product.variants, selectedColor, selectedSize]
+  );
+
+  const activeVariant = useMemo(() => 
+    (product.variants || []).find(
+      (v: any) => 
+        (v.color || null) === (selectedColor || null) && 
+        (v.size || null) === (selectedSize || null) &&
+        (v.others || null) === (selectedOthers || null)
+    ),
+    [product.variants, selectedColor, selectedSize, selectedOthers]
+  );
+
+  // Auto-select first available options on mount or product change
   useEffect(() => {
     if (!product) return;
+    
+    const initialColor = uniqueColors[0] || null;
+    setSelectedColor(initialColor);
+    
+    const initialSizes = (product.variants || [])
+      .filter((v: any) => !initialColor || v.color === initialColor)
+      .map((v: any) => v.size)
+      .filter(Boolean);
+    const initialSize = initialSizes[0] || null;
+    setSelectedSize(initialSize);
+
+    const initialOthersList = (product.variants || [])
+      .filter((v: any) => (!initialColor || v.color === initialColor) && (!initialSize || v.size === initialSize))
+      .map((v: any) => v.others)
+      .filter(Boolean);
+    setSelectedOthers(initialOthersList[0] || null);
+    
     setSelectedImage(0);
     setQuantity(1);
-  }, [product?._id]);
+  }, [product?._id, uniqueColors, product.variants]);
 
+  // Adjust selection if dependencies change and current choice is unavailable
+  useEffect(() => {
+    if (selectedSize == null || !availableSizes.includes(selectedSize)) {
+      setSelectedSize(availableSizes[0] || null);
+    }
+    if (selectedOthers == null || !availableOthers.includes(selectedOthers)) {
+      setSelectedOthers(availableOthers[0] || null);
+    }
+    
+    // Update main image if variant has one
+    if (activeVariant?.image) {
+      const variantImgIndex = (product.images || []).findIndex((img: string) => img === activeVariant.image);
+      if (variantImgIndex !== -1) {
+        setSelectedImage(variantImgIndex);
+      }
+    }
+  }, [selectedColor, selectedSize, selectedOthers, availableSizes, availableOthers, activeVariant, product.images]);
+
+  const displayPrice = activeVariant?.price || product.price;
+  const displaySalePrice = activeVariant?.salePrice || product.salePrice;
+  const displayStock = activeVariant?.stock ?? product.stock;
+  const displaySku = activeVariant?.sku || product.sku;
   const handleAddToCart = () => {
-    const stock = product.stock || 0;
+    if (uniqueColors.length > 0 && !selectedColor) {
+      toast.error('Please select a color');
+      return;
+    }
+    if (uniqueSizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+    if (uniqueOthers.length > 0 && !selectedOthers) {
+      toast.error('Please select an option');
+      return;
+    }
+
+    const stock = displayStock || 0;
     const finalQuantity = Math.min(quantity, stock);
 
     if (finalQuantity <= 0) {
@@ -52,12 +151,17 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       return;
     }
 
+    const cartItemId = `${product._id}-${selectedColor || ''}-${selectedSize || ''}-${selectedOthers || ''}`;
+
     dispatch(addToCart({
-      id: product._id,
+      id: cartItemId,
       name: product.name,
-      price: product.salePrice || product.price,
+      price: displaySalePrice || displayPrice,
       quantity: finalQuantity,
-      image: product.images?.[0]
+      image: activeVariant?.image || product.images?.[0],
+      color: selectedColor || undefined,
+      size: selectedSize || undefined,
+      others: selectedOthers || undefined
     }));
     toast.success(`Added ${finalQuantity} ${product.name} to cart`);
   };
@@ -243,17 +347,22 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
         <div className="flex flex-col gap-1">
           <div className="flex items-baseline gap-4">
             <span className="text-3xl font-extrabold text-primary">
-              ৳{Math.round(product.salePrice || product.price)}
+              ৳{Math.round(displaySalePrice || displayPrice)}
             </span>
-            {product.salePrice && product.salePrice !== product.price && (
+            {displaySalePrice && displaySalePrice !== displayPrice && (
               <span className="text-xl text-muted-foreground line-through font-medium">
-                ৳{Math.round(product.price)}
+                ৳{Math.round(displayPrice)}
               </span>
             )}
           </div>
-          <p className={`text-xs font-bold mt-1 ${product.stock > 0 ? 'text-green-600' : 'text-destructive'}`}>
-            {product.stock > 0 ? 'In stock, ready to ship.' : 'Out of stock'}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className={`text-xs font-bold ${displayStock > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                {displayStock > 0 ? `In stock (${displayStock} units available)` : 'Out of stock'}
+            </p>
+            {displaySku && (
+                <span className="text-xs text-muted-foreground">| SKU: {displaySku}</span>
+            )}
+          </div>
         </div>
 
         <p className="text-muted-foreground leading-relaxed">
@@ -262,15 +371,112 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
         <Separator />
 
-        {/* Attributes */}
-        <div className="space-y-4">
-            {product.attributes?.map((attr: any, i: number) => (
-                <div key={i} className="flex items-center gap-4">
-                    <span className="text-sm font-bold min-w-[80px] uppercase tracking-wider">{attr.key}:</span>
-                    <Badge variant="secondary">{attr.value}</Badge>
-                </div>
-            ))}
+        {/* Selection Options */}
+        <div className="space-y-6">
+          {/* Colors Selection */}
+          {uniqueColors.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold uppercase tracking-wider">Color:</span>
+                <span className="text-sm text-primary font-medium">{selectedColor}</span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {uniqueColors.map((colorName, i) => {
+                  // Find first variant for this color to get thumbnail
+                  const colorVariant = product.variants?.find((v: any) => v.color === colorName);
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedColor(colorName)}
+                      className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${
+                        selectedColor === colorName 
+                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
+                          : 'border-muted hover:border-primary/30'
+                      }`}
+                    >
+                      {colorVariant?.image && (
+                        <div className="h-8 w-8 rounded-full overflow-hidden border bg-background">
+                          <img src={colorVariant.image} alt="" className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <span className="text-xs font-bold">{colorName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Sizes Selection */}
+          {uniqueSizes.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold uppercase tracking-wider">Size:</span>
+                <span className="text-sm text-primary font-medium">{selectedSize || 'Select a size'}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {uniqueSizes.map((sizeName, i) => {
+                  const isAvailable = availableSizes.includes(sizeName);
+                  return (
+                    <button
+                      key={i}
+                      disabled={!isAvailable}
+                      onClick={() => setSelectedSize(sizeName)}
+                      className={`min-w-[48px] h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${
+                        selectedSize === sizeName 
+                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary' 
+                          : 'border-muted hover:border-primary/30 text-muted-foreground'
+                      }`}
+                    >
+                      {sizeName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Others Selection */}
+          {uniqueOthers.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold uppercase tracking-wider">Option:</span>
+                <span className="text-sm text-primary font-medium">{selectedOthers || 'Select an option'}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {uniqueOthers.map((optName, i) => {
+                  const isAvailable = availableOthers.includes(optName);
+                  return (
+                    <button
+                      key={i}
+                      disabled={!isAvailable}
+                      onClick={() => setSelectedOthers(optName)}
+                      className={`px-4 h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${
+                        selectedOthers === optName 
+                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary' 
+                          : 'border-muted hover:border-primary/30 text-muted-foreground'
+                      }`}
+                    >
+                      {optName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Regular Attributes */}
+        {product.attributes && product.attributes.length > 0 && (
+            <div className="space-y-3 pt-2">
+                {product.attributes?.map((attr: any, i: number) => (
+                    <div key={i} className="flex items-center gap-4">
+                        <span className="text-xs font-bold min-w-[80px] uppercase tracking-wider text-muted-foreground">{attr.key}:</span>
+                        <span className="text-xs font-medium">{attr.value}</span>
+                    </div>
+                ))}
+            </div>
+        )}
 
         <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
           <div className="flex items-center border rounded-full overflow-hidden h-12 bg-muted/50">
@@ -287,8 +493,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                   variant="ghost" 
                   size="icon" 
                   className="h-full rounded-none px-4 hover:bg-muted"
-                  onClick={() => setQuantity(Math.min(product.stock || 0, quantity + 1))}
-                  disabled={quantity >= (product.stock || 0)}
+                  onClick={() => setQuantity(Math.min(displayStock || 0, quantity + 1))}
+                  disabled={quantity >= (displayStock || 0)}
               >
                   <Plus className="h-4 w-4" />
               </Button>
@@ -297,7 +503,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
               size="lg" 
               className="flex-1 h-12 rounded-full font-bold uppercase tracking-wider transition-all hover:scale-[1.02] shadow-xl shadow-primary/20"
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={(displayStock || 0) === 0}
           >
               <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
           </Button>

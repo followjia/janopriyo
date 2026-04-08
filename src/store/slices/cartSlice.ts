@@ -6,6 +6,9 @@ interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  color?: string;
+  size?: string;
+  others?: string;
 }
 
 interface CartState {
@@ -28,7 +31,13 @@ const cartSlice = createSlice({
   reducers: {
     addToCart(state, action: PayloadAction<CartItem>) {
       const newItem = action.payload;
-      const existingItem = state.items.find((item) => item.id === newItem.id);
+      const existingItem = state.items.find(
+        (item) => 
+          item.id === newItem.id && 
+          item.color === newItem.color && 
+          item.size === newItem.size && 
+          item.others === newItem.others
+      );
 
       if (!existingItem) {
         state.totalQuantity += newItem.quantity;
@@ -40,14 +49,42 @@ const cartSlice = createSlice({
         existingItem.quantity += newItem.quantity;
       }
     },
-    removeFromCart(state, action: PayloadAction<string>) {
-      const id = action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
+    removeFromCart(state, action: PayloadAction<{ id: string; color?: string; size?: string; others?: string } | string>) {
+      const payloadWasString = typeof action.payload === 'string';
+      const payloadObject = payloadWasString
+        ? { id: action.payload }
+        : action.payload;
+      const { id, color, size, others } = payloadObject;
 
-      if (existingItem) {
-        state.totalQuantity -= existingItem.quantity;
-        state.totalAmount = Math.round((state.totalAmount - existingItem.price * existingItem.quantity) * 100) / 100;
-        state.items = state.items.filter((item) => item.id !== id);
+      const matchingItems = state.items.filter((item) => {
+        if (payloadWasString) {
+          return item.id === id;
+        }
+        return (
+          item.id === id &&
+          item.color === color &&
+          item.size === size &&
+          item.others === others
+        );
+      });
+
+      if (matchingItems.length > 0) {
+        const removedQuantity = matchingItems.reduce((sum, item) => sum + item.quantity, 0);
+        const removedAmount = matchingItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        state.totalQuantity -= removedQuantity;
+        state.totalAmount = Math.round((state.totalAmount - removedAmount) * 100) / 100;
+        state.items = state.items.filter((item) => {
+          if (payloadWasString) {
+            return item.id !== id;
+          }
+          return !(
+            item.id === id &&
+            item.color === color &&
+            item.size === size &&
+            item.others === others
+          );
+        });
       }
     },
     clearCart(state) {

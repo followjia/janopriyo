@@ -3,12 +3,13 @@ import { revalidateTag } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
+import { generateUniqueSlug } from '@/lib/slugify';
 
 // GET all products
 export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
-    
+
     const searchParams = req.nextUrl.searchParams;
     const ids = searchParams.get('ids');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
@@ -49,71 +50,108 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Invalid JSON request body' }, { status: 400 });
     }
 
-    const { name, slug, description, sku, categories, tags, images, attributes, isFeatured, isPublished, deliveryCharge } = body;
+    const { name, slug, description, sku, categories, tags, images, attributes, variants, isFeatured, isNewArrival, isPublished, discountRate } = body;
     let { price, salePrice, stock } = body;
 
     // Numeric validation and coercion
-    const parsedPrice = parseFloat(price);
-    const parsedSalePrice = salePrice !== undefined && salePrice !== '' ? parseFloat(salePrice) : undefined;
-    const parsedStock = stock !== undefined && stock !== '' ? parseInt(stock) : 0;
+    const rawPrice = parseFloat(price);
+    const parsedPrice = Number.isFinite(rawPrice) ? rawPrice : 0;
+
+    const rawSalePrice = parseFloat(salePrice);
+    const parsedSalePrice = Number.isFinite(rawSalePrice) ? rawSalePrice : undefined;
+
+    const rawStock = parseInt(stock, 10);
+    const parsedStock = Number.isFinite(rawStock) ? rawStock : 0;
+
+    const rawDiscountRate = parseFloat(discountRate);
+    const parsedDiscountRate = Number.isFinite(rawDiscountRate) ? rawDiscountRate : undefined;
 
     // Validate required fields and price
     if (!name || !slug || !description || !sku || isNaN(parsedPrice) || parsedPrice <= 0) {
-      return NextResponse.json({ 
-        message: 'Invalid or missing required fields. Price must be a positive number.' 
+      return NextResponse.json({
+        message: 'Invalid or missing required fields. Price must be a positive number.'
       }, { status: 400 });
     }
 
     // Validate salePrice logic
     if (parsedSalePrice !== undefined) {
       if (isNaN(parsedSalePrice) || parsedSalePrice < 0 || parsedSalePrice > parsedPrice) {
-        return NextResponse.json({ 
-          message: 'Sale price must be a non-negative number and less than or equal to the regular price.' 
+        return NextResponse.json({
+          message: 'Sale price must be a non-negative number and less than or equal to the regular price.'
         }, { status: 400 });
       }
     }
 
-    // Validate stock
-    if (isNaN(parsedStock) || parsedStock < 0) {
-      return NextResponse.json({ message: 'Stock must be a non-negative integer.' }, { status: 400 });
-    }
+    // Coerce variant numeric fields and whitelist properties
+    const coercedVariants = (variants || []).map((v: any) => ({
+      _id: v._id || v.id,
+      color: v.color,
+      size: v.size,
+      others: v.others,
+      sku: v.sku,
+      image: v.image,
+      price: Number.isFinite(parseFloat(v.price)) ? parseFloat(v.price) : 0,
+      salePrice: Number.isFinite(parseFloat(v.salePrice)) ? parseFloat(v.salePrice) : undefined,
+      stock: Number.isFinite(parseInt(v.stock, 10)) ? parseInt(v.stock, 10) : 0,
+      discountRate: Number.isFinite(parseFloat(v.discountRate)) ? parseFloat(v.discountRate) : undefined,
+    }));
 
     await connectToDatabase();
 
-    try {
-      const newProduct = await Product.create({
-        name,
-        slug,
-        description,
-        price: parsedPrice,
-        salePrice: parsedSalePrice,
-        sku,
-        stock: parsedStock,
-        categories: categories || [],
-        tags: tags || [],
-        images: images || [],
-        attributes: attributes || [],
-        isFeatured: isFeatured !== undefined ? isFeatured : false,
-        isPublished: isPublished !== undefined ? isPublished : true,
-        deliveryCharge: deliveryCharge || {
-          type: 'all_over_country',
-          amount: 100,
-          insideDhaka: 60,
-          outsideDhaka: 120
-        },
-      });
+    const maxRetries = 3;
+    let attempt = 0;
+    let lastError;
 
-      revalidateTag('products', 'default');
-      return NextResponse.json(newProduct, { status: 201 });
-    } catch (error: any) {
-      if (error.code === 11000) {
-        const field = Object.keys(error.keyPattern || {})[0] || 'slug/SKU';
-        return NextResponse.json({ 
-          message: `Product with this ${field} already exists.` 
-        }, { status: 400 });
+    while (attempt < maxRetries) {
+      attempt++;
+      const currentSlug = attempt === 1 ? slug : `${slug}-${attempt - 1}`;
+      const uniqueSlug = await generateUniqueSlug(Product, currentSlug);
+
+      try {
+        const newProduct = await Product.create({
+          name,
+          slug: uniqueSlug,
+          description,
+          price: parsedPrice,
+          salePrice: parsedSalePrice,
+          discountRate: parsedDiscountRate,
+          sku,
+          stock: parsedStock,
+          categories: categories || [],
+          tags: tags || [],
+          images: images || [],
+          attributes: attributes || [],
+          variants: coercedVariants,
+          isFeatured: isFeatured !== undefined ? isFeatured : false,
+          isNewArrival: isNewArrival !== undefined ? isNewArrival : false,
+          isPublished: isPublished !== undefined ? isPublished : true,
+        });
+
+        revalidateTag('products', 'default');
+        return NextResponse.json(newProduct, { status: 201 });
+      } catch (error: any) {
+        lastError = error;
+        if (error.code === 11000 && error.keyPattern?.slug) {
+          // If slug conflict, retry with incremented slug
+          continue;
+        }
+        
+        // If other duplicate error (e.g. SKU), or other DB error, return 400
+        if (error.code === 11000) {
+          const field = Object.keys(error.keyPattern || {})[0] || 'slug/SKU';
+          return NextResponse.json({
+            message: `Product with this ${field} already exists.`
+          }, { status: 400 });
+        }
+        throw error;
       }
-      throw error;
     }
+
+    // If we exhausted retries
+    return NextResponse.json({ 
+      message: 'Failed to generate a unique slug after several attempts. Please try a different name or slug.',
+      error: lastError?.message
+    }, { status: 400 });
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

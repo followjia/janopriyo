@@ -8,12 +8,12 @@ import { toast } from 'sonner';
 
 export default function EditProductPage() {
   const params = useParams();
-  const id = params.id as string;
+  const slug = params.slug as string;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) {
+    if (!slug) {
       setLoading(false);
       return;
     }
@@ -22,7 +22,7 @@ export default function EditProductPage() {
 
     async function fetchProduct() {
       try {
-        const res = await fetch(`/api/products/${id}`, { signal: controller.signal });
+        const res = await fetch(`/api/products/${slug}`, { signal: controller.signal });
         if (!res.ok) throw new Error('Product not found');
         const data = await res.json();
         setProduct(data);
@@ -41,7 +41,7 @@ export default function EditProductPage() {
     fetchProduct();
 
     return () => controller.abort();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (

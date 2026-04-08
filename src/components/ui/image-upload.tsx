@@ -1,21 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { uploadToImgBB } from '@/lib/upload';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
   onUpload: (url: string) => void;
   value?: string;
   label?: string;
+  className?: string;
+  iconClassName?: string;
 }
 
-export function ImageUpload({ onUpload, value, label }: ImageUploadProps) {
+export function ImageUpload({ onUpload, value, label, className, iconClassName }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
+  const generatedId = useId();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +44,7 @@ export function ImageUpload({ onUpload, value, label }: ImageUploadProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {label && <Label>{label}</Label>}
       <div className="flex flex-col gap-4">
         {value ? (
@@ -64,24 +68,31 @@ export function ImageUpload({ onUpload, value, label }: ImageUploadProps) {
         ) : (
           <div className="flex w-full items-center justify-center">
             <Label
-              htmlFor="image-upload"
-              className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed hover:bg-muted/50 transition-colors"
+              htmlFor={generatedId}
+              className={cn(
+                "flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed hover:bg-muted/50 transition-colors",
+                className
+              )}
             >
               <div className="flex flex-col items-center justify-center pb-6 pt-5">
                 {loading ? (
-                  <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+                  <Loader2 className={cn("h-10 w-10 animate-spin text-muted-foreground", iconClassName)} />
                 ) : (
                   <>
-                    <Upload className="mb-2 h-10 w-10 text-muted-foreground" />
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      <span className="font-semibold">Click to upload</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, or WEBP (MAX. 800x400px)</p>
+                    <Upload className={cn("mb-2 h-10 w-10 text-muted-foreground", iconClassName)} />
+                    {!className?.includes('p-0') && (
+                      <>
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">Click to upload</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground text-center px-2 line-clamp-1">PNG, JPG, or WEBP</p>
+                      </>
+                    )}
                   </>
                 )}
               </div>
               <Input
-                id="image-upload"
+                id={generatedId}
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}

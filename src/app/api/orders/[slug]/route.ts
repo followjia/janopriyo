@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
 import { auth } from '@/auth';
@@ -6,17 +8,21 @@ import { auth } from '@/auth';
 // GET single order details
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    if (!mongoose.isValidObjectId(slug)) {
+      return NextResponse.json({ message: 'Invalid order ID' }, { status: 400 });
+    }
+
     await connectToDatabase();
-    const order = await Order.findById(id)
+    const order = await Order.findById(slug)
       .populate('user', 'name email image')
       .populate('items.product', 'name price images');
 
@@ -35,6 +41,9 @@ export async function GET(
     return NextResponse.json(order);
   } catch (error) {
     console.error('Error fetching order detail:', error);
+    if (error instanceof mongoose.Error.CastError) {
+      return NextResponse.json({ message: 'Invalid order ID' }, { status: 400 });
+    }
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -42,19 +51,30 @@ export async function GET(
 // PATCH update order status (Admin Only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
-    const { status, paymentStatus } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json({ message: 'Invalid JSON body' }, { status: 400 });
+    }
+    const { status, paymentStatus } = body;
 
     await connectToDatabase();
-    const order = await Order.findById(id);
+
+    if (!mongoose.Types.ObjectId.isValid(slug)) {
+      return NextResponse.json({ message: 'Invalid order id' }, { status: 400 });
+    }
+
+    const order = await Order.findById(slug);
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
@@ -94,17 +114,21 @@ export async function PATCH(
 // DELETE order (Admin Only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(slug)) {
+      return NextResponse.json({ message: 'Invalid order ID' }, { status: 400 });
+    }
+
     await connectToDatabase();
-    const deletedOrder = await Order.findByIdAndDelete(id);
+    const deletedOrder = await Order.findByIdAndDelete(slug);
 
     if (!deletedOrder) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });

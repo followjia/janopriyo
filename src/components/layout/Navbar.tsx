@@ -219,15 +219,15 @@ export default function Navbar() {
                          </div>
                        </DropdownMenuLabel>
                        <DropdownMenuSeparator />
-                       <DropdownMenuItem render={<Link href={dashboardHref} />}>
+                       <DropdownMenuItem render={<Link href={dashboardHref} />} nativeButton={false}>
                          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
                        </DropdownMenuItem>
-                       <DropdownMenuItem render={<Link href="/profile" />}>
+                       <DropdownMenuItem render={<Link href="/profile" />} nativeButton={false}>
                          <User className="mr-2 h-4 w-4" /> Profile
                        </DropdownMenuItem>
                        {isAdmin && (
-                         <DropdownMenuItem render={<Link href="/admin/dashboard" />}>
-                           <Settings className="mr-2 h-4 w-4" /> Admin Panel
+                         <DropdownMenuItem render={<Link href="/admin/settings" />} nativeButton={false}>
+                           <Settings className="mr-2 h-4 w-4" /> Admin Settings
                          </DropdownMenuItem>
                        )}
                      </DropdownMenuGroup>

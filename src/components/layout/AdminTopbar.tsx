@@ -39,7 +39,7 @@ export default function AdminTopbar() {
         
         {session?.user ? (
           <DropdownMenu>
-            <DropdownMenuTrigger render={
+            <DropdownMenuTrigger nativeButton={false} render={
               <Button variant="secondary" size="icon" className="rounded-full overflow-hidden border border-primary/20">
                 {session.user.image ? (
                   <img 
@@ -66,15 +66,15 @@ export default function AdminTopbar() {
                 </DropdownMenuLabel>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link href="/admin/dashboard" />}>
+              <DropdownMenuItem render={<Link href="/admin/dashboard" />} nativeButton={false}>
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 <span>Admin Dashboard</span>
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/" />}>
+              <DropdownMenuItem render={<Link href="/" />} nativeButton={false}>
                 <Store className="mr-2 h-4 w-4" />
                 <span>Visit Shop</span>
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/admin/settings" />}>
+              <DropdownMenuItem render={<Link href="/admin/settings" />} nativeButton={false}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>

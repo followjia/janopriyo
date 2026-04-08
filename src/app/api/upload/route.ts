@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const apiKey = process.env.IMGBB_API_KEY;
+    const apiKey = process.env.IMGBB_API_KEY || process.env.NEXT_PUBLIC_IMGBB_API_KEY;
     if (!apiKey) {
       console.error('Server Configuration Error: IMGBB_API_KEY is not set');
       return NextResponse.json({ message: 'Image upload service is not configured' }, { status: 500 });

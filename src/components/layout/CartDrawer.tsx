@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { 
@@ -23,7 +24,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
 
   const handleUpdateQuantity = (item: any, delta: number) => {
       if (item.quantity + delta === 0) {
-          dispatch(removeFromCart(item.id));
+          dispatch(removeFromCart({ id: item.id, color: item.color, size: item.size, others: item.others }));
           toast.info(`${item.name} removed from cart`);
       } else {
           dispatch(addToCart({ ...item, quantity: delta }));
@@ -51,7 +52,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                 <ShoppingCart className="h-10 w-10 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-bold">Your cart is empty</h3>
-              <p className="text-muted-foreground text-sm max-w-[200px]">Looks like you haven't added anything to your cart yet.</p>
+              <p className="text-muted-foreground text-sm max-w-[200px]">Looks like you haven&apos;t added anything to your cart yet.</p>
               <SheetClose
                 nativeButton={false}
                 render={<Link href="/shop" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">Start Shopping</Link>}
@@ -59,7 +60,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
             </div>
           ) : (
             items.map((item) => (
-              <div key={item.id} className="flex gap-4 group">
+              <div key={`${item.id ?? ''}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}`} className="flex gap-4 group">
                 <div className="h-20 w-20 rounded-md overflow-hidden bg-muted group-hover:scale-105 transition-transform">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
@@ -71,16 +72,37 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
                   <div className="flex justify-between items-start gap-2">
-                    <h4 className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">{item.name}</h4>
+                    <div className="flex flex-col flex-1">
+                      <h4 className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">{item.name}</h4>
+                      {(item.color || item.size || item.others) && (
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {item.color && (
+                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium uppercase tracking-tighter">
+                              Color: {item.color}
+                            </span>
+                          )}
+                          {item.size && (
+                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium uppercase tracking-tighter">
+                              Size: {item.size}
+                            </span>
+                          )}
+                          {item.others && (
+                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium uppercase tracking-tighter">
+                              Option: {item.others}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <Button 
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
                         onClick={() => {
-                            dispatch(removeFromCart(item.id));
+                            dispatch(removeFromCart({ id: item.id, color: item.color, size: item.size, others: item.others }));
                             toast.info(`${item.name} removed from cart`);
                         }}
-                        aria-label={`Remove ${item.name} from cart`}
+                        aria-label={`Remove ${[item.name, item.color, item.size, item.others].filter(Boolean).join(' - ')} from cart`}
                     >
                         <X className="h-4 w-4" />
                     </Button>

@@ -106,19 +106,18 @@ export default async function RootLayout({
  
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {jsonLd && (
-          <Script
-            id="json-ld"
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-        )}
-      </head>
+      <head />
       <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col`}
         suppressHydrationWarning
       >
+        {jsonLd && (
+          <Script
+             id="json-ld"
+             type="application/ld+json"
+             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )}
         <Providers>
           {children}
         </Providers>
