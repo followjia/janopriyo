@@ -50,11 +50,12 @@ const cartSlice = createSlice({
       }
     },
     removeFromCart(state, action: PayloadAction<{ id: string; color?: string; size?: string; others?: string } | string>) {
-      const payloadWasString = typeof action.payload === 'string';
-      const payloadObject = payloadWasString
-        ? { id: action.payload }
-        : action.payload;
-      const { id, color, size, others } = payloadObject;
+      const payload = action.payload;
+      const payloadWasString = typeof payload === 'string';
+      
+      const { id, color, size, others } = payloadWasString
+        ? { id: payload, color: undefined, size: undefined, others: undefined }
+        : payload;
 
       const matchingItems = state.items.filter((item) => {
         if (payloadWasString) {
