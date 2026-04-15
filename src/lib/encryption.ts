@@ -7,13 +7,20 @@ const VERSION_PREFIX = 'v1:';
 
 const MASTER_KEY = process.env.ENCRYPTION_KEY;
 
-// Security Requirement: The application must not operate with a weak fallback if protection is intended
-if (!MASTER_KEY && process.env.NODE_ENV === 'production') {
-  throw new Error('ENCRYPTION_KEY is required in production environments to secure sensitive data.');
+/**
+ * Validates and retrieves the master encryption key.
+ * Strictly enforces existence in production but only when called,
+ * allowing Next.js build-time static generation to proceed.
+ */
+function getEffectiveKey(): string {
+  if (!MASTER_KEY) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('ENCRYPTION_KEY is required in production environments to secure sensitive data.');
+    }
+    return 'janopriyoshop-dev-only-insecure-key-32';
+  }
+  return MASTER_KEY;
 }
-
-// Fallback only for non-production environments to prevent developer friction, but clearly warned
-const EFFECTIVE_KEY = MASTER_KEY || 'janopriyoshop-dev-only-insecure-key-32';
 
 /**
  * Validates if a string follows the v1 encrypted format:
@@ -53,7 +60,7 @@ export function encrypt(text: string): string {
   const iv = crypto.randomBytes(IV_LENGTH);
   
   // Derive key using scrypt with the random salt
-  const key = crypto.scryptSync(EFFECTIVE_KEY, salt, 32);
+  const key = crypto.scryptSync(getEffectiveKey(), salt, 32);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   
   let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -93,7 +100,7 @@ export function decrypt(text: string | null | undefined): string | null {
         return null;
     }
 
-    const key = crypto.scryptSync(EFFECTIVE_KEY, salt, 32);
+    const key = crypto.scryptSync(getEffectiveKey(), salt, 32);
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     
     decipher.setAuthTag(authTag);
