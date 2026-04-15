@@ -35,6 +35,9 @@ const settingsSchema = z.object({
     twitter: z.string().url().optional().or(z.literal('')),
     instagram: z.string().url().optional().or(z.literal('')),
     youtube: z.string().url().optional().or(z.literal('')),
+    linkedin: z.string().url().optional().or(z.literal('')),
+    tiktok: z.string().url().optional().or(z.literal('')),
+    whatsapp: z.string().url().optional().or(z.literal('')),
   }),
   marqueeText: z.string().optional(),
   googleTagManagerId: z.string().optional(),
@@ -55,7 +58,15 @@ export default function SettingsPage() {
       logo: '',
       favicon: '',
       contact: { email: '', phone: '', address: '' },
-      socialLinks: { facebook: '', twitter: '', instagram: '', youtube: '' },
+      socialLinks: { 
+        facebook: '', 
+        twitter: '', 
+        instagram: '', 
+        youtube: '',
+        linkedin: '',
+        tiktok: '',
+        whatsapp: ''
+      },
       marqueeText: '',
       googleTagManagerId: '',
       searchConsoleMeta: '',
@@ -75,7 +86,16 @@ export default function SettingsPage() {
           const result = settingsSchema.safeParse(data);
           if (result.success) {
             if (!controller.signal.aborted) {
-              form.reset(result.data);
+              // Merge with default values to ensure no fields (including top-level ones) are undefined
+              const sanitizedData = {
+                ...form.getValues(),
+                ...result.data,
+                socialLinks: {
+                  ...form.getValues().socialLinks,
+                  ...(result.data.socialLinks || {})
+                }
+              };
+              form.reset(sanitizedData);
             }
           } else {
             console.error('Settings validation failed:', result.error);
@@ -327,6 +347,45 @@ export default function SettingsPage() {
                           <FormLabel>YouTube URL</FormLabel>
                           <FormControl>
                             <Input placeholder="https://youtube.com/@your-channel" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="socialLinks.linkedin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>LinkedIn URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://linkedin.com/in/your-profile" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="socialLinks.tiktok"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>TikTok URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://tiktok.com/@your-handle" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="socialLinks.whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://wa.me/your-number" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

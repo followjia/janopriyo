@@ -37,7 +37,7 @@ export function HeroSlider({ banners }: HeroSliderProps) {
   }
 
   return (
-    <Carousel className="w-full" opts={{ loop: true }}>
+    <Carousel className="w-full overflow-hidden" opts={{ loop: true }}>
       <CarouselContent>
         {banners.map((banner, index) => (
           <CarouselItem key={banner._id || index}>
@@ -53,15 +53,36 @@ export function HeroSlider({ banners }: HeroSliderProps) {
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tighter" data-aos="fade-right">
                       {banner.title}
                     </h1>
-                    {banner.link && (
-                      <div data-aos="fade-up" data-aos-delay="400">
+                    <div className="flex flex-wrap gap-4" data-aos="fade-up">
+                      {/* Primary Button */}
+                      {(banner.primaryBtnLink || banner.primaryBtnText) && (
+                        <Link href={banner.primaryBtnLink || '#'}>
+                          <Button size="lg" className="bg-white text-black hover:bg-white/90">
+                            {banner.primaryBtnText || 'Shop Now'}
+                          </Button>
+                        </Link>
+                      )}
+                      
+                      {/* Secondary Button */}
+                      {(banner.secondaryBtnLink || banner.secondaryBtnText) && (
+                        <Link href={banner.secondaryBtnLink || '#'}>
+                          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                            {banner.secondaryBtnText || 'Learn More'}
+                          </Button>
+                        </Link>
+                      )}
+                      
+                      {/* Fallback Legacy Link (only if both new buttons are empty) */}
+                      {!banner.primaryBtnLink && !banner.primaryBtnText && 
+                       !banner.secondaryBtnLink && !banner.secondaryBtnText && 
+                       banner.link && (
                         <Link href={banner.link}>
                           <Button size="lg" className="bg-white text-black hover:bg-white/90">
                             Shop Now
                           </Button>
                         </Link>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

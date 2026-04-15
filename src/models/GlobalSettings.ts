@@ -14,6 +14,9 @@ export interface IGlobalSettings extends Document {
     twitter?: string;
     instagram?: string;
     youtube?: string;
+    linkedin?: string;
+    tiktok?: string;
+    whatsapp?: string;
   };
   marqueeText?: string;
   googleTagManagerId?: string;
@@ -38,6 +41,9 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       twitter: { type: String },
       instagram: { type: String },
       youtube: { type: String },
+      linkedin: { type: String },
+      tiktok: { type: String },
+      whatsapp: { type: String },
     },
     marqueeText: { type: String },
     googleTagManagerId: { type: String },

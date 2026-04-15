@@ -39,7 +39,7 @@ export default function AdminTopbar() {
         
         {session?.user ? (
           <DropdownMenu>
-            <DropdownMenuTrigger nativeButton={false} render={
+            <DropdownMenuTrigger nativeButton={true} render={
               <Button variant="secondary" size="icon" className="rounded-full overflow-hidden border border-primary/20">
                 {session.user.image ? (
                   <img 
