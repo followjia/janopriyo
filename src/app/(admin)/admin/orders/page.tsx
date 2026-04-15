@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import Swal from 'sweetalert2';
 
 
 export default function OrdersPage() {
@@ -81,21 +82,57 @@ export default function OrdersPage() {
   };
 
   const deleteOrder = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this order?')) return;
-
-    try {
-      const res = await fetch(`/api/orders/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        toast.success('Order deleted successfully');
-        fetchOrders();
-      } else {
-        toast.error('Failed to delete order');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This order will be permanently deleted from the database!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#00D1B2',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
       }
-    } catch (error) {
-      toast.error('Error deleting order');
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/orders/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (res.ok) {
+          toast.success('Order deleted successfully');
+          fetchOrders();
+        } else {
+          toast.error('Failed to delete order');
+        }
+      } catch (error) {
+        toast.error('Error deleting order');
+      }
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    const result = await Swal.fire({
+      title: 'Cancel Order?',
+      text: "Are you sure you want to cancel this order?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#aaa',
+      confirmButtonText: 'Yes, cancel it!',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
+      }
+    });
+
+    if (result.isConfirmed) {
+      await updateStatus(orderId, 'Cancelled');
     }
   };
 
@@ -231,11 +268,7 @@ export default function OrdersPage() {
                           size="icon" 
                           title="Cancel Order" 
                           className="text-destructive/50 hover:text-destructive" 
-                          onClick={() => {
-                            if (confirm('Are you sure you want to cancel this order?')) {
-                              updateStatus(order._id, 'Cancelled');
-                            }
-                          }}
+                          onClick={() => handleCancelOrder(order._id)}
                         >
                           <XCircle className="h-4 w-4" />
                         </Button>

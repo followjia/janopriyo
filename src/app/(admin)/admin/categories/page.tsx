@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import Swal from 'sweetalert2';
 
 const categorySchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -140,21 +141,36 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
-
-    try {
-      const response = await fetch(`/api/categories/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        toast.success('Category deleted successfully');
-        fetchCategories();
-      } else {
-        toast.error('Failed to delete category');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You are about to delete this category. This may affect related products!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#00D1B2',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
       }
-    } catch (error) {
-      toast.error('Error deleting category');
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/categories/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast.success('Category deleted successfully');
+          fetchCategories();
+        } else {
+          toast.error('Failed to delete category');
+        }
+      } catch (error) {
+        toast.error('Error deleting category');
+      }
     }
   };
 

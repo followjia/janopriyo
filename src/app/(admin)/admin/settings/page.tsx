@@ -43,6 +43,21 @@ const settingsSchema = z.object({
   googleTagManagerId: z.string().optional(),
   searchConsoleMeta: z.string().optional(),
   metaPixelId: z.string().optional(),
+  courierConfig: z.object({
+    activeProvider: z.enum(['steadfast', 'pathao', 'redx', 'none']).default('none'),
+    steadfast: z.object({
+      apiKey: z.string().optional().or(z.literal('')),
+      secretKey: z.string().optional().or(z.literal('')),
+    }).optional(),
+    pathao: z.object({
+      clientId: z.string().optional().or(z.literal('')),
+      clientSecret: z.string().optional().or(z.literal('')),
+      storeId: z.string().optional().or(z.literal('')),
+    }).optional(),
+    redx: z.object({
+      apiKey: z.string().optional().or(z.literal('')),
+    }).optional(),
+  }).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -52,7 +67,7 @@ export default function SettingsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
+    resolver: zodResolver(settingsSchema) as any,
     defaultValues: {
       brandName: '',
       logo: '',
@@ -71,6 +86,12 @@ export default function SettingsPage() {
       googleTagManagerId: '',
       searchConsoleMeta: '',
       metaPixelId: '',
+      courierConfig: {
+        activeProvider: 'none',
+        steadfast: { apiKey: '', secretKey: '' },
+        pathao: { clientId: '', clientSecret: '', storeId: '' },
+        redx: { apiKey: '' },
+      },
     },
   });
 
@@ -93,6 +114,22 @@ export default function SettingsPage() {
                 socialLinks: {
                   ...form.getValues().socialLinks,
                   ...(result.data.socialLinks || {})
+                },
+                courierConfig: {
+                  ...form.getValues().courierConfig,
+                  ...(result.data.courierConfig || {}),
+                  steadfast: {
+                    ...form.getValues().courierConfig?.steadfast,
+                    ...(result.data.courierConfig?.steadfast || {})
+                  },
+                  pathao: {
+                    ...form.getValues().courierConfig?.pathao,
+                    ...(result.data.courierConfig?.pathao || {})
+                  },
+                  redx: {
+                    ...form.getValues().courierConfig?.redx,
+                    ...(result.data.courierConfig?.redx || {})
+                  }
                 }
               };
               form.reset(sanitizedData);
@@ -164,10 +201,11 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
+              <TabsTrigger value="courier">Courier</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4">
@@ -396,6 +434,94 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="courier" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Courier & Shipping Integration</CardTitle>
+                  <CardDescription>Configure your preferred courier service for automated parcel booking.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="courierConfig.activeProvider"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Active Courier Provider</FormLabel>
+                        <div className="flex items-center gap-4">
+                            <select 
+                                {...field}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="none">None (Manual Handling)</option>
+                                <option value="steadfast">Steadfast Courier</option>
+                                <option value="pathao">Pathao Courier</option>
+                                <option value="redx">RedX</option>
+                            </select>
+                        </div>
+                        <FormDescription>Select which courier service to use for automated booking by default.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                    <h3 className="font-bold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        SteadFast Configuration
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="courierConfig.steadfast.apiKey"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>API Key</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="Enter Steadfast API Key" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="courierConfig.steadfast.secretKey"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Secret Key</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="Enter Steadfast Secret Key" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20 opacity-60">
+                    <h3 className="font-bold">Pathao Courier (Coming Soon)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input disabled placeholder="Pathao Client ID" />
+                        <Input disabled placeholder="Pathao Client Secret" />
+                        <Input disabled placeholder="Pathao Store ID" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20 opacity-60">
+                    <h3 className="font-bold">RedX (Coming Soon)</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <Input disabled placeholder="RedX API Key" />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/30 py-4">
+                    <p className="text-xs text-muted-foreground italic">
+                        * Note: Ensure you have obtained production API credentials from your courier merchant portal.
+                    </p>
+                </CardFooter>
+              </Card>
+            </TabsContent>
           </Tabs>
         </form>
       </Form>

@@ -5,24 +5,25 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 import connectToDatabase from "@/lib/db";
 import GlobalSettings from "@/models/GlobalSettings";
- 
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
- 
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
- 
+
 import { generateOrganizationSchema } from "@/lib/seo";
- 
+
 async function getGlobalSettings() {
   try {
     await connectToDatabase();
     const settings = await GlobalSettings.findOne({}).lean();
-    
+
     if (!settings) {
       // Consistent fallback logic
       return {
@@ -50,18 +51,30 @@ async function getGlobalSettings() {
     };
   }
 }
- 
+
+import Script from "next/script";
+import { PWARegistry } from "@/components/pwa-registry";
+
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
   try {
     const settings = await getGlobalSettings();
-    
+
     return {
       title: {
-          default: settings.brandName || "Janopriyo Shop",
-          template: `%s | ${settings.brandName || "Janopriyo Shop"}`,
+        default: settings.brandName || "Janopriyo Shop",
+        template: `%s | ${settings.brandName || "Janopriyo Shop"}`,
       },
       description: settings.brandName || "Your ultimate destination for quality products.",
+      manifest: process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined,
+      appleWebApp: {
+        capable: true,
+        statusBarStyle: 'default',
+        title: settings.brandName || "Janopriyo Shop",
+      },
+      formatDetection: {
+        telephone: false,
+      },
       openGraph: {
         title: settings.brandName || "Janopriyo Shop",
         description: "Your ultimate destination for quality products.",
@@ -84,11 +97,10 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: "Janopriyo Shop",
       description: "Your ultimate destination for quality products across multiple categories.",
+      manifest: process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined,
     };
   }
 }
- 
-import Script from "next/script";
 
 export default async function RootLayout({
   children,
@@ -96,26 +108,27 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let jsonLd = null;
- 
+
   try {
     const settings = await getGlobalSettings();
     jsonLd = generateOrganizationSchema(settings);
   } catch (e) {
     console.error("Error generating JSON-LD structured data", e);
   }
- 
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body 
+      <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col overflow-x-hidden`}
         suppressHydrationWarning
       >
+        <PWARegistry />
         {jsonLd && (
           <Script
-             id="json-ld"
-             type="application/ld+json"
-             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            id="json-ld"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
         )}
         <Providers>

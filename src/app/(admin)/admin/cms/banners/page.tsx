@@ -14,6 +14,7 @@ import { Plus, Edit, Trash, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import Swal from 'sweetalert2';
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<any[]>([]);
@@ -40,21 +41,37 @@ export default function BannersPage() {
   }, []);
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete the banner "${title}"?`)) return;
-
-    try {
-      const response = await fetch(`/api/admin/banners/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        toast.success('Banner deleted successfully');
-        fetchBanners();
-      } else {
-        toast.error('Failed to delete banner');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to delete the banner "${title}". This action cannot be undone!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#00D1B2', // janopriyo primary color roughly
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
       }
-    } catch (error) {
-      toast.error('Error deleting banner');
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/admin/banners/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast.success('Banner deleted successfully');
+          fetchBanners();
+        } else {
+          toast.error('Failed to delete banner');
+        }
+      } catch (error) {
+        toast.error('Error deleting banner');
+      }
     }
   };
 
@@ -99,14 +116,15 @@ export default function BannersPage() {
               <TableHead>Title</TableHead>
               <TableHead>Order</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Link</TableHead>
+              <TableHead>Primary CTA</TableHead>
+              <TableHead>Secondary CTA</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-40 text-center">
+                <TableCell colSpan={7} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Loading banners...</p>
@@ -115,7 +133,7 @@ export default function BannersPage() {
               </TableRow>
             ) : banners.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-40 text-center">
+                <TableCell colSpan={7} className="h-40 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <p className="text-lg font-medium">No banners found</p>
                     <p className="text-sm text-muted-foreground">Add your first promotional banner to get started.</p>
@@ -138,10 +156,7 @@ export default function BannersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-semibold block">{banner.title}</span>
-                    <span className="text-xs text-muted-foreground truncate max-w-[200px] block">
-                      {banner.image}
-                    </span>
+                    <span className="font-semibold">{banner.title}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">
@@ -159,16 +174,20 @@ export default function BannersPage() {
                     </button>
                   </TableCell>
                   <TableCell>
-                    {banner.link ? (
-                      <div className="flex items-center gap-1 text-sm text-primary hover:underline">
-                        <Link href={banner.link} target="_blank">
-                           {banner.link}
-                        </Link>
-                        <ExternalLink className="h-3 w-3" />
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-xs italic">No link</span>
-                    )}
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{banner.primaryBtnText || 'Shop Now'}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        {banner.primaryBtnLink || 'No link'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{banner.secondaryBtnText || 'Contact'}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        {banner.secondaryBtnLink || 'No link'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

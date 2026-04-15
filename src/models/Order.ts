@@ -28,6 +28,13 @@ export interface IOrder extends Document {
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
   status: 'Order Placed' | 'Confirmed' | 'Paid' | 'Ready for Delivery' | 'Released for Delivery' | 'Cancelled' | 'Delivered';
   transactionId?: string;
+  shippingDetails?: {
+    courierName?: string;
+    trackingId?: string;
+    consignmentId?: string;
+    trackingUrl?: string;
+    courierStatus?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +75,13 @@ const OrderSchema: Schema<IOrder> = new Schema(
       default: 'Order Placed',
     },
     transactionId: { type: String },
+    shippingDetails: {
+      courierName: { type: String },
+      trackingId: { type: String },
+      consignmentId: { type: String },
+      trackingUrl: { type: String },
+      courierStatus: { type: String },
+    },
   },
   { timestamps: true }
 );

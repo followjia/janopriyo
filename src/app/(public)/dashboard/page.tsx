@@ -9,7 +9,8 @@ import {
     Truck, 
     Package,
     ChevronRight,
-    Loader2
+    Loader2,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,41 +24,55 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { generateInvoicePDF } from '@/lib/invoice-generator';
 
 export default function OrdersPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchOrders() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const data = await res.json();
+        const [ordersRes, settingsRes] = await Promise.all([
+            fetch('/api/orders'),
+            fetch('/api/settings')
+        ]);
+
+        if (ordersRes.ok) {
+          const data = await ordersRes.json();
           setOrders(Array.isArray(data) ? data : []);
         } else {
-          const error = await res.json().catch(() => ({ message: res.statusText }));
-          toast.error(`Failed to fetch orders: ${res.status} ${error.message || ''}`);
+          toast.error(`Failed to load orders: ${ordersRes.statusText || ordersRes.status}`);
+        }
+
+        if (settingsRes.ok) {
+          setSettings(await settingsRes.json());
+        } else {
+          toast.error(`Failed to load settings: ${settingsRes.statusText || settingsRes.status}`);
         }
       } catch (error) {
-        toast.error('Failed to fetch orders');
+        toast.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     }
     if (session?.user) {
-      fetchOrders();
+      fetchData();
     }
   }, [session]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Pending': return 'secondary';
-      case 'Processing': return 'default';
-      case 'Shipped': return 'default';
+      case 'Order Placed': return 'secondary';
+      case 'Confirmed': return 'default';
+      case 'Paid': return 'default';
+      case 'Ready for Delivery': return 'default';
+      case 'Released for Delivery': return 'default';
       case 'Delivered': return 'default';
+      case 'Cancelled': return 'outline';
       default: return 'outline';
     }
   };
@@ -107,20 +122,44 @@ export default function OrdersPage() {
                   <TableCell className="text-xs">{Array.isArray(order?.items) ? order.items.length : 0} items</TableCell>
                   <TableCell className="font-bold">৳{typeof order?.totalAmount === 'number' ? Math.round(order.totalAmount) : '0'}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusColor(order.status) as any}>
-                      {order.status}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={getStatusColor(order.status) as any}>
+                        {order.status}
+                      </Badge>
+                      {order.shippingDetails?.trackingUrl && (
+                        <a 
+                          href={order.shippingDetails.trackingUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5 mt-1"
+                        >
+                          <Truck className="h-3 w-3" /> Track Parcel
+                        </a>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 group"
-                      onClick={() => router.push(`/dashboard/orders/${order._id}`)}
-                    >
-                      Details
-                      <ChevronRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            title={settings ? "Download Invoice" : "Loading settings..."}
+                            disabled={!settings}
+                            onClick={() => settings && generateInvoicePDF(order, settings)}
+                        >
+                            <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 group"
+                            onClick={() => router.push(`/dashboard/orders/${order._id}`)}
+                        >
+                            Details
+                            <ChevronRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                        </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

@@ -10,9 +10,10 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Mail, Phone, MapPin, CreditCard, Calendar } from 'lucide-react';
+import { Loader2, Mail, Phone, MapPin, CreditCard, Calendar, Truck, ExternalLink, FileText } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { toast } from 'sonner';
+import { generateInvoicePDF } from '@/lib/invoice-generator';
 
 interface OrderDetailsDialogProps {
   orderId: string | null;
@@ -28,24 +29,50 @@ export default function OrderDetailsDialog({
   onUpdate,
 }: OrderDetailsDialogProps) {
   const [order, setOrder] = useState<any>(null);
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  // Additional Shipping Fields
+  const [cityId, setCityId] = useState('');
+  const [zoneId, setZoneId] = useState('');
+  const [areaId, setAreaId] = useState('');
+  const [shippingNote, setShippingNote] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const fetchOrderDetails = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/orders/${orderId}`, { signal: controller.signal });
-        if (res.ok) {
-          const data = await res.json();
-          setOrder(data);
-        } else {
-          toast.error('Failed to load order details');
+        const [orderRes, settingsRes] = await Promise.all([
+            fetch(`/api/orders/${orderId}`, { signal: controller.signal }),
+            fetch(`/api/settings`, { signal: controller.signal })
+        ]);
+
+        if (!orderRes.ok) {
+          const errData = await orderRes.json().catch(() => ({}));
+          toast.error(errData.message || `Failed to load order: ${orderRes.statusText || orderRes.status}`);
+          return;
         }
+
+        if (!settingsRes.ok) {
+          const errData = await settingsRes.json().catch(() => ({}));
+          toast.error(errData.message || `Failed to load settings: ${settingsRes.statusText || settingsRes.status}`);
+          return;
+        }
+
+        const [orderData, settingsData] = await Promise.all([
+          orderRes.json(),
+          settingsRes.json()
+        ]);
+        
+        setOrder(orderData);
+        setSettings(settingsData);
       } catch (error: any) {
         if (error.name !== 'AbortError') {
-          toast.error('Error loading order details');
+          console.error('Fetch error:', error);
+          toast.error('Error loading data');
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -55,9 +82,15 @@ export default function OrderDetailsDialog({
     };
 
     if (open && orderId) {
-      fetchOrderDetails();
+      fetchData();
     } else {
       setOrder(null);
+      setSettings(null);
+      // Reset shipping fields when closing or switching orders
+      setCityId('');
+      setZoneId('');
+      setAreaId('');
+      setShippingNote('');
     }
 
     return () => controller.abort();
@@ -74,9 +107,18 @@ export default function OrderDetailsDialog({
               Order Details
             </DialogTitle>
             {order && (
-              <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>
-                {order.status}
-              </Badge>
+               <div className="flex items-center gap-2">
+                  <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}>
+                    {order.status}
+                  </Badge>
+                  <button 
+                    onClick={() => generateInvoicePDF(order, settings)}
+                    className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    title="Download PDF Invoice"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </button>
+               </div>
             )}
           </div>
           <DialogDescription>
@@ -174,6 +216,139 @@ export default function OrderDetailsDialog({
 
             <Separator />
 
+            {/* Shipping Management (Admin Action) */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase text-muted-foreground flex items-center justify-between">
+                <span>Shipping Management</span>
+              </h3>
+              
+              {order.shippingDetails?.trackingId ? (
+                <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Courier Service</p>
+                      <p className="font-bold text-sm">{order.shippingDetails.courierName}</p>
+                    </div>
+                    <Badge variant="outline" className="bg-white">
+                      {order.shippingDetails.courierStatus || 'Processing'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tracking ID</p>
+                      <code className="text-sm font-mono font-bold">{order.shippingDetails.trackingId}</code>
+                    </div>
+                    {order.shippingDetails.trackingUrl && (
+                      <a 
+                        href={order.shippingDetails.trackingUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                      >
+                        Track Status <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {settings?.courierConfig?.activeProvider === 'none' ? (
+                    <div className="text-xs bg-yellow-50 text-yellow-700 p-3 rounded-lg border border-yellow-200">
+                      <strong>Note:</strong> Courier integration is not configured. Please go to Settings &gt; Courier to enable automated booking.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase">Booking Details ({settings?.courierConfig?.activeProvider})</span>
+                        </div>
+                        
+                        {(settings?.courierConfig?.activeProvider === 'pathao' || settings?.courierConfig?.activeProvider === 'redx') && (
+                            <div className="grid grid-cols-2 gap-2">
+                                {settings?.courierConfig?.activeProvider === 'pathao' && (
+                                    <>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold">City ID</label>
+                                            <input type="text" value={cityId} onChange={(e) => setCityId(e.target.value)} placeholder="e.g. 1" className="w-full text-xs p-2 border rounded" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold">Zone ID</label>
+                                            <input type="text" value={zoneId} onChange={(e) => setZoneId(e.target.value)} placeholder="e.g. 1" className="w-full text-xs p-2 border rounded" />
+                                        </div>
+                                    </>
+                                )}
+                                <div className="space-y-1 col-span-2">
+                                    <label className="text-[10px] font-bold">Area ID</label>
+                                    <input type="text" value={areaId} onChange={(e) => setAreaId(e.target.value)} placeholder="e.g. 123" className="w-full text-xs p-2 border rounded" />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold">Shipping Note</label>
+                            <input type="text" value={shippingNote} onChange={(e) => setShippingNote(e.target.value)} placeholder="Package handle with care..." className="w-full text-xs p-2 border rounded" />
+                        </div>
+                      </div>
+
+                      <button
+                        disabled={bookingLoading}
+                        onClick={async () => {
+                          const conf = window.confirm(`Hand over order #${order._id} to ${settings?.courierConfig?.activeProvider}?`);
+                          if (!conf) return;
+                          
+                          setBookingLoading(true);
+                          try {
+                            const res = await fetch(`/api/admin/orders/${order._id}/book-courier`, { 
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    city_id: cityId,
+                                    zone_id: zoneId,
+                                    area_id: areaId,
+                                    note: shippingNote
+                                })
+                            });
+                            
+                            if (res.ok) {
+                              toast.success(`${settings?.courierConfig?.activeProvider} booked successfully!`);
+                              onUpdate();
+                              const updateRes = await fetch(`/api/orders/${orderId}`);
+                              if (updateRes.ok) setOrder(await updateRes.json());
+                            } else {
+                              let errorMessage = 'Failed to book courier';
+                              try {
+                                const contentType = res.headers.get('content-type');
+                                if (contentType && contentType.includes('application/json')) {
+                                  const err = await res.json();
+                                  errorMessage = err.message || errorMessage;
+                                } else {
+                                  const text = await res.text();
+                                  errorMessage = text || res.statusText || errorMessage;
+                                }
+                              } catch (e) {
+                                errorMessage = res.statusText || errorMessage;
+                              }
+                              toast.error(errorMessage);
+                            }
+                          } catch (e) {
+                            toast.error('Network error');
+                          } finally {
+                            setBookingLoading(false);
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+                      >
+                        {bookingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />} 
+                        Hand over to {settings?.courierConfig?.activeProvider ? settings.courierConfig.activeProvider.toUpperCase() : 'Courier'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Separator />
+            
             {/* Items */}
             <div className="space-y-4">
               <h4 className="text-sm font-bold uppercase text-muted-foreground">Order Items</h4>

@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import Swal from 'sweetalert2';
 
 export default function ReviewsModerationPage() {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -65,21 +66,36 @@ export default function ReviewsModerationPage() {
   };
 
   const deleteReview = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return;
-
-    try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        toast.success('Review deleted');
-        fetchReviews();
-      } else {
-        toast.error('Failed to delete review');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This review will be permanently deleted!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#00D1B2',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
       }
-    } catch (error) {
-      toast.error('Error deleting review');
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (res.ok) {
+          toast.success('Review deleted');
+          fetchReviews();
+        } else {
+          toast.error('Failed to delete review');
+        }
+      } catch (error) {
+        toast.error('Error deleting review');
+      }
     }
   };
 

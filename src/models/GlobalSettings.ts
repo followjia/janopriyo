@@ -22,9 +22,26 @@ export interface IGlobalSettings extends Document {
   googleTagManagerId?: string;
   searchConsoleMeta?: string;
   metaPixelId?: string;
+  courierConfig?: {
+    activeProvider?: 'steadfast' | 'pathao' | 'redx' | 'none';
+    steadfast?: {
+      apiKey: string;
+      secretKey: string;
+    };
+    pathao?: {
+      clientId: string;
+      clientSecret: string;
+      storeId: string;
+    };
+    redx?: {
+      apiKey: string;
+    };
+  };
   createdAt: Date;
   updatedAt: Date;
 }
+
+import { encrypt, decrypt } from '@/lib/encryption';
 
 const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
   {
@@ -49,8 +66,38 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
     googleTagManagerId: { type: String },
     searchConsoleMeta: { type: String },
     metaPixelId: { type: String },
+    courierConfig: {
+      activeProvider: { type: String, enum: ['steadfast', 'pathao', 'redx', 'none'], default: 'none' },
+      steadfast: {
+        apiKey: { type: String, get: decrypt, set: encrypt },
+        secretKey: { type: String, get: decrypt, set: encrypt },
+      },
+      pathao: {
+        clientId: { type: String, get: decrypt, set: encrypt },
+        clientSecret: { type: String, get: decrypt, set: encrypt },
+        storeId: { type: String, get: decrypt, set: encrypt },
+      },
+      redx: {
+        apiKey: { type: String, get: decrypt, set: encrypt },
+      },
+    },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { 
+      getters: false, // Prevent automatic decryption and exposure in API responses
+      transform: (doc, ret) => {
+        // Security: Explicitly remove sensitive courier credentials from serialized output
+        if (ret.courierConfig) {
+          delete ret.courierConfig.steadfast;
+          delete ret.courierConfig.pathao;
+          delete ret.courierConfig.redx;
+        }
+        return ret;
+      }
+    },
+    toObject: { getters: true } // Keep getters enabled for internal server-side logic
+  }
 );
 
 const GlobalSettings: Model<IGlobalSettings> =

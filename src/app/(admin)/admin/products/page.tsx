@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -46,21 +47,36 @@ export default function ProductsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
-    try {
-      const response = await fetch(`/api/products/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        toast.success('Product deleted successfully');
-        fetchProducts();
-      } else {
-        toast.error('Failed to delete product');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This product will be permanently deleted!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#00D1B2',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+      customClass: {
+        popup: 'rounded-xl',
+        confirmButton: 'rounded-lg px-4 py-2 font-bold',
+        cancelButton: 'rounded-lg px-4 py-2 font-bold'
       }
-    } catch (error) {
-      toast.error('Error deleting product');
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/products/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast.success('Product deleted successfully');
+          fetchProducts();
+        } else {
+          toast.error('Failed to delete product');
+        }
+      } catch (error) {
+        toast.error('Error deleting product');
+      }
     }
   };
 

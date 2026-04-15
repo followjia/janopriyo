@@ -28,14 +28,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 
+const urlSchema = z.string().optional().refine((val) => {
+  if (!val) return true;
+  return val.startsWith('http://') || val.startsWith('https://');
+}, {
+  message: "Must be a full URL starting with http:// or https://"
+});
+
 const bannerSchema = z.object({
   title: z.string().min(3, 'Title is required'),
   image: z.string().min(1, 'Image is required'),
-  link: z.string().optional(),
   primaryBtnText: z.string().optional(),
-  primaryBtnLink: z.string().optional(),
+  primaryBtnLink: urlSchema,
   secondaryBtnText: z.string().optional(),
-  secondaryBtnLink: z.string().optional(),
+  secondaryBtnLink: urlSchema,
   order: z.coerce.number().int().default(0),
   isActive: z.boolean().default(true),
 });
@@ -55,10 +61,9 @@ export function BannerForm({ initialData }: BannerFormProps) {
     defaultValues: {
       title: initialData?.title || '',
       image: initialData?.image || '',
-      link: initialData?.link || '',
-      primaryBtnText: initialData?.primaryBtnText || '',
+      primaryBtnText: initialData?.primaryBtnText || 'Shop Now',
       primaryBtnLink: initialData?.primaryBtnLink || '',
-      secondaryBtnText: initialData?.secondaryBtnText || '',
+      secondaryBtnText: initialData?.secondaryBtnText || 'Contact',
       secondaryBtnLink: initialData?.secondaryBtnLink || '',
       order: initialData?.order || 0,
       isActive: initialData?.isActive ?? true,
@@ -155,7 +160,7 @@ export function BannerForm({ initialData }: BannerFormProps) {
                       <FormItem>
                         <FormLabel>Primary Button Link</FormLabel>
                         <FormControl>
-                          <Input placeholder="/shop" {...field} />
+                          <Input placeholder="https://janopriyoshop.com/shop" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -184,28 +189,13 @@ export function BannerForm({ initialData }: BannerFormProps) {
                       <FormItem>
                         <FormLabel>Secondary Button Link</FormLabel>
                         <FormControl>
-                          <Input placeholder="/about" {...field} />
+                          <Input placeholder="https://wa.me/..." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="link"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Main CTA Link (Legacy/Background)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="/shop or https://..." {...field} />
-                      </FormControl>
-                      <FormDescription>Old single link field, kept for compatibility.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField

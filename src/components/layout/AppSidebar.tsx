@@ -98,6 +98,10 @@ const data = {
           title: "Content Studio",
           url: "/admin/cms",
         },
+        {
+          title: "Blog Posts",
+          url: "/admin/blogs",
+        },
       ],
     },
     {

@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = [
       'brandName', 'logo', 'favicon', 'contact', 'socialLinks', 
-      'marqueeText', 'googleTagManagerId', 'searchConsoleMeta', 'metaPixelId'
+      'marqueeText', 'googleTagManagerId', 'searchConsoleMeta', 'metaPixelId',
+      'courierConfig'
     ];
     const allowedBody: any = {};
     
@@ -68,12 +69,11 @@ export async function POST(req: NextRequest) {
     // Check if settings already exist
     let settings = await GlobalSettings.findOne({});
     if (settings) {
-      // Update existing settings
-      settings = await GlobalSettings.findByIdAndUpdate(
-        settings._id,
-        { $set: allowedBody },
-        { new: true, runValidators: true }
-      );
+      // Update existing settings document manually to trigger setters/encryption
+      Object.keys(allowedBody).forEach((key) => {
+        (settings as any)[key] = allowedBody[key];
+      });
+      await settings.save();
     } else {
       // Create new settings record
       settings = await GlobalSettings.create(allowedBody);
