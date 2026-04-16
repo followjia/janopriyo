@@ -26,8 +26,9 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
 
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
-        // Facebook automatically captures the URL from window.location.href
-        // We only pass the eventID for deduplication
+        // Manually override the page location for the current pixel
+        fbq("set", "page_location", url);
+        
         fbq("track", "PageView", {}, { 
           eventID: eventId 
         });
