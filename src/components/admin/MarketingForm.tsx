@@ -24,6 +24,9 @@ const marketingSchema = z.object({
   googleTagManagerId: z.string().optional(),
   searchConsoleMeta: z.string().optional(),
   metaPixelId: z.string().optional(),
+  facebookAccessToken: z.string().optional(),
+  facebookTestEventCode: z.string().optional(),
+  facebookDomainVerification: z.string().optional(),
 });
 
 type MarketingFormValues = z.infer<typeof marketingSchema>;
@@ -38,6 +41,9 @@ export function MarketingForm() {
       googleTagManagerId: '',
       searchConsoleMeta: '',
       metaPixelId: '',
+      facebookAccessToken: '',
+      facebookTestEventCode: '',
+      facebookDomainVerification: '',
     },
   });
 
@@ -58,6 +64,9 @@ export function MarketingForm() {
             googleTagManagerId: data.googleTagManagerId || '',
             searchConsoleMeta: data.searchConsoleMeta || '',
             metaPixelId: data.metaPixelId || '',
+            facebookAccessToken: data.facebookAccessToken || '',
+            facebookTestEventCode: data.facebookTestEventCode || '',
+            facebookDomainVerification: data.facebookDomainVerification || '',
           });
         }
       } catch (error: any) {
@@ -167,6 +176,53 @@ export function MarketingForm() {
                   <FormDescription>
                     Enter your 15-digit Meta Pixel ID to track user behavior and conversions.
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="facebookAccessToken"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Facebook Access Token (CAPI)</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="EAA..." {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormDescription>Required for Server-Side Conversions API tracking.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="facebookTestEventCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Facebook Test Event Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="TEST..." {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormDescription>Used for real-time verification in Events Manager.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="facebookDomainVerification"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Facebook Domain Verification</FormLabel>
+                  <FormControl>
+                    <Input placeholder="facebook-domain-verification code" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormDescription>Used to verify domain ownership in Meta Business Suite.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

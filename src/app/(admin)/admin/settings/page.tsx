@@ -40,12 +40,6 @@ const settingsSchema = z.object({
     whatsapp: z.string().url().optional().or(z.literal('')),
   }),
   marqueeText: z.string().optional(),
-  googleTagManagerId: z.string().optional(),
-  searchConsoleMeta: z.string().optional(),
-  facebookDomainVerification: z.string().optional(),
-  metaPixelId: z.string().optional(),
-  facebookAccessToken: z.string().optional(),
-  facebookTestEventCode: z.string().optional(),
   courierConfig: z.object({
     activeProvider: z.enum(['steadfast', 'pathao', 'redx', 'none']).default('none'),
     steadfast: z.object({
@@ -86,12 +80,6 @@ export default function SettingsPage() {
         whatsapp: ''
       },
       marqueeText: '',
-      googleTagManagerId: '',
-      searchConsoleMeta: '',
-      facebookDomainVerification: '',
-      metaPixelId: '',
-      facebookAccessToken: '',
-      facebookTestEventCode: '',
       courierConfig: {
         activeProvider: 'none',
         steadfast: { apiKey: '', secretKey: '' },
@@ -207,12 +195,11 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 lg:w-[750px]">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
               <TabsTrigger value="courier">Courier</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4">
@@ -506,19 +493,73 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20 opacity-60">
-                    <h3 className="font-bold">Pathao Courier (Coming Soon)</h3>
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                    <h3 className="font-bold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        Pathao Courier
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Input disabled placeholder="Pathao Client ID" />
-                        <Input disabled placeholder="Pathao Client Secret" />
-                        <Input disabled placeholder="Pathao Store ID" />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.pathao.clientId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Client ID</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Pathao Client ID" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.pathao.clientSecret"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Client Secret</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Pathao Client Secret" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.pathao.storeId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Store ID</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Pathao Store ID" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20 opacity-60">
-                    <h3 className="font-bold">RedX (Coming Soon)</h3>
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                    <h3 className="font-bold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500" />
+                        RedX Configuration
+                    </h3>
                     <div className="grid grid-cols-1 gap-4">
-                        <Input disabled placeholder="RedX API Key" />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.redx.apiKey"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>RedX API Key</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="RedX API Key" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -527,104 +568,6 @@ export default function SettingsPage() {
                         * Note: Ensure you have obtained production API credentials from your courier merchant portal.
                     </p>
                 </CardFooter>
-              </Card>
-            </TabsContent>
-            <TabsContent value="analytics" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>SEO & Analytics</CardTitle>
-                  <CardDescription>Configure tracking IDs and site verification codes.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="googleTagManagerId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Google Tag Manager ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="GTM-XXXXXXX" {...field} />
-                          </FormControl>
-                          <FormDescription>Your GTM container ID.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="metaPixelId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Facebook Pixel ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="123456789012345" {...field} />
-                          </FormControl>
-                          <FormDescription>Standard FB Pixel ID for browser-side tracking.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="searchConsoleMeta"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Google Search Console Verification</FormLabel>
-                        <FormControl>
-                          <Input placeholder="google-site-verification code" {...field} />
-                        </FormControl>
-                        <FormDescription>The 'content' value from the Google verification meta tag.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="facebookDomainVerification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Facebook Domain Verification</FormLabel>
-                        <FormControl>
-                          <Input placeholder="facebook-domain-verification code" {...field} />
-                        </FormControl>
-                        <FormDescription>The 'content' value from the Facebook domain verification meta tag.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="facebookAccessToken"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Facebook Access Token (CAPI)</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="EAA..." {...field} />
-                          </FormControl>
-                          <FormDescription>Required for Server-Side Conversions API.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="facebookTestEventCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Facebook Test Event Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="TEST..." {...field} />
-                          </FormControl>
-                          <FormDescription>Used for real-time verification in Events Manager.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
