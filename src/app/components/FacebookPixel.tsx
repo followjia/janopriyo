@@ -26,6 +26,8 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
 
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
+        // Explicitly set parameters to prevent FB from guessing or using defaults
+        fbq("set", "page_location", url, "${pixelId}");
         fbq("track", "PageView", {
           page_location: url,
           page_path: pathname,
@@ -51,6 +53,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
   useEffect(() => {
     if (!pixelId) return;
 
+    // Longer timeout for better reliability on heavy pages or slow hydration
     const timeoutId = setTimeout(() => {
       const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
       const trackingKey = pathname + searchParams.toString();
@@ -60,7 +63,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
       lastTrackedPath.current = trackingKey;
       currentEventId.current = crypto.randomUUID();
       trackPageView(currentEventId.current, currentUrl);
-    }, 150); // Slightly more delay for stability
+    }, 250); 
 
     return () => clearTimeout(timeoutId);
   }, [pathname, searchParams, trackPageView, pixelId]);
@@ -82,7 +85,11 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+            
+            // Aggressive disabling of automatic tracking
             fbq('set', 'autoConfig', false, '${pixelId}');
+            fbq('set', 'allow_automatic_events', false, '${pixelId}');
+            
             fbq('init', '${pixelId}');
             window.fbqInitialized = true;
           }
