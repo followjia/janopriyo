@@ -75,14 +75,14 @@ export async function POST(req: NextRequest) {
       Object.keys(allowedBody).forEach((key) => {
         (settings as any)[key] = allowedBody[key];
       });
-      await settings.save();
+      await settings.save({ validateBeforeSave: false });
     } else {
       // Create new settings record
       settings = await GlobalSettings.create(allowedBody);
     }
 
     revalidateTag('settings', 'max');
-
+    
     // Mask sensitive response data for the return
     const safeResult = {
       ...(settings as any).toObject ? (settings as any).toObject() : settings,
@@ -93,9 +93,10 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('CRITICAL: Error updating settings:', error);
     if (error.name === 'ValidationError') {
-      return NextResponse.json({
-        message: 'Validation Error: Missing required branding or contact fields. Please fill out General Settings first.',
-        details: error.errors
+      const fieldErrors = Object.keys(error.errors || {}).join(', ');
+      return NextResponse.json({ 
+        message: `Validation Error: Missing or invalid fields (${fieldErrors}). Please ensure General Settings are filled.`,
+        details: error.errors 
       }, { status: 400 });
     }
     return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
