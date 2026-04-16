@@ -24,8 +24,6 @@ const marketingSchema = z.object({
   googleTagManagerId: z.string().optional(),
   searchConsoleMeta: z.string().optional(),
   metaPixelId: z.string().optional(),
-  facebookAccessToken: z.string().optional(),
-  facebookTestEventCode: z.string().optional(),
   facebookDomainVerification: z.string().optional(),
 });
 
@@ -41,8 +39,6 @@ export function MarketingForm() {
       googleTagManagerId: '',
       searchConsoleMeta: '',
       metaPixelId: '',
-      facebookAccessToken: '',
-      facebookTestEventCode: '',
       facebookDomainVerification: '',
     },
   });
@@ -67,8 +63,6 @@ export function MarketingForm() {
             googleTagManagerId: data.googleTagManagerId || '',
             searchConsoleMeta: data.searchConsoleMeta || '',
             metaPixelId: data.metaPixelId || '',
-            facebookAccessToken: data.facebookAccessToken || '',
-            facebookTestEventCode: data.facebookTestEventCode || '',
             facebookDomainVerification: data.facebookDomainVerification || '',
           });
         }
@@ -93,16 +87,11 @@ export function MarketingForm() {
 
   async function onSubmit(values: MarketingFormValues) {
     setIsSubmitting(true);
-    const valuesToSave = { ...values };
-    if (valuesToSave.facebookAccessToken === "********************") {
-      delete valuesToSave.facebookAccessToken;
-    }
-
     try {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(valuesToSave),
+        body: JSON.stringify(values),
       });
 
       if (!res.ok) {
@@ -189,37 +178,7 @@ export function MarketingForm() {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="facebookAccessToken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Facebook Access Token (CAPI)</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="EAA..." {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormDescription>Required for Server-Side Conversions API tracking.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="facebookTestEventCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Facebook Test Event Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="TEST..." {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormDescription>Used for real-time verification in Events Manager.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <FormField
               control={form.control}
