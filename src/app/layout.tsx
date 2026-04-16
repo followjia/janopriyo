@@ -150,8 +150,7 @@ export default async function RootLayout({
           <GoogleTagManager gtmId={settings.googleTagManagerId} />
           <Suspense fallback={null}>
             <FacebookPixel
-              pixelId={settings.metaPixelId}
-              testEventCode={settings.facebookTestEventCode}
+              pixelId={process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || settings.metaPixelId}
             />
           </Suspense>
           {children}

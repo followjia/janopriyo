@@ -16,7 +16,7 @@ declare global {
 export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: string, testEventCode?: string }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    
+
     // Shared eventId across browser pixel and CAPI for deduplication
     // Initialize with a dummy or empty string during SSR
     const currentEventId = useRef<string>("");
@@ -68,7 +68,6 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${pixelId}');
-            fbq('track', 'PageView');
           `,
                 }}
             />

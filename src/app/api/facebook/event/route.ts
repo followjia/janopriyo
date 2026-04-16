@@ -1,30 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import connectToDatabase from '@/lib/db';
-import GlobalSettings from '@/models/GlobalSettings';
+const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
+const ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
 
-// Use Node.js runtime because Mongoose/MongoDB are not supported on Edge
-export const runtime = 'nodejs';
+// Using Edge runtime for best performance now that we're using ENV variables exclusively
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
     try {
-        await connectToDatabase();
-        const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 }).lean() as any;
-        
-        // Prioritize ENV variables for immediate functionality
-        const pixelId = settings?.metaPixelId || process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
-        const accessToken = process.env.FACEBOOK_ACCESS_TOKEN || settings?.facebookAccessToken;
-        
-        if (!pixelId || !accessToken) {
-            console.error('[FB CAPI] Missing configuration:', { hasPixel: !!pixelId, hasToken: !!accessToken });
+        if (!PIXEL_ID || !ACCESS_TOKEN) {
+            console.error('[FB CAPI] Missing configuration in environment variables');
             return NextResponse.json({ error: 'Missing Facebook config' }, { status: 500 });
         }
 
         const body = await request.json();
         const { eventName = 'PageView', eventUrl, userAgent, testEventCode } = body;
-        
-        // Use test code from request, then from setting, then from env as final fallback
-        const activeTestCode = testEventCode || settings?.facebookTestEventCode || process.env.FACEBOOK_TEST_EVENT_CODE;
+
+        // Prioritize: 1. Request test code, 2. Env variable
+        const activeTestCode = testEventCode || process.env.FACEBOOK_TEST_EVENT_CODE;
 
         // Get real client IP
         const ipAddress =
@@ -32,8 +25,12 @@ export async function POST(request: NextRequest) {
             request.headers.get('x-real-ip') ||
             '0.0.0.0';
 
-        // Generate unique event ID for deduplication with browser pixel
+        // Generate/Use event ID for deduplication
         const eventId = body.eventId || crypto.randomUUID();
+
+        // Get browser identifiers for best match quality
+        const fbp = request.cookies.get('_fbp')?.value;
+        const fbc = request.cookies.get('_fbc')?.value;
 
         const payload: any = {
             data: [
@@ -46,6 +43,8 @@ export async function POST(request: NextRequest) {
                     user_data: {
                         client_ip_address: ipAddress,
                         client_user_agent: userAgent,
+                        fbp,
+                        fbc,
                     },
                 },
             ],
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
         }
 
         const fbResponse = await fetch(
-            `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`,
+            `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,15 +66,9 @@ export async function POST(request: NextRequest) {
         const result = await fbResponse.json();
 
         if (!fbResponse.ok) {
-            console.error('[FB CAPI] Error:', {
-                status: fbResponse.status,
-                result,
-                payload,
-                pixelId: pixelId,
-                token: accessToken ? `${accessToken.substring(0, 6)}...` : 'not set'
-            });
+            console.error('[FB CAPI] Error:', result);
             return NextResponse.json(
-                { error: 'Failed to send event to Facebook' },
+                { error: 'Failed to send event to Facebook', details: result },
                 { status: fbResponse.status }
             );
         }
