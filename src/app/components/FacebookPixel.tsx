@@ -15,6 +15,9 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Immediate log to check mount and ID
+  console.log(`[FB-Pixel] Component Mounting. PixelID: ${pixelId || 'UNDEFINED'}`);
+
   // Shared eventId across browser pixel and CAPI for deduplication
   const currentEventId = useRef<string>("");
 
