@@ -93,11 +93,16 @@ export function MarketingForm() {
 
   async function onSubmit(values: MarketingFormValues) {
     setIsSubmitting(true);
+    const valuesToSave = { ...values };
+    if (valuesToSave.facebookAccessToken === "********************") {
+      delete valuesToSave.facebookAccessToken;
+    }
+
     try {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(valuesToSave),
       });
 
       if (!res.ok) {

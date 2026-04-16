@@ -23,7 +23,20 @@ export async function GET() {
         socialLinks: {}
       });
     }
-    return NextResponse.json(settings);
+    // Mask sensitive response data
+    const safeResult = {
+      ...(settings as any).toObject ? (settings as any).toObject() : settings,
+      facebookAccessToken: (settings as any).facebookAccessToken ? "********************" : null,
+      // Mask courier keys as well for consistency
+      courierConfig: settings.courierConfig ? {
+        ...settings.courierConfig,
+        steadfast: settings.courierConfig.steadfast?.apiKey ? { apiKey: "********************", secretKey: "********************" } : settings.courierConfig.steadfast,
+        pathao: settings.courierConfig.pathao?.clientId ? { clientId: "********************", clientSecret: "********************", storeId: "********************" } : settings.courierConfig.pathao,
+        redx: settings.courierConfig.redx?.apiKey ? { apiKey: "********************" } : settings.courierConfig.redx,
+      } : settings.courierConfig
+    };
+
+    return NextResponse.json(safeResult);
   } catch (error) {
     console.error('Error fetching settings:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
