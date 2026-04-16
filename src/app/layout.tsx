@@ -99,6 +99,9 @@ export async function generateMetadata(): Promise<Metadata> {
       verification: {
         google: settings.searchConsoleMeta,
       },
+      alternates: {
+        canonical: './',
+      },
 
       other: {
         ...(settings.facebookDomainVerification

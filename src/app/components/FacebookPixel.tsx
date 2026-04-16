@@ -26,8 +26,8 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
 
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
-        // Explicitly set parameters to prevent FB from guessing or using defaults
-        fbq("set", "page_location", url, pixelId);
+        // Facebook automatically captures the URL from window.location.href
+        // We only pass the eventID for deduplication
         fbq("track", "PageView", {}, { 
           eventID: eventId 
         });
@@ -44,13 +44,13 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
         }),
       }).catch(() => {});
     },
-    [pixelId, pathname]
+    [pixelId]
   );
 
   useEffect(() => {
     if (!pixelId) return;
 
-    // Longer timeout for better reliability on heavy pages or slow hydration
+    // Increased timeout to 500ms to ensure window.location.href is fully settled
     const timeoutId = setTimeout(() => {
       const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
       const trackingKey = pathname + searchParams.toString();
@@ -60,7 +60,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
       lastTrackedPath.current = trackingKey;
       currentEventId.current = crypto.randomUUID();
       trackPageView(currentEventId.current, currentUrl);
-    }, 250); 
+    }, 500); 
 
     return () => clearTimeout(timeoutId);
   }, [pathname, searchParams, trackPageView, pixelId]);
@@ -83,10 +83,12 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
             
-            // Aggressive disabling of automatic tracking
-            fbq('set', 'autoConfig', false, '${pixelId}');
-            fbq('set', 'allow_automatic_events', false, '${pixelId}');
+            // Disable automatic URL tracking to allow manual control
+            if (window._fbq) {
+              window._fbq.disablePushState = true;
+            }
             
+            fbq('set', 'autoConfig', false, '${pixelId}');
             fbq('init', '${pixelId}');
             window.fbqInitialized = true;
           }
