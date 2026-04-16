@@ -14,10 +14,8 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { eventName = 'PageView', eventUrl, userAgent, testEventCode } = body;
+        const { eventName = 'PageView', eventUrl, userAgent } = body;
 
-        // Prioritize: 1. Request test code, 2. Env variable
-        const activeTestCode = testEventCode || process.env.FACEBOOK_TEST_EVENT_CODE;
 
         // Get real client IP
         const ipAddress =
@@ -50,9 +48,6 @@ export async function POST(request: NextRequest) {
             ],
         };
 
-        if (activeTestCode) {
-            payload.test_event_code = activeTestCode;
-        }
 
         const fbResponse = await fetch(
             `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,

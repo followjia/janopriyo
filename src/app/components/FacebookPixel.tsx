@@ -13,7 +13,7 @@ declare global {
 
 // PIXEL_ID is now passed as a prop from layout
 
-export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: string, testEventCode?: string }) {
+export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
@@ -36,10 +36,9 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
                 eventUrl: window.location.href,
                 userAgent: navigator.userAgent,
                 eventId,
-                testEventCode: testEventCode,
             }),
         }).catch(() => { /* fail silently — browser pixel is the fallback */ });
-    }, [pixelId, testEventCode]);
+    }, [pixelId]);
 
     useEffect(() => {
         if (!pixelId) return;
