@@ -68,6 +68,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
+import Script from 'next/script';
+
 export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProduct(slug);
@@ -93,13 +95,15 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   return (
     <div className="container px-4 md:px-6 py-10">
       {productSchema && (
-        <script
+        <Script
+          id="product-schema"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: sanitizeForScript(productSchema) }}
         />
       )}
       {breadcrumbSchema && (
-        <script
+        <Script
+          id="breadcrumb-schema"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: sanitizeForScript(breadcrumbSchema) }}
         />

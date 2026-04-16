@@ -33,9 +33,13 @@ export function FlashSale({ products, saleEndTimestamp }: FlashSaleProps) {
     };
   };
 
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setTimeLeft(calculateTimeLeft());
+
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
@@ -61,7 +65,7 @@ export function FlashSale({ products, saleEndTimestamp }: FlashSaleProps) {
                 <h2 className="text-3xl font-black tracking-tight">Flash Sale</h2>
                 <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Ending In:</span>
-                    <div className="flex gap-1 text-primary font-mono font-bold font-black tabular-nums">
+                    <div className="flex gap-1 text-primary font-mono font-bold font-black tabular-nums" suppressHydrationWarning>
                         <span>{String(timeLeft.hours).padStart(2, '0')}h</span>
                         <span>:</span>
                         <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>

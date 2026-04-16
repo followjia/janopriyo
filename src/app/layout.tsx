@@ -27,7 +27,7 @@ async function getGlobalSettings() {
     if (!settings) {
       // Consistent fallback logic
       return {
-        brandName: process.env.NEXT_PUBLIC_STORE_NAME || "Janopriyo Shop",
+        brandName: "Janopriyo Shop",
         logo: "/logo.png",
         contact: {
           email: "support@janopriyo.shop",
@@ -54,13 +54,18 @@ async function getGlobalSettings() {
 
 import Script from "next/script";
 import { PWARegistry } from "@/components/pwa-registry";
+import GoogleTagManager from "./components/GoogleTagManager";
+import FacebookPixel from "./components/FacebookPixel";
+
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
   try {
     const settings = await getGlobalSettings();
 
     return {
+      metadataBase: new URL(baseUrl),
       title: {
         default: settings.brandName || "Janopriyo Shop",
         template: `%s | ${settings.brandName || "Janopriyo Shop"}`,
@@ -90,27 +95,32 @@ export async function generateMetadata(): Promise<Metadata> {
         images: settings.logo ? [settings.logo] : [],
       },
       verification: {
-        google: settings.searchConsoleMeta || '',
+        google: settings.searchConsoleMeta,
+      },
+      other: {
+        ...(settings.facebookDomainVerification
+          ? { "facebook-domain-verification": settings.facebookDomainVerification }
+          : {}),
       },
     };
   } catch (error) {
     return {
       title: "Janopriyo Shop",
-      description: "Your ultimate destination for quality products across multiple categories.",
-      manifest: process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined,
+      description: "Your ultimate destination for quality products.",
     };
   }
 }
+
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getGlobalSettings();
   let jsonLd = null;
 
   try {
-    const settings = await getGlobalSettings();
     jsonLd = generateOrganizationSchema(settings);
   } catch (e) {
     console.error("Error generating JSON-LD structured data", e);
@@ -132,6 +142,11 @@ export default async function RootLayout({
           />
         )}
         <Providers>
+          <GoogleTagManager gtmId={settings.googleTagManagerId} />
+          <FacebookPixel
+            pixelId={settings.metaPixelId}
+            testEventCode={settings.facebookTestEventCode}
+          />
           {children}
         </Providers>
         <Toaster position="bottom-right" richColors />

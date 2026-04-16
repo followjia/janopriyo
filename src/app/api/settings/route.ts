@@ -34,7 +34,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
@@ -45,15 +45,16 @@ export async function POST(req: NextRequest) {
     } catch (parseError) {
       return NextResponse.json({ message: 'Invalid JSON request body' }, { status: 400 });
     }
-    
+
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = [
-      'brandName', 'logo', 'favicon', 'contact', 'socialLinks', 
-      'marqueeText', 'googleTagManagerId', 'searchConsoleMeta', 'metaPixelId',
+      'brandName', 'logo', 'favicon', 'contact', 'socialLinks',
+      'marqueeText', 'googleTagManagerId', 'searchConsoleMeta', 'facebookDomainVerification', 'metaPixelId',
+      'facebookAccessToken', 'facebookTestEventCode',
       'courierConfig'
     ];
     const allowedBody: any = {};
-    
+
     Object.keys(body).forEach((key) => {
       if (allowedFields.includes(key)) {
         allowedBody[key] = body[key];

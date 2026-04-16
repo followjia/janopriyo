@@ -21,7 +21,10 @@ export interface IGlobalSettings extends Document {
   marqueeText?: string;
   googleTagManagerId?: string;
   searchConsoleMeta?: string;
+  facebookDomainVerification?: string;
   metaPixelId?: string;
+  facebookAccessToken?: string;
+  facebookTestEventCode?: string;
   courierConfig?: {
     activeProvider?: 'steadfast' | 'pathao' | 'redx' | 'none';
     steadfast?: {
@@ -65,7 +68,10 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
     marqueeText: { type: String },
     googleTagManagerId: { type: String },
     searchConsoleMeta: { type: String },
+    facebookDomainVerification: { type: String },
     metaPixelId: { type: String },
+    facebookAccessToken: { type: String, get: decrypt, set: encrypt },
+    facebookTestEventCode: { type: String },
     courierConfig: {
       activeProvider: { type: String, enum: ['steadfast', 'pathao', 'redx', 'none'], default: 'none' },
       steadfast: {
@@ -93,6 +99,8 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
           delete ret.courierConfig.pathao;
           delete ret.courierConfig.redx;
         }
+        // Security: Remove sensitive Facebook Access Token
+        delete ret.facebookAccessToken;
         return ret;
       }
     },

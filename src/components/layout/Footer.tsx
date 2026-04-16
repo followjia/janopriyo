@@ -2,7 +2,7 @@ import Link from 'next/link';
 import connectToDatabase from "@/lib/db";
 import GlobalSettings from "@/models/GlobalSettings";
 import * as SocialIcons from '@/components/ui/social-icons';
-import { 
+import {
   Circle,
   MapPin,
   Phone,
@@ -105,22 +105,40 @@ export default async function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-12 flex flex-col items-center justify-between border-t py-6 sm:flex-row text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} {settings?.brandName || 'Janopriyo Shop'}. All rights reserved.</p>
-          
+
           <div className="flex items-center gap-5 mt-4 sm:mt-0">
             {Object.entries(socialLinks).map(([platform, url]) => {
               if (!url) return null;
               const Icon = socialIconMap[platform];
               if (!Icon) return null;
-              
+
+              // Security: Validate protocol to prevent injection (e.g. javascript:)
+              let safeUrl = "#";
+              try {
+                const parsedUrl = new URL(url as string);
+                if (['http:', 'https:', 'mailto:'].includes(parsedUrl.protocol)) {
+                  safeUrl = url as string;
+                } else {
+                  return null; // Skip unsafe protocols
+                }
+              } catch (e) {
+                // Allow relative paths starting with /
+                if (typeof url === 'string' && url.startsWith('/')) {
+                  safeUrl = url;
+                } else {
+                  return null; // Skip invalid URLs
+                }
+              }
+
               return (
-                <a 
+                <a
                   key={platform}
-                  href={url as string} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                  href={safeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-primary transition-all hover:scale-110"
                   aria-label={socialLabels[platform] || platform}
                 >
