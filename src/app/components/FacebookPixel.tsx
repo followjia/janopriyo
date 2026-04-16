@@ -22,6 +22,9 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
     (eventId: string, url: string) => {
       if (!pixelId) return;
 
+      // Debug log to identify which code is firing the event
+      console.log(`[FB-Pixel] Tracking PageView | ID: ${eventId} | URL: ${url}`);
+
       // 1. Browser-side tracking (with precise URL parameters)
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
@@ -100,7 +103,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
           height="1"
           width="1"
           style={{ display: "none" }}
-          src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+          src={`https://www.facebook.com/tr?id=${pixelId}&noscript=1`}
         />
       </noscript>
     </>
