@@ -26,10 +26,10 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
 
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
-        // Manually override the page location for the current pixel
-        fbq("set", "page_location", url);
-        
-        fbq("track", "PageView", {}, { 
+        // Report the current path explicitly to ensure the Pixel tool picks it up
+        fbq("track", "PageView", {
+          page_path: window.location.pathname + window.location.search
+        }, { 
           eventID: eventId 
         });
       }
