@@ -223,9 +223,11 @@ export function MarketingForm() {
                 <FormItem>
                   <FormLabel>Facebook Domain Verification</FormLabel>
                   <FormControl>
-                    <Input placeholder="facebook-domain-verification code" {...field} disabled={isSubmitting} />
+                    <Input placeholder="8zp1nr7skv87u2..." {...field} disabled={isSubmitting} />
                   </FormControl>
-                  <FormDescription>Used to verify domain ownership in Meta Business Suite.</FormDescription>
+                  <FormDescription>
+                    Enter only the unique <b>content</b> code from the Facebook meta tag (e.g., 8zp1nr7skv87u2...).
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
