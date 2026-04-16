@@ -50,16 +50,23 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
     [pixelId, pathname]
   );
 
+  const lastTrackedPath = useRef<string>("");
+
   useEffect(() => {
     if (!pixelId) return;
 
     // Use a small timeout to ensure the browser has updated history/location state
     const timeoutId = setTimeout(() => {
       const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
+      const trackingKey = pathname + searchParams.toString();
+
+      // Prevent duplicate tracking if the path hasn't truly changed
+      if (lastTrackedPath.current === trackingKey) return;
       
+      lastTrackedPath.current = trackingKey;
       currentEventId.current = crypto.randomUUID();
       trackPageView(currentEventId.current, currentUrl);
-    }, 50);
+    }, 100); // Increased to 100ms for extra safety
 
     return () => clearTimeout(timeoutId);
   }, [pathname, searchParams, trackPageView, pixelId]);
