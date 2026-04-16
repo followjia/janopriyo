@@ -43,16 +43,10 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
 
     useEffect(() => {
         if (!pixelId) return;
-        
-        // Use a small delay to ensure fbq is initialized and browser is ready
-        const timer = setTimeout(() => {
-            currentEventId.current = crypto.randomUUID();
-            trackPageView(currentEventId.current);
-            console.log(`[Facebook Pixel] Tracked PageView for ${pixelId}`);
-        }, 100);
-
-        return () => clearTimeout(timer);
-    }, [pathname, searchParams, trackPageView, pixelId]);
+        // Generate new eventId on every route change
+        currentEventId.current = crypto.randomUUID();
+        trackPageView(currentEventId.current);
+    }, [pathname, searchParams, trackPageView]);
 
     if (!pixelId) {
         return null;
@@ -74,6 +68,7 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${pixelId}');
+            fbq('track', 'PageView');
           `,
                 }}
             />
