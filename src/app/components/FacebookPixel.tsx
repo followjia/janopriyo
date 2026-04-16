@@ -57,11 +57,6 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
             <Script
                 id="fb-pixel"
                 strategy="afterInteractive"
-                onLoad={() => {
-                    if (pixelId && typeof window.fbq === 'function') {
-                        window.fbq('init', pixelId);
-                    }
-                }}
                 dangerouslySetInnerHTML={{
                     __html: `
             !function(f,b,e,v,n,t,s)
@@ -73,6 +68,7 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${pixelId}');
+            fbq('track', 'PageView');
           `,
                 }}
             />
