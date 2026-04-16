@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       settings = await GlobalSettings.create(allowedBody);
     }
 
-    revalidateTag('settings', 'default');
+    revalidateTag('settings', 'max');
 
     // Mask sensitive response data for the return
     const safeResult = {

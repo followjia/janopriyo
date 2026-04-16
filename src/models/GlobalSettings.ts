@@ -50,13 +50,13 @@ import { encrypt, decrypt } from '@/lib/encryption';
 
 const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
   {
-    brandName: { type: String, required: true },
-    logo: { type: String, required: true },
+    brandName: { type: String },
+    logo: { type: String },
     favicon: { type: String },
     contact: {
-      email: { type: String, required: true },
-      phone: { type: String, required: true },
-      address: { type: String, required: true },
+      email: { type: String },
+      phone: { type: String },
+      address: { type: String },
     },
     socialLinks: {
       facebook: { type: String },
@@ -68,8 +68,8 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       whatsapp: { type: String },
     },
     marqueeText: { type: String },
-    metaTitle: { type: String },
-    metaDescription: { type: String },
+    metaTitle: { type: String, default: '' },
+    metaDescription: { type: String, default: '' },
     googleTagManagerId: { type: String },
     searchConsoleMeta: { type: String },
     facebookDomainVerification: { type: String },

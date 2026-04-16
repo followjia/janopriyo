@@ -128,7 +128,9 @@ export default function SettingsPage() {
                     ...form.getValues().courierConfig?.redx,
                     ...(result.data.courierConfig?.redx || {})
                   }
-                }
+                },
+                metaTitle: result.data.metaTitle || '',
+                metaDescription: result.data.metaDescription || '',
               };
               form.reset(sanitizedData);
             }
