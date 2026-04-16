@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = [
-      'brandName', 'logo', 'favicon', 'contact', 'socialLinks', 
+      'brandName', 'logo', 'favicon', 'contact', 'socialLinks',
       'marqueeText', 'metaTitle', 'metaDescription',
       'googleTagManagerId', 'searchConsoleMeta', 'facebookDomainVerification', 'metaPixelId',
       'facebookAccessToken', 'facebookTestEventCode',
@@ -83,9 +83,21 @@ export async function POST(req: NextRequest) {
 
     revalidateTag('settings', 'default');
 
-    return NextResponse.json(settings, { status: 200 });
-  } catch (error) {
-    console.error('Error updating settings:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    // Mask sensitive response data for the return
+    const safeResult = {
+      ...(settings as any).toObject ? (settings as any).toObject() : settings,
+      facebookAccessToken: (settings as any).facebookAccessToken ? "********************" : null
+    };
+
+    return NextResponse.json(safeResult, { status: 200 });
+  } catch (error: any) {
+    console.error('CRITICAL: Error updating settings:', error);
+    if (error.name === 'ValidationError') {
+      return NextResponse.json({
+        message: 'Validation Error: Missing required branding or contact fields. Please fill out General Settings first.',
+        details: error.errors
+      }, { status: 400 });
+    }
+    return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }

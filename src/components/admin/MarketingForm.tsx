@@ -53,7 +53,10 @@ export function MarketingForm() {
 
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/settings', { signal: controller.signal });
+        const res = await fetch('/api/settings', { 
+          cache: 'no-store',
+          signal: controller.signal 
+        });
         if (!res.ok) {
           throw new Error('Failed to fetch settings');
         }
