@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import GlobalSettings from '@/models/GlobalSettings';
 
-export const runtime = 'edge';
+// Use Node.js runtime because Mongoose/MongoDB are not supported on Edge
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
     try {
