@@ -23,11 +23,15 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
 
     const trackPageView = useCallback((eventId: string) => {
         if (!pixelId) return;
-        // 1. Browser-side tracking with explicit eventID
-        if (typeof window.fbq === 'function') {
-            window.fbq('track', 'PageView', {}, { eventID: eventId });
+        
+        // Ensure window.fbq is handled even if script is not fully loaded
+        // The script snippet defines fbq as a queueing function immediately
+        const fbq = (window as any).fbq;
+        if (typeof fbq === 'function') {
+            fbq('track', 'PageView', {}, { eventID: eventId });
         }
-        // 2. Server-side (CAPI) tracking with same eventID
+        
+        // CAPI tracking
         fetch('/api/facebook/event', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -37,19 +41,16 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
                 userAgent: navigator.userAgent,
                 eventId,
             }),
-        }).catch(() => { /* fail silently — browser pixel is the fallback */ });
+        }).catch(() => { /* fail silently */ });
     }, [pixelId]);
 
     useEffect(() => {
         if (!pixelId) return;
-        // Generate new eventId on every route change
         currentEventId.current = crypto.randomUUID();
         trackPageView(currentEventId.current);
     }, [pathname, searchParams, trackPageView]);
 
-    if (!pixelId) {
-        return null;
-    }
+    if (!pixelId) return null;
 
     return (
         <>
@@ -66,6 +67,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('set', 'autoConfig', false, '${pixelId}');
             fbq('init', '${pixelId}');
           `,
                 }}
