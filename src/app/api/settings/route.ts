@@ -28,7 +28,7 @@ export async function GET() {
 
     const safeResult = {
       ...maskedSettings,
-      facebookAccessToken: rawSettings.facebookAccessToken ? "********************" : null,
+      facebookAccessToken: (rawSettings.facebookAccessToken || process.env.FACEBOOK_ACCESS_TOKEN) ? "********************" : null,
       courierConfig: maskedSettings.courierConfig ? {
         ...maskedSettings.courierConfig,
         steadfast: rawSettings.courierConfig?.steadfast?.apiKey ? { apiKey: "********************", secretKey: "********************" } : maskedSettings.courierConfig.steadfast,

@@ -9,12 +9,14 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
     try {
         await connectToDatabase();
-        const settings = await GlobalSettings.findOne({}).lean() as any;
+        const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 }).lean() as any;
         
-        const pixelId = settings?.metaPixelId;
-        const accessToken = settings?.facebookAccessToken;
-
+        // Prioritize ENV variables for immediate functionality
+        const pixelId = settings?.metaPixelId || process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
+        const accessToken = process.env.FACEBOOK_ACCESS_TOKEN || settings?.facebookAccessToken;
+        
         if (!pixelId || !accessToken) {
+            console.error('[FB CAPI] Missing configuration:', { hasPixel: !!pixelId, hasToken: !!accessToken });
             return NextResponse.json({ error: 'Missing Facebook config' }, { status: 500 });
         }
 
