@@ -8,9 +8,8 @@ import { auth } from '@/auth';
 export async function GET() {
   try {
     await connectToDatabase();
-    const settings = await GlobalSettings.findOne({});
+    const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 });
     if (!settings) {
-      // Return default settings if none exist yet to prevent UI failures
       return NextResponse.json({
         brandName: process.env.NEXT_PUBLIC_STORE_NAME || "Janopriyo Shop",
         logo: "/logo.png",
@@ -19,21 +18,23 @@ export async function GET() {
           phone: "+8801234567890",
           address: "Dhaka, Bangladesh"
         },
-        marqueeText: "Welcome to Janopriyo Shop! Free shipping on orders over $500.",
+        marqueeText: "Welcome to Janopriyo Shop!",
         socialLinks: {}
       });
     }
-    // Mask sensitive response data
+
+    const rawSettings = settings.toObject({ getters: false });
+    const maskedSettings = settings.toObject({ getters: true });
+
     const safeResult = {
-      ...(settings as any).toObject ? (settings as any).toObject() : settings,
-      facebookAccessToken: (settings as any).facebookAccessToken ? "********************" : null,
-      // Mask courier keys as well for consistency
-      courierConfig: settings.courierConfig ? {
-        ...settings.courierConfig,
-        steadfast: settings.courierConfig.steadfast?.apiKey ? { apiKey: "********************", secretKey: "********************" } : settings.courierConfig.steadfast,
-        pathao: settings.courierConfig.pathao?.clientId ? { clientId: "********************", clientSecret: "********************", storeId: "********************" } : settings.courierConfig.pathao,
-        redx: settings.courierConfig.redx?.apiKey ? { apiKey: "********************" } : settings.courierConfig.redx,
-      } : settings.courierConfig
+      ...maskedSettings,
+      facebookAccessToken: rawSettings.facebookAccessToken ? "********************" : null,
+      courierConfig: maskedSettings.courierConfig ? {
+        ...maskedSettings.courierConfig,
+        steadfast: rawSettings.courierConfig?.steadfast?.apiKey ? { apiKey: "********************", secretKey: "********************" } : maskedSettings.courierConfig.steadfast,
+        pathao: rawSettings.courierConfig?.pathao?.clientId ? { clientId: "********************", clientSecret: "********************", storeId: "********************" } : maskedSettings.courierConfig.pathao,
+        redx: rawSettings.courierConfig?.redx?.apiKey ? { apiKey: "********************" } : maskedSettings.courierConfig.redx,
+      } : maskedSettings.courierConfig
     };
 
     return NextResponse.json(safeResult);
