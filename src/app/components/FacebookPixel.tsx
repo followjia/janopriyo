@@ -27,11 +27,8 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
         // Explicitly set parameters to prevent FB from guessing or using defaults
-        fbq("set", "page_location", url, "${pixelId}");
-        fbq("track", "PageView", {
-          page_location: url,
-          page_path: pathname,
-        }, { 
+        fbq("set", "page_location", url, pixelId);
+        fbq("track", "PageView", {}, { 
           eventID: eventId 
         });
       }
