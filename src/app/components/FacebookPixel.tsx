@@ -8,73 +8,65 @@ declare global {
   interface Window {
     fbq: any;
     _fbq: any;
-    fbqInitialized: boolean;
   }
 }
 
-export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
+// PIXEL_ID is now passed as a prop from layout
+
+export default function FacebookPixel({
+  pixelId,
+}: {
+  pixelId?: string;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const lastTrackedPath = useRef<string>("");
+
+  // Shared eventId across browser pixel and CAPI for deduplication
+  // Initialize with a dummy or empty string during SSR
   const currentEventId = useRef<string>("");
 
   const trackPageView = useCallback(
-    (eventId: string, url: string) => {
+    (eventId: string) => {
       if (!pixelId) return;
-
-      console.log(`[FB-Pixel] Tracking PageView | ID: ${eventId} | URL: ${url}`);
-
-      const fbq = (window as any).fbq;
-      if (typeof fbq === "function") {
-        // Report the current path explicitly to ensure the Pixel tool picks it up
-        fbq("track", "PageView", {
-          page_path: window.location.pathname + window.location.search
-        }, { 
-          eventID: eventId 
-        });
+      // 1. Browser-side tracking with explicit eventID
+      if (typeof window.fbq === "function") {
+        window.fbq("track", "PageView", {}, { eventID: eventId });
       }
-
+      // 2. Server-side (CAPI) tracking with same eventID
       fetch("/api/facebook/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventName: "PageView",
-          eventUrl: url,
+          eventUrl: window.location.href,
           userAgent: navigator.userAgent,
           eventId,
         }),
-      }).catch(() => {});
+      }).catch(() => {
+        /* fail silently — browser pixel is the fallback */
+      });
     },
     [pixelId]
   );
 
   useEffect(() => {
     if (!pixelId) return;
-
-    // Increased timeout to 500ms to ensure window.location.href is fully settled
-    const timeoutId = setTimeout(() => {
-      const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
-      const trackingKey = pathname + searchParams.toString();
-
-      if (lastTrackedPath.current === trackingKey) return;
-      
-      lastTrackedPath.current = trackingKey;
-      currentEventId.current = crypto.randomUUID();
-      trackPageView(currentEventId.current, currentUrl);
-    }, 500); 
-
-    return () => clearTimeout(timeoutId);
+    // Generate new eventId on every route change
+    currentEventId.current = crypto.randomUUID();
+    trackPageView(currentEventId.current);
   }, [pathname, searchParams, trackPageView, pixelId]);
 
-  if (!pixelId) return null;
+  if (!pixelId) {
+    return null;
+  }
 
   return (
-    <Script
-      id="fb-pixel"
-      strategy="afterInteractive"
-      dangerouslySetInnerHTML={{
-        __html: `
-          if (!window.fbqInitialized) {
+    <>
+      <Script
+        id="fb-pixel"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod ?
               n.callMethod.apply(n, arguments) : n.queue.push(arguments)};
@@ -83,19 +75,19 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            
-            // Disable automatic URL tracking to allow manual control
-            if (window._fbq) {
-              window._fbq.disablePushState = true;
-              window.fbq.allowDuplicatePageViews = true;
-            }
-            
-            fbq('set', 'autoConfig', false, '${pixelId}');
             fbq('init', '${pixelId}');
-            window.fbqInitialized = true;
-          }
-        `,
-      }}
-    />
+            
+          `,
+        }}
+      />
+      <noscript>
+        <img
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+        />
+      </noscript>
+    </>
   );
 }
