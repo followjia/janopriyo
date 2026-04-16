@@ -28,7 +28,10 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
       if (typeof fbq === "function") {
         // Facebook automatically captures the URL from window.location.href
         // We only pass the eventID for deduplication
-        fbq("track", "PageView", {}, { 
+        fbq("track", "PageView", {
+          page_location: url,
+          page_path: window.location.pathname
+        }, { 
           eventID: eventId 
         });
       }
