@@ -8,27 +8,22 @@ declare global {
   interface Window {
     fbq: any;
     _fbq: any;
+    fbqInitialized: boolean;
   }
 }
 
 export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // Immediate log to check mount and ID
-  console.log(`[FB-Pixel] Component Mounting. PixelID: ${pixelId || 'UNDEFINED'}`);
-
-  // Shared eventId across browser pixel and CAPI for deduplication
+  const lastTrackedPath = useRef<string>("");
   const currentEventId = useRef<string>("");
 
   const trackPageView = useCallback(
     (eventId: string, url: string) => {
       if (!pixelId) return;
 
-      // Debug log to identify which code is firing the event
       console.log(`[FB-Pixel] Tracking PageView | ID: ${eventId} | URL: ${url}`);
 
-      // 1. Browser-side tracking (with precise URL parameters)
       const fbq = (window as any).fbq;
       if (typeof fbq === "function") {
         fbq("track", "PageView", {
@@ -39,7 +34,6 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
         });
       }
 
-      // 2. Server-side (CAPI) tracking
       fetch("/api/facebook/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -49,45 +43,37 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
           userAgent: navigator.userAgent,
           eventId,
         }),
-      }).catch(() => {
-        /* fail silently */
-      });
+      }).catch(() => {});
     },
     [pixelId, pathname]
   );
 
-  const lastTrackedPath = useRef<string>("");
-
   useEffect(() => {
     if (!pixelId) return;
 
-    // Use a small timeout to ensure the browser has updated history/location state
     const timeoutId = setTimeout(() => {
       const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
       const trackingKey = pathname + searchParams.toString();
 
-      // Prevent duplicate tracking if the path hasn't truly changed
       if (lastTrackedPath.current === trackingKey) return;
       
       lastTrackedPath.current = trackingKey;
       currentEventId.current = crypto.randomUUID();
       trackPageView(currentEventId.current, currentUrl);
-    }, 100); // Increased to 100ms for extra safety
+    }, 150); // Slightly more delay for stability
 
     return () => clearTimeout(timeoutId);
   }, [pathname, searchParams, trackPageView, pixelId]);
 
-  if (!pixelId) {
-    return null;
-  }
+  if (!pixelId) return null;
 
   return (
-    <>
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+    <Script
+      id="fb-pixel"
+      strategy="afterInteractive"
+      dangerouslySetInnerHTML={{
+        __html: `
+          if (!window.fbqInitialized) {
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod ?
               n.callMethod.apply(n, arguments) : n.queue.push(arguments)};
@@ -98,17 +84,10 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('set', 'autoConfig', false, '${pixelId}');
             fbq('init', '${pixelId}');
-          `,
-        }}
-      />
-      <noscript>
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          src={`https://www.facebook.com/tr?id=${pixelId}&noscript=1`}
-        />
-      </noscript>
-    </>
+            window.fbqInitialized = true;
+          }
+        `,
+      }}
+    />
   );
 }
