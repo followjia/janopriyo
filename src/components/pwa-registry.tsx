@@ -17,7 +17,14 @@ export function PWARegistry() {
 
       const handleServiceWorker = async () => {
         try {
-          const registration = await navigator.serviceWorker.register('/sw.js');
+          // Force the browser to check for new service worker on every visit
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            updateViaCache: 'none'
+          });
+          
+          // Trigger an update check immediately
+          registration.update();
+          
           console.log('Service Worker registered with scope:', registration.scope);
         } catch (error) {
           console.error('Service Worker registration failed:', error);
