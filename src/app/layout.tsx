@@ -24,6 +24,8 @@ const geistMono = Geist_Mono({
 
 import { generateOrganizationSchema } from "@/lib/seo";
 
+export const dynamic = 'force-dynamic';
+
 async function getGlobalSettings() {
   try {
     await connectToDatabase();
