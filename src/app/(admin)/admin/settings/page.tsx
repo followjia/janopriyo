@@ -40,6 +40,8 @@ const settingsSchema = z.object({
     whatsapp: z.string().url().optional().or(z.literal('')),
   }),
   marqueeText: z.string().optional(),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
   courierConfig: z.object({
     activeProvider: z.enum(['steadfast', 'pathao', 'redx', 'none']).default('none'),
     steadfast: z.object({
@@ -80,6 +82,8 @@ export default function SettingsPage() {
         whatsapp: ''
       },
       marqueeText: '',
+      metaTitle: '',
+      metaDescription: '',
       courierConfig: {
         activeProvider: 'none',
         steadfast: { apiKey: '', secretKey: '' },
@@ -270,6 +274,37 @@ export default function SettingsPage() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="metaTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Global Meta Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Janopriyo Shop | Best Ecommerce in BD" {...field} />
+                          </FormControl>
+                          <FormDescription>Used as the primary browser title for the home page.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="metaDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Global Meta Description</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Shop the best products at Janopriyo..." {...field} />
+                          </FormControl>
+                          <FormDescription>Used for search engine snippets and social sharing.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

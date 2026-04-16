@@ -19,6 +19,8 @@ export interface IGlobalSettings extends Document {
     whatsapp?: string;
   };
   marqueeText?: string;
+  metaTitle?: string;
+  metaDescription?: string;
   googleTagManagerId?: string;
   searchConsoleMeta?: string;
   facebookDomainVerification?: string;
@@ -66,6 +68,8 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       whatsapp: { type: String },
     },
     marqueeText: { type: String },
+    metaTitle: { type: String },
+    metaDescription: { type: String },
     googleTagManagerId: { type: String },
     searchConsoleMeta: { type: String },
     facebookDomainVerification: { type: String },

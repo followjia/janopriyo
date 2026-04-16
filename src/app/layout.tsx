@@ -67,10 +67,10 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       metadataBase: new URL(baseUrl),
       title: {
-        default: settings.brandName || "Janopriyo Shop",
+        default: settings.metaTitle || settings.brandName || "Janopriyo Shop",
         template: `%s | ${settings.brandName || "Janopriyo Shop"}`,
       },
-      description: settings.brandName || "Your ultimate destination for quality products.",
+      description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
       manifest: process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined,
       appleWebApp: {
         capable: true,
@@ -81,8 +81,8 @@ export async function generateMetadata(): Promise<Metadata> {
         telephone: false,
       },
       openGraph: {
-        title: settings.brandName || "Janopriyo Shop",
-        description: "Your ultimate destination for quality products.",
+        title: settings.metaTitle || settings.brandName || "Janopriyo Shop",
+        description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
         url: baseUrl,
         siteName: settings.brandName || "Janopriyo Shop",
         images: settings.logo ? [{ url: settings.logo }] : [],
@@ -90,12 +90,15 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       twitter: {
         card: 'summary_large_image',
-        title: settings.brandName || "Janopriyo Shop",
-        description: "Your ultimate destination for quality products.",
+        title: settings.metaTitle || settings.brandName || "Janopriyo Shop",
+        description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
         images: settings.logo ? [settings.logo] : [],
       },
       verification: {
         google: settings.searchConsoleMeta,
+      },
+      alternates: {
+        canonical: '/',
       },
       other: {
         ...(settings.facebookDomainVerification
