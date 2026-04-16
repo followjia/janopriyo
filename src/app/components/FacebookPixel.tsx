@@ -19,21 +19,24 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
   const currentEventId = useRef<string>("");
 
   const trackPageView = useCallback(
-    (eventId: string) => {
+    (eventId: string, url: string) => {
       if (!pixelId) return;
       
-      // Use the global fbq function (which is initialized by the script snippet)
+      // 1. Browser-side tracking
       if (typeof window !== "undefined" && typeof (window as any).fbq === "function") {
-        (window as any).fbq("track", "PageView", {}, { eventID: eventId });
+        (window as any).fbq("track", "PageView", {
+            page_location: url,
+            page_path: pathname
+        }, { eventID: eventId });
       }
 
-      // CAPI (Server-side) tracking
+      // 2. Server-side (CAPI) tracking
       fetch("/api/facebook/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventName: "PageView",
-          eventUrl: window.location.href,
+          eventUrl: url,
           userAgent: navigator.userAgent,
           eventId,
         }),
@@ -41,14 +44,17 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
         /* fail silently */
       });
     },
-    [pixelId]
+    [pixelId, pathname]
   );
 
   useEffect(() => {
     if (!pixelId) return;
-    // Generate new eventId on every route change
+    
+    // Explicitly construct the current URL to ensure accuracy in SPAs
+    const currentUrl = window.location.origin + pathname + (searchParams.toString() ? "?" + searchParams.toString() : "");
+    
     currentEventId.current = crypto.randomUUID();
-    trackPageView(currentEventId.current);
+    trackPageView(currentEventId.current, currentUrl);
   }, [pathname, searchParams, trackPageView, pixelId]);
 
   if (!pixelId) {
