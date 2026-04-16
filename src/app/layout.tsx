@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic';
 async function getGlobalSettings() {
   try {
     await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).lean();
+    const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 }).lean();
 
     if (!settings) {
       // Consistent fallback logic

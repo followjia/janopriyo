@@ -57,6 +57,11 @@ export default function FacebookPixel({ pixelId, testEventCode }: { pixelId?: st
             <Script
                 id="fb-pixel"
                 strategy="afterInteractive"
+                onLoad={() => {
+                    if (pixelId && typeof window.fbq === 'function') {
+                        window.fbq('init', pixelId);
+                    }
+                }}
                 dangerouslySetInnerHTML={{
                     __html: `
             !function(f,b,e,v,n,t,s)
