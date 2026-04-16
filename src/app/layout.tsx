@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 import connectToDatabase from "@/lib/db";
 import GlobalSettings from "@/models/GlobalSettings";
+import Script from "next/script";
+import { PWARegistry } from "@/components/pwa-registry";
+import GoogleTagManager from "./components/GoogleTagManager";
+import FacebookPixel from "./components/FacebookPixel";
 
 
 const geistSans = Geist({
@@ -51,11 +56,6 @@ async function getGlobalSettings() {
     };
   }
 }
-
-import Script from "next/script";
-import { PWARegistry } from "@/components/pwa-registry";
-import GoogleTagManager from "./components/GoogleTagManager";
-import FacebookPixel from "./components/FacebookPixel";
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -143,10 +143,12 @@ export default async function RootLayout({
         )}
         <Providers>
           <GoogleTagManager gtmId={settings.googleTagManagerId} />
-          <FacebookPixel
-            pixelId={settings.metaPixelId}
-            testEventCode={settings.facebookTestEventCode}
-          />
+          <Suspense fallback={null}>
+            <FacebookPixel
+              pixelId={settings.metaPixelId}
+              testEventCode={settings.facebookTestEventCode}
+            />
+          </Suspense>
           {children}
         </Providers>
         <Toaster position="bottom-right" richColors />
