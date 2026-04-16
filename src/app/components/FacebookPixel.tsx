@@ -28,10 +28,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
       if (typeof fbq === "function") {
         // Facebook automatically captures the URL from window.location.href
         // We only pass the eventID for deduplication
-        fbq("track", "PageView", {
-          page_location: url,
-          page_path: window.location.pathname
-        }, { 
+        fbq("track", "PageView", {}, { 
           eventID: eventId 
         });
       }
@@ -89,6 +86,7 @@ export default function FacebookPixel({ pixelId }: { pixelId?: string }) {
             // Disable automatic URL tracking to allow manual control
             if (window._fbq) {
               window._fbq.disablePushState = true;
+              window.fbq.allowDuplicatePageViews = true;
             }
             
             fbq('set', 'autoConfig', false, '${pixelId}');
