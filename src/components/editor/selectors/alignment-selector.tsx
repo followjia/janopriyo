@@ -4,6 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AlignCenter, AlignLeft, AlignRight } from "lucide-react";
 import { useEditor } from "novel";
+import "@tiptap/extension-text-align";
 
 type Alignment = "left" | "center" | "right";
 
