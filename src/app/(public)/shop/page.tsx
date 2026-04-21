@@ -17,10 +17,10 @@ import {
     Filter, 
     Search, 
     X, 
-    ChevronDown, 
     Loader2, 
     LayoutGrid, 
-    LayoutList 
+    LayoutList,
+    SlidersHorizontal
 } from 'lucide-react';
 import { 
     Sheet, 
@@ -33,14 +33,42 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
+interface ShopCategory {
+  _id: string;
+  slug: string;
+  name: string;
+  isActive: boolean;
+}
+
+interface ShopProductCategoryRef {
+  _id?: string;
+  slug?: string;
+}
+
+interface ShopProduct {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  price: number;
+  salePrice?: number;
+  createdAt: string;
+  isPublished: boolean;
+  isNewArrival?: boolean;
+  images: string[];
+  stock: number;
+  categories?: ShopProductCategoryRef[];
+}
+
 // Component for the SearchParams usage to avoid deopting the whole page from static optimization
 function ShopContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
   const initialSearch = searchParams.get('q');
+  const initialFilter = searchParams.get('filter');
 
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [categories, setCategories] = useState<ShopCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
@@ -51,6 +79,7 @@ function ShopContent() {
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
+  const [showOnlyNew, setShowOnlyNew] = useState(initialFilter === 'new');
 
   useEffect(() => {
     async function fetchData() {
@@ -61,7 +90,7 @@ function ShopContent() {
         if (catRes.ok) {
           const catData = await catRes.json();
           if (Array.isArray(catData)) {
-            setCategories(catData.filter((c: any) => c.isActive));
+            setCategories(catData.filter((c: ShopCategory) => c.isActive));
           }
         }
 
@@ -70,10 +99,10 @@ function ShopContent() {
         if (prodRes.ok) {
           const prodData = await prodRes.json();
           if (Array.isArray(prodData)) {
-            setProducts(prodData.filter((p: any) => p.isPublished));
+            setProducts(prodData.filter((p: ShopProduct) => p.isPublished));
           }
         }
-      } catch (error) {
+      } catch {
         console.error('Failed to load shop data');
       } finally {
         setLoading(false);
@@ -87,11 +116,12 @@ function ShopContent() {
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (p.description?.toLowerCase() ?? '').includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategories.length === 0 || 
-                             (p.categories ?? []).some((c: any) => selectedCategories.includes(c.slug) || selectedCategories.includes(c._id));
+                             (p.categories ?? []).some((c) => selectedCategories.includes(c.slug || '') || selectedCategories.includes(c._id || ''));
       const price = p.salePrice || p.price;
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+      const matchesNewArrival = !showOnlyNew || p.isNewArrival === true;
 
-      return matchesSearch && matchesCategory && matchesPrice;
+      return matchesSearch && matchesCategory && matchesPrice && matchesNewArrival;
     })
     .sort((a, b) => {
       const priceA = a.salePrice || a.price;
@@ -111,6 +141,7 @@ function ShopContent() {
     setSelectedCategories([]);
     setPriceRange([0, 5000]);
     setSearchTerm('');
+    setShowOnlyNew(false);
   };
 
   const Sidebar = () => (
@@ -161,6 +192,20 @@ function ShopContent() {
 
   return (
     <div className="container px-4 md:px-6 py-10">
+      <div className="mb-10 rounded-3xl border bg-gradient-to-r from-primary/[0.08] via-background to-background p-6 md:p-10">
+        <div className="max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Smart shopping
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight">
+            Discover Products That Match Your Style
+          </h1>
+          <p className="text-muted-foreground">
+            Filter by category, budget, and latest arrivals to quickly find the right product.
+          </p>
+        </div>
+      </div>
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Desktop Sidebar */}
         <aside className="hidden w-64 shrink-0 md:block">
@@ -229,8 +274,19 @@ function ShopContent() {
             </div>
           </div>
 
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {loading ? 'Loading products...' : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'} found`}
+            </p>
+            {filteredProducts.length > 0 && (
+              <Badge variant="outline" className="text-[10px] uppercase tracking-widest">
+                Curated from database
+              </Badge>
+            )}
+          </div>
+
           {/* Active Filters Bar */}
-          {(selectedCategories.length > 0 || searchTerm || priceRange[0] > 0 || priceRange[1] < 5000) && (
+          {(selectedCategories.length > 0 || searchTerm || priceRange[0] > 0 || priceRange[1] < 5000 || showOnlyNew) && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs font-bold uppercase text-muted-foreground mr-2">Filtered By:</span>
               {selectedCategories.map(cat => (
@@ -246,6 +302,11 @@ function ShopContent() {
               {(priceRange[0] !== 0 || priceRange[1] !== 5000) && (
                 <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
                    Price: ${priceRange[0]} - ${priceRange[1]}
+                </Badge>
+              )}
+              {showOnlyNew && (
+                <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
+                  New Arrivals <X className="h-3 w-3 cursor-pointer" onClick={() => setShowOnlyNew(false)} />
                 </Badge>
               )}
               <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={clearFilters}>
@@ -267,7 +328,7 @@ function ShopContent() {
                 </div>
                 <h2 className="text-xl font-bold">No products found</h2>
                 <p className="text-muted-foreground max-w-xs">
-                    Try adjusting your filters or search terms to find what you're looking for.
+                    Try adjusting your filters or search terms to find what you&apos;re looking for.
                 </p>
                 <Button variant="outline" onClick={clearFilters}>Reset All Filters</Button>
             </div>

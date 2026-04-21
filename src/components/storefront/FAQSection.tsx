@@ -9,30 +9,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { HelpCircle } from "lucide-react";
 
-const faqs = [
-  {
-    question: "Do you deliver all over Bangladesh?",
-    answer: "Yes, we provide nationwide home delivery through professional courier services like Steadfast, Pathao, and RedX. Delivery usually takes 2-3 days in Dhaka and 3-5 days outside Dhaka."
-  },
-  {
-    question: "How can I track my order?",
-    answer: "Once your order is shipped, you will receive a tracking link in your customer dashboard and via SMS. You can use this link to check the live status of your parcel."
-  },
-  {
-    question: "What are your payment methods?",
-    answer: "We accept Cash on Delivery (COD) as well as secure online payments including bKash, Nagad, Rocket, and all major Credit/Debit cards through SSLCommerz."
-  },
-  {
-    question: "What is your return policy?",
-    answer: "We offer a 7-day easy return policy if the product is damaged, defective, or not as described. Please keep the original packaging and contact our support immediately."
-  },
-  {
-    question: "Are the products genuine?",
-    answer: "Absolutely. We source all our products directly from authorized distributors and manufacturers to ensure 100% authenticity for our customers."
-  }
-];
+interface FAQItem {
+  question: string;
+  answer: string;
+}
 
-export function FAQSection() {
+export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
+  if (!faqs || faqs.length === 0) return null;
   return (
     <section className="py-24 bg-muted/20">
       <div className="container px-4 md:px-6">

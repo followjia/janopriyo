@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Edit, Trash, Loader2, Search } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2, Search, DatabaseZap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -18,9 +18,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 
+interface AdminProduct {
+  _id: string;
+  name: string;
+  sku: string;
+  price: number;
+  salePrice?: number;
+  stock: number;
+  isPublished: boolean;
+  images?: string[];
+}
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const [search, setSearch] = useState('');
   const router = useRouter();
 
@@ -33,7 +45,7 @@ export default function ProductsPage() {
       }
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch products');
     } finally {
       setLoading(false);
@@ -74,7 +86,7 @@ export default function ProductsPage() {
         } else {
           toast.error('Failed to delete product');
         }
-      } catch (error) {
+      } catch {
         toast.error('Error deleting product');
       }
     }
@@ -87,15 +99,43 @@ export default function ProductsPage() {
     return nameLower.includes(searchLower) || skuLower.includes(searchLower);
   });
 
+  const handleSeedDemoData = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch('/api/admin/seed-demo', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message || 'Failed to seed demo data');
+        return;
+      }
+      toast.success(`Seeded ${data.blogsInserted} blogs and ${data.productsInserted} products.`);
+      fetchProducts();
+    } catch {
+      toast.error('Failed to seed demo data');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-        <Link href="/admin/products/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Product
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={handleSeedDemoData} disabled={seeding}>
+            {seeding ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <DatabaseZap className="mr-2 h-4 w-4" />
+            )}
+            Seed Demo Data
           </Button>
-        </Link>
+          <Link href="/admin/products/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

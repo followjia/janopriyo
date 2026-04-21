@@ -10,7 +10,7 @@ export async function GET(
     await connectToDatabase();
     const { slug } = await params;
 
-    const blog = await Blog.findOne({ slug });
+    const blog = await Blog.findOne({ slug, isPublished: true });
 
     if (!blog) {
       return NextResponse.json({ message: 'Blog not found' }, { status: 404 });

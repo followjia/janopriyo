@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Calendar, ArrowLeft, Share2, Send, Share, Link as LinkIcon } from 'lucide-react';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,19 +8,36 @@ import { ShareButtons } from '@/components/storefront/ShareButtons';
 import Image from 'next/image';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
+import { generateHtml } from '@/lib/server-html';
 
 interface BlogDetailProps {
   params: { slug: string };
 }
 
+interface BlogDetail {
+  title: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  thumbnail?: string;
+  content: string;
+  createdAt: string | Date;
+}
+
+const getReadingTime = (rawContent: string) => {
+  const html = generateHtml(rawContent);
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = text ? text.split(' ').length : 0;
+  return Math.max(1, Math.ceil(words / 220));
+};
+
 async function getBlog(slug: string) {
   await connectToDatabase();
-  return await Blog.findOne({ slug }).lean();
+  return (await Blog.findOne({ slug, isPublished: true }).lean()) as BlogDetail | null;
 }
 
 export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {
   const { slug } = await params;
-  const blog: any = await getBlog(slug);
+  const blog = await getBlog(slug);
 
   if (!blog) return { title: 'Blog Not Found' };
 
@@ -38,9 +55,10 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
 
 export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const { slug } = await params;
-  const blog: any = await getBlog(slug);
+  const blog = await getBlog(slug);
 
   if (!blog) notFound();
+  const readingTime = getReadingTime(blog.content);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +84,7 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
                </div>
                <div className="h-1 w-1 rounded-full bg-border" />
                <div className="text-xs font-bold uppercase tracking-widest">
-                  5 min read
+                  {readingTime} min read
                </div>
             </div>
           </div>
@@ -102,9 +120,10 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
                    We use whitespace-pre-wrap to preserve normal text formatting 
                    since there is no rich text editor yet.
                 */}
-                <div className="whitespace-pre-wrap min-h-[400px]">
-                    {blog.content}
-                </div>
+                <div 
+                    className="ProseMirror prose prose-lg dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-muted-foreground prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-strong:text-foreground min-h-[400px]"
+                    dangerouslySetInnerHTML={{ __html: generateHtml(blog.content) }}
+                />
               </div>
 
               {/* Tag / Category Footer section could go here */}

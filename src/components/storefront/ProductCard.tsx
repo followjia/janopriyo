@@ -19,6 +19,7 @@ interface ProductCardProps {
     salePrice?: number;
     images: string[];
     isFeatured?: boolean;
+    isNewArrival?: boolean;
     stock: number;
     categories?: any[];
   }
@@ -108,6 +109,9 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
             {product.isFeatured && (
                 <Badge variant="default" className="bg-primary hover:bg-primary font-bold uppercase text-[10px]">Featured</Badge>
+            )}
+            {product.isNewArrival && (
+                <Badge variant="secondary" className="bg-emerald-500 hover:bg-emerald-600 text-white border-none font-bold uppercase text-[10px]">New Arrival</Badge>
             )}
             {product.stock === 0 && (
                 <Badge variant="secondary" className="font-bold uppercase text-[10px]">Out of Stock</Badge>

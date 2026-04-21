@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
+import { Mail, Phone, MapPin, ExternalLink, MessageCircleMore } from 'lucide-react';
 import { Facebook, X, Instagram, Youtube } from '@/components/ui/social-icons';
 import connectToDatabase from '@/lib/db';
 import GlobalSettings from '@/models/GlobalSettings';
@@ -44,7 +44,11 @@ export default async function ContactPage() {
     );
   }
 
-  const { contact = {} as any, socialLinks, brandName } = settings;
+  const { contact = {}, socialLinks, brandName } = settings as {
+    contact?: { email?: string; phone?: string; address?: string };
+    socialLinks?: { facebook?: string; twitter?: string; instagram?: string; youtube?: string };
+    brandName?: string;
+  };
 
   const contactItems = [
     {
@@ -52,23 +56,34 @@ export default async function ContactPage() {
       title: "Call Us",
       value: contact?.phone || "Phone not set",
       href: `tel:${contact?.phone || ""}`,
-      label: "Call Now"
+      label: "Call Now",
+      isExternal: false
     },
     {
       icon: <Mail className="h-6 w-6 text-primary" />,
       title: "Email Us",
       value: contact?.email || "Email not set",
       href: `mailto:${contact?.email || ""}`,
-      label: "Send Email"
+      label: "Send Email",
+      isExternal: false
     },
     {
       icon: <MapPin className="h-6 w-6 text-primary" />,
       title: "Visit Us",
       value: contact?.address || "Address not set",
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact?.address || "")}`,
-      label: "Get Directions"
+      label: "Get Directions",
+      isExternal: true
+    },
+    {
+      icon: <MessageCircleMore className="h-6 w-6 text-primary" />,
+      title: "Chat on WhatsApp",
+      value: contact?.phone || "Phone not set",
+      href: contact?.phone ? `https://wa.me/${String(contact.phone).replace(/\D/g, '')}` : null,
+      label: "Start Chat",
+      isExternal: true
     }
-  ];
+  ].filter(item => item.title !== "Chat on WhatsApp" || item.href);
 
   const socialItems = [
     { name: 'Facebook', icon: <Facebook className="h-5 w-5" />, url: socialLinks?.facebook },
@@ -86,7 +101,7 @@ export default async function ContactPage() {
             Contact <span className="text-primary">Us</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have questions about our products or services? We're here to help. Reach out to us through any of the channels below.
+            Have questions about our products or services? We&apos;re here to help. Reach out to us through any of the channels below.
           </p>
         </div>
       </section>
@@ -94,7 +109,7 @@ export default async function ContactPage() {
       {/* Contact Cards Grid */}
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {contactItems.map((item, idx) => (
               <Card key={idx} className="border-none shadow-md hover:shadow-lg transition-shadow bg-card/50 backdrop-blur-sm">
                 <CardContent className="pt-8 pb-8 flex flex-col items-center text-center">
@@ -106,9 +121,9 @@ export default async function ContactPage() {
                     {item.value}
                   </p>
                   <a 
-                    href={item.href} 
-                    target={item.title === "Visit Us" ? "_blank" : undefined}
-                    rel={item.title === "Visit Us" ? "noopener noreferrer" : undefined}
+                    href={item.href || "#"} 
+                    target={item.isExternal ? "_blank" : undefined}
+                    rel={item.isExternal ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
                   >
                     {item.label} <ExternalLink className="h-3 w-3" />

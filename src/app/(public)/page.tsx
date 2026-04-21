@@ -1,9 +1,10 @@
-import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import connectToDatabase from '@/lib/db';
 import Banner from '@/models/Banner';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import Blog from '@/models/Blog';
+import FAQ from '@/models/FAQ';
 import { HeroSlider } from '@/components/storefront/HeroSlider';
 import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
 import { FeaturedProducts } from '@/components/storefront/FeaturedProducts';
@@ -20,15 +21,16 @@ import Link from 'next/link';
 async function getHomeData() {
   try {
     await connectToDatabase();
-    
+
     const [
-        bannersRaw, 
-        categoriesRaw, 
-        featuredProductsRaw, 
-        newArrivalsRaw, 
-        flashSaleRaw, 
-        trendingRaw, 
-        blogsRaw
+      bannersRaw,
+      categoriesRaw,
+      featuredProductsRaw,
+      newArrivalsRaw,
+      flashSaleRaw,
+      trendingRaw,
+      blogsRaw,
+      faqsRaw
     ] = await Promise.all([
       Banner.find({ isActive: true }).sort({ order: 1 }).lean(),
       Category.find({ isActive: true }).sort({ createdAt: -1 }).lean(),
@@ -57,10 +59,13 @@ async function getHomeData() {
         .limit(4)
         .lean(),
       // Recent Blogs
-      Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(3).lean()
+      Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(3).lean(),
+      // FAQs
+      FAQ.find({ isActive: true }).sort({ order: 1 }).lean()
     ]);
 
-    const serialize = (data: any) => JSON.parse(JSON.stringify(data));
+
+    const serialize = (data: any): any => JSON.parse(JSON.stringify(data));
 
     return {
       banners: serialize(bannersRaw),
@@ -69,24 +74,31 @@ async function getHomeData() {
       newArrivals: serialize(newArrivalsRaw),
       flashSale: serialize(flashSaleRaw),
       trending: serialize(trendingRaw),
-      blogs: serialize(blogsRaw)
+      blogs: serialize(blogsRaw),
+      faqs: serialize(faqsRaw && faqsRaw.length > 0 ? faqsRaw : [])
     };
   } catch (error) {
     console.error("Error fetching home data directly from DB:", error);
-    return { 
-        banners: [], 
-        categories: [], 
-        featuredProducts: [], 
-        newArrivals: [], 
-        flashSale: [], 
-        trending: [], 
-        blogs: [] 
+    return {
+      banners: [],
+      categories: [],
+      featuredProducts: [],
+      newArrivals: [],
+      flashSale: [],
+      trending: [],
+      blogs: [],
+      faqs: []
     };
   }
 }
 
 export default async function Home() {
   const data = await getHomeData();
+  const hasAnyProducts =
+    data.featuredProducts.length > 0 ||
+    data.newArrivals.length > 0 ||
+    data.flashSale.length > 0 ||
+    data.trending.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -105,34 +117,43 @@ export default async function Home() {
       {/* 5. New Arrivals */}
       <section className="py-20">
         <div className="container px-4 md:px-6">
-            <div className="flex items-center justify-between mb-12">
-                <h2 className="text-3xl font-black tracking-tighter">New Arrivals</h2>
-                <Link href="/shop?filter=new" className="text-sm font-bold text-primary hover:underline flex items-center gap-1 group">
-                    View All <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-3xl font-black tracking-tighter">New Arrivals</h2>
+            <Link href="/shop?filter=new" className="text-sm font-bold text-primary hover:underline flex items-center gap-1 group">
+              View All <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {data.newArrivals.map((product: any) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+          {!hasAnyProducts && (
+            <div className="mt-8 text-center rounded-2xl border border-dashed p-10 bg-muted/20">
+              <h3 className="text-xl font-bold mb-2">Storefront is getting ready</h3>
+              <p className="text-muted-foreground mb-4">Add products from admin to make this section live.</p>
+              <Button render={<Link href="/shop" />} nativeButton={false}>
+                Visit Shop
+              </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {data.newArrivals.map((product: any) => (
-                    <ProductCard key={product._id} product={product} /> 
-                ))}
-            </div>
+          )}
         </div>
       </section>
 
       {/* 6. Trending Products */}
       <section className="py-20 bg-muted/20">
         <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4 mb-16">
-                <h2 className="text-4xl font-black tracking-tighter">Trending Now</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto">
-                    The most popular items according to our community ratings and reviews.
-                </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {data.trending.map((product: any) => (
-                    <ProductCard key={product._id} product={product} />
-                ))}
-            </div>
+          <div className="flex flex-col items-center text-center space-y-4 mb-16">
+            <h2 className="text-4xl font-black tracking-tighter">Trending Now</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              The most popular items according to our community ratings and reviews.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {data.trending.map((product: any) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -146,7 +167,7 @@ export default async function Home() {
       <BlogRecent blogs={data.blogs} />
 
       {/* 10. FAQ Accordion Section */}
-      <FAQSection />
+      <FAQSection faqs={data.faqs} />
 
       {/* 11. Newsletter V2 Integration */}
       <NewsletterV2 />

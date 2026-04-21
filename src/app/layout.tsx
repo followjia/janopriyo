@@ -4,12 +4,16 @@ import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import "./prosemirror.css";
 import connectToDatabase from "@/lib/db";
 import GlobalSettings from "@/models/GlobalSettings";
 import Script from "next/script";
 import { PWARegistry } from "@/components/pwa-registry";
 import GoogleTagManager from "./components/GoogleTagManager";
 import FacebookPixel from "./components/FacebookPixel";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { ScrollProgress } from "@/components/layout/ScrollProgress";
 
 
 const geistSans = Geist({
@@ -154,7 +158,11 @@ export default async function RootLayout({
               pixelId={process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || settings.metaPixelId}
             />
           </Suspense>
-          {children}
+          <SmoothScroll>
+            {children}
+            <ScrollProgress />
+            <ScrollToTop />
+          </SmoothScroll>
         </Providers>
         <Toaster position="bottom-right" richColors />
       </body>

@@ -1,16 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { 
-    ShoppingCart, 
-    Heart, 
-    ChevronRight, 
-    Truck, 
-    ShieldCheck, 
-    RotateCcw,
-    Star
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
@@ -18,6 +8,7 @@ import { cache } from 'react';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
 import ProductDetailsClient from './ProductDetailsClient'; 
+import { ProductCard } from '@/components/storefront/ProductCard';
  
 const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
@@ -85,6 +76,27 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     );
   }
 
+  let related = [];
+  try {
+    await connectToDatabase();
+    const relatedProducts = await Product.find({
+      _id: { $ne: product._id },
+      isPublished: true,
+      $or: [
+        { categories: { $in: (product.categories ?? []).map((category: { _id: string }) => category._id) } },
+        { tags: { $in: product.tags || [] } },
+      ],
+    })
+      .populate('categories')
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .lean();
+    related = JSON.parse(JSON.stringify(relatedProducts));
+  } catch (error) {
+    console.error("Error fetching related products:", error);
+    related = [];
+  }
+
   const productSchema = generateProductSchema(product);
   const breadcrumbSchema = generateBreadcrumbSchema([
       { name: 'Home', item: '/' },
@@ -117,7 +129,28 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         <span className="text-foreground font-medium truncate">{product.name}</span>
       </div>
 
-      <ProductDetailsClient product={product} />
+      <div className="rounded-3xl border bg-card/40 p-4 md:p-8">
+        <ProductDetailsClient product={product} />
+      </div>
+
+      {Array.isArray(related) && related.length > 0 && (
+        <section className="mt-20">
+          <div className="flex items-end justify-between mb-8 gap-4">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight">You May Also Like</h2>
+              <p className="text-muted-foreground mt-1">Similar picks based on this product&apos;s category and tags.</p>
+            </div>
+            <Button variant="outline" render={<Link href="/shop" />} nativeButton={false}>
+              Explore More
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {related.map((item: any) => (
+              <ProductCard key={item._id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

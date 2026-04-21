@@ -50,9 +50,9 @@ export function CategoryNav() {
         setActiveParent(null);
       }}
     >
-      <button className="flex items-center gap-1.5 text-sm font-medium hover:text-primary transition-colors h-full px-2 group">
+      <button className="flex items-center gap-1.5 text-sm font-bold tracking-wide hover:text-primary transition-colors h-full px-1 group">
         Categories
-        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isHovered ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isHovered ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -77,10 +77,10 @@ export function CategoryNav() {
                   >
                     <Link
                       href={`/shop?category=${mainCat.slug}`}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
                         activeParent === mainCat._id 
                           ? 'bg-primary/10 text-primary' 
-                          : 'hover:bg-muted font-normal'
+                          : 'hover:bg-muted'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export function CategoryNav() {
                           transition={{ duration: 0.15, ease: "easeOut" }}
                           className="absolute left-full top-[-8px] min-w-[200px] bg-background/98 backdrop-blur shadow-2xl border rounded-xl p-2 ml-1"
                         >
-                          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-1 mb-1">
+                          <div className="text-xs font-black text-primary/70 uppercase tracking-widest px-3 py-2 mb-1 border-b border-primary/10 bg-primary/5 rounded-t-lg">
                             {mainCat.name}
                           </div>
                           <div className="flex flex-col gap-0.5">
@@ -107,7 +107,7 @@ export function CategoryNav() {
                               <Link
                                 key={sub._id}
                                 href={`/shop?category=${sub.slug}`}
-                                className="px-3 py-2 rounded-lg text-sm hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap"
+                                className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap"
                               >
                                 {sub.name}
                               </Link>

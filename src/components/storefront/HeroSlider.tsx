@@ -111,7 +111,7 @@ export function HeroSlider({ banners }: HeroSliderProps) {
 
               {/* Content */}
               <div className="absolute inset-0 flex items-end pb-10 sm:pb-20 lg:pb-32 z-20 px-4 sm:px-12 md:px-20 lg:px-32">
-                <div className="max-w-[95%] sm:max-w-xl lg:max-w-3xl flex flex-col items-start">
+                <div className="w-full max-w-[95%] sm:max-w-[60%] lg:max-w-[50%] flex flex-col items-start text-left">
                   <AnimatePresence mode="wait">
                     {isActive && (
                       <motion.div
@@ -177,14 +177,14 @@ export function HeroSlider({ banners }: HeroSliderProps) {
       {/* ── Custom Navigation ── */}
       {slides.length > 1 && (
         <>
-          <button 
+          <button
             type="button"
             className="swiper-button-prev-custom absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-6 h-6 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover/slider:opacity-100 hover:bg-primary hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-3 h-3 sm:w-7 sm:h-7" />
           </button>
-          <button 
+          <button
             type="button"
             className="swiper-button-next-custom absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-6 h-6 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover/slider:opacity-100 hover:bg-primary hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
             aria-label="Next slide"
