@@ -11,6 +11,7 @@ import {
     handleCommandNavigation,
     handleImagePaste,
     handleImageDrop,
+    EditorBubble,
 } from "novel";
 import { useMemo, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -20,7 +21,7 @@ import { uploadFn } from "./image-upload";
 
 import { Separator } from "@/components/ui/separator";
 
-import GenerativeMenuSwitch from "./generative/generative-menu-switch";
+
 import { NodeSelector } from "./selectors/node-selector";
 import { LinkSelector } from "./selectors/link-selector";
 import { TextButtons } from "./selectors/text-buttons";
@@ -38,7 +39,7 @@ export default function NovelEditor({ initialValue, onChange, readOnly = false }
     const [openNode, setOpenNode] = useState(false);
     const [openColor, setOpenColor] = useState(false);
     const [openLink, setOpenLink] = useState(false);
-    const [openAI, setOpenAI] = useState(false);
+
 
     const debouncedUpdates = useDebouncedCallback(async (editor) => {
         const json = editor.getJSON();
@@ -117,8 +118,12 @@ export default function NovelEditor({ initialValue, onChange, readOnly = false }
                         </EditorCommandList>
                     </EditorCommand>
 
-                    <GenerativeMenuSwitch open={openAI} onOpenChange={setOpenAI}>
-                        <Separator orientation="vertical" />
+                    <EditorBubble
+                        tippyOptions={{
+                            placement: "top",
+                        }}
+                        className="flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl"
+                    >
                         <NodeSelector open={openNode} onOpenChange={setOpenNode} />
                         <Separator orientation="vertical" />
 
@@ -129,7 +134,7 @@ export default function NovelEditor({ initialValue, onChange, readOnly = false }
                         <AlignmentSelector />
                         <Separator orientation="vertical" />
                         <ColorSelector open={openColor} onOpenChange={setOpenColor} />
-                    </GenerativeMenuSwitch>
+                    </EditorBubble>
                 </EditorContent>
             </EditorRoot>
         </div >
