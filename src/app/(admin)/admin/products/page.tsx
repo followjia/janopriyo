@@ -181,7 +181,7 @@ export default function ProductsPage() {
                 <TableRow key={product._id}>
                   <TableCell>
                     <div className="h-12 w-12 overflow-hidden rounded-md border bg-muted">
-                      {product.images?.length > 0 ? (
+                      {product.images && product.images.length > 0 ? (
                         <img 
                           src={product.images[0]} 
                           alt={product.name} 
