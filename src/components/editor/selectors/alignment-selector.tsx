@@ -36,8 +36,9 @@ export const AlignmentSelector = () => {
                         current === value && "bg-accent text-accent-foreground"
                     )}
                     onClick={() => {
-                        if (editor.can().chain().focus().setTextAlign(value).run()) {
-                            editor.chain().focus().setTextAlign(value).run();
+                        const chain = editor.chain().focus() as any;
+                        if (chain.setTextAlign(value).run()) {
+                            chain.setTextAlign(value).run();
                         } else {
                             console.error("setTextAlign command is unavailable for current selection.");
                         }
