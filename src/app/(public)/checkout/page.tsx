@@ -75,7 +75,7 @@ export default function CheckoutPage() {
     try {
       const orderData = {
         items: items.map(item => ({
-            product: item.id,
+            product: item.productId,
             name: item.name,
             quantity: item.quantity,
             price: item.price,
@@ -343,8 +343,8 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center">
+                {items.map((item, index) => (
+                  <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : index} className="flex gap-4 items-center">
                     <div className="h-12 w-12 rounded border bg-muted flex-shrink-0">
                       {item.image && <img src={item.image} alt={item.name || 'Product'} className="h-full w-full object-cover rounded" />}
                     </div>
