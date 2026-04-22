@@ -19,6 +19,16 @@ export interface IUser extends Document {
     isDefault?: boolean;
   }[];
   wishlist: mongoose.Types.ObjectId[];
+  cart: {
+    productId: mongoose.Types.ObjectId;
+    name: string;
+    price: number;
+    quantity: number;
+    image?: string;
+    color?: string;
+    size?: string;
+    others?: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +61,18 @@ const UserSchema: Schema<IUser> = new Schema(
       },
     ],
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    cart: [
+      {
+        productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        quantity: { type: Number, required: true },
+        image: { type: String },
+        color: { type: String },
+        size: { type: String },
+        others: { type: String },
+      }
+    ],
   },
   { timestamps: true }
 );

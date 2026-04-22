@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface CartItem {
-  id: string;
+  productId: string;
   name: string;
   price: number;
   quantity: number;
@@ -33,7 +33,7 @@ const cartSlice = createSlice({
       const newItem = action.payload;
       const existingItem = state.items.find(
         (item) => 
-          item.id === newItem.id && 
+          item.productId === newItem.productId && 
           item.color === newItem.color && 
           item.size === newItem.size && 
           item.others === newItem.others
@@ -49,20 +49,20 @@ const cartSlice = createSlice({
         existingItem.quantity += newItem.quantity;
       }
     },
-    removeFromCart(state, action: PayloadAction<{ id: string; color?: string; size?: string; others?: string } | string>) {
+    removeFromCart(state, action: PayloadAction<{ productId: string; color?: string; size?: string; others?: string } | string>) {
       const payload = action.payload;
       const payloadWasString = typeof payload === 'string';
       
-      const { id, color, size, others } = payloadWasString
-        ? { id: payload, color: undefined, size: undefined, others: undefined }
+      const { productId, color, size, others } = payloadWasString
+        ? { productId: payload, color: undefined, size: undefined, others: undefined }
         : payload;
 
       const matchingItems = state.items.filter((item) => {
         if (payloadWasString) {
-          return item.id === id;
+          return item.productId === productId;
         }
         return (
-          item.id === id &&
+          item.productId === productId &&
           item.color === color &&
           item.size === size &&
           item.others === others
@@ -77,10 +77,10 @@ const cartSlice = createSlice({
         state.totalAmount = Math.round((state.totalAmount - removedAmount) * 100) / 100;
         state.items = state.items.filter((item) => {
           if (payloadWasString) {
-            return item.id !== id;
+            return item.productId !== productId;
           }
           return !(
-            item.id === id &&
+            item.productId === productId &&
             item.color === color &&
             item.size === size &&
             item.others === others

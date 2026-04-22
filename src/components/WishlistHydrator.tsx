@@ -1,84 +1,49 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { hydrateWishlist, setWishlistHydrated, setWishlist } from '@/store/slices/wishlistSlice';
+import { useAppDispatch } from '@/store/hooks';
+import { setWishlist, setWishlistHydrated } from '@/store/slices/wishlistSlice';
 import { useSession } from 'next-auth/react';
 
 export function WishlistHydrator({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const { status } = useSession();
-  const isHydrated = useAppSelector((state) => state.wishlist.isHydrated);
+  const fetchAttempted = useRef(false);
 
-  // 1. Initial LocalStorage Hydration
   useEffect(() => {
-    try {
-      const savedWishlist = localStorage.getItem('wishlist');
-      if (savedWishlist) {
-        const parsedWishlist = JSON.parse(savedWishlist);
-        if (Array.isArray(parsedWishlist)) {
-          dispatch(hydrateWishlist(parsedWishlist));
-        } else {
-          dispatch(setWishlistHydrated());
-        }
-      } else {
-        dispatch(setWishlistHydrated());
-      }
-    } catch (error) {
-      console.error('Failed to hydrate wishlist:', error);
-      dispatch(setWishlistHydrated());
-    }
-  }, [dispatch]);
-
-  const syncAttempted = useRef(false);
-
-  // 2. Auth Sync with Database
-  useEffect(() => {
-    if (status === 'authenticated' && isHydrated && !syncAttempted.current) {
-      const syncWishlist = async () => {
-        syncAttempted.current = true;
+    if (status === 'authenticated' && !fetchAttempted.current) {
+      const fetchWishlist = async () => {
+        fetchAttempted.current = true;
         try {
-          let localIds = [];
-          try {
-            const saved = localStorage.getItem('wishlist');
-            localIds = saved ? JSON.parse(saved) : [];
-            if (!Array.isArray(localIds)) localIds = [];
-          } catch (e) {
-            console.error('Failed to parse local wishlist for sync', e);
-            localIds = [];
-          }
-          
-          // Sync local items with DB
-          const syncRes = await fetch('/api/wishlist/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productIds: localIds }),
-          });
-
-          if (syncRes.ok) {
-            const serverWishlist = await syncRes.json();
-            // serverWishlist is now guaranteed to be array of IDs as strings
+          const res = await fetch('/api/wishlist');
+          if (res.ok) {
+            const serverWishlist = await res.json();
             const finalIds = serverWishlist
                 .map((item: any) => typeof item === 'string' ? item : (item._id || item.id))
                 .filter((id: any): id is string => typeof id === 'string' && id.length > 0);
             
             dispatch(setWishlist(finalIds));
-            // Update localStorage to match server
-            localStorage.setItem('wishlist', JSON.stringify(finalIds));
+            dispatch(setWishlistHydrated());
           } else {
-            const errorData = await syncRes.json().catch(() => ({}));
-            console.error('Failed to sync wishlist with server:', syncRes.status, errorData.message || 'Unknown error');
-            // Reset ref on non-auth failures if you want to retry? 
-            // Better to keep true to avoid potential infinite failure loops in one session.
+            console.error('Failed to fetch wishlist');
+            dispatch(setWishlistHydrated());
           }
         } catch (error) {
-          console.error('Failed to sync wishlist with server:', error);
+          console.error('Failed to fetch wishlist with server:', error);
+          dispatch(setWishlistHydrated());
         }
       };
 
-      syncWishlist();
+      fetchWishlist();
+    } else if (status === 'unauthenticated') {
+      // Clear wishlist when not logged in
+      dispatch(setWishlist([]));
+      dispatch(setWishlistHydrated());
+      fetchAttempted.current = false; // Reset so it fetches again on login
+    } else if (status === 'loading') {
+      // Do nothing, wait for auth resolution
     }
-  }, [status, isHydrated, dispatch]);
+  }, [status, dispatch]);
 
   return <>{children}</>;
 }

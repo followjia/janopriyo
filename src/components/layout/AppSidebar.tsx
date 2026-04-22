@@ -3,15 +3,15 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { 
-  ChevronRight, 
-  LayoutDashboard, 
-  ShoppingBag, 
-  Tag, 
-  FileText, 
-  Users, 
-  Image as ImageIcon, 
-  Settings, 
+import {
+  ChevronRight,
+  LayoutDashboard,
+  ShoppingBag,
+  Tag,
+  FileText,
+  Users,
+  Image as ImageIcon,
+  Settings,
   Megaphone,
   Store
 } from "lucide-react"
@@ -31,6 +31,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
 
@@ -95,12 +98,27 @@ const data = {
       icon: ImageIcon,
       items: [
         {
-          title: "Content Studio",
-          url: "/admin/cms",
+          title: "Banners",
+          url: "/admin/cms/banners",
         },
         {
-          title: "Blog Posts",
+          title: "FAQs",
+          url: "/admin/cms/faqs",
+        },
+      ],
+    },
+    {
+      title: "Blogs",
+      url: "#",
+      icon: FileText,
+      items: [
+        {
+          title: "Manage Blog",
           url: "/admin/blogs",
+        },
+        {
+          title: "Add New Blog",
+          url: "/admin/blogs/new",
         },
       ],
     },
@@ -122,59 +140,59 @@ const data = {
   ],
 }
 
-interface NavGroupProps {
-  item: typeof data.navMain[0]
-  pathname: string
-}
 
-function NavGroup({ item, pathname }: NavGroupProps) {
-  const isParentActive = React.useMemo(() => 
-    item.items.some(subItem => pathname === subItem.url) || pathname === item.url,
-    [item.items, item.url, pathname]
-  )
-  
-  const [open, setOpen] = React.useState(isParentActive)
-
-  // Sync open state with navigation
-  React.useEffect(() => {
-    if (isParentActive) {
-      setOpen(true)
-    }
-  }, [isParentActive])
-
+function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: string }) {
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className="group/collapsible"
-    >
-      <SidebarGroup>
-        <SidebarGroupLabel
-          render={<CollapsibleTrigger />}
-          className="group/label text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        >
-          <item.icon className="mr-2 h-4 w-4" />
-          {item.title}
-          <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {item.items.map((subItem) => (
-                <SidebarMenuItem key={subItem.title}>
-                  <SidebarMenuButton 
-                    render={<Link href={subItem.url} />} 
-                    isActive={pathname === subItem.url}
-                  >
-                    {subItem.title}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+    <SidebarGroup>
+      <SidebarGroupLabel>Menu</SidebarGroupLabel>
+      <SidebarMenu>
+        {items.map((item) => {
+          const isParentActive =
+            item.items.some(
+              (subItem) =>
+                pathname === subItem.url ||
+                (subItem.url !== "#" &&
+                  subItem.url !== "/admin" &&
+                  pathname.startsWith(subItem.url))
+            ) || pathname === item.url
+
+          return (
+            <Collapsible
+              key={item.title}
+              defaultOpen={isParentActive}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} isActive={isParentActive} />}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-open/collapsible:rotate-90 group-[[data-state=open]]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        <SidebarMenuSubButton
+                          render={<Link href={subItem.url} />}
+                          isActive={
+                            pathname === subItem.url ||
+                            (subItem.url !== "#" &&
+                              subItem.url !== "/admin" &&
+                              pathname.startsWith(subItem.url))
+                          }
+                        >
+                          <span>{subItem.title}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          )
+        })}
+      </SidebarMenu>
+    </SidebarGroup>
   )
 }
 
@@ -190,9 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Link>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        {data.navMain.map((item) => (
-          <NavGroup key={item.title} item={item} pathname={pathname} />
-        ))}
+        <NavMain items={data.navMain} pathname={pathname} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

@@ -15,6 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -65,29 +67,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </CardHeader>
             <CardContent className="p-0">
               <nav className="flex flex-col">
-                <Link href="/dashboard" passHref legacyBehavior>
-                  <Button 
-                    variant="ghost" 
-                    className={`justify-start px-6 h-12 rounded-none border-l-4 ${pathname === '/dashboard' ? 'border-primary bg-muted/50' : 'border-transparent'}`}
-                  >
-                    <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
-                  </Button>
+                <Link 
+                  href="/dashboard" 
+                  className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                    pathname === '/dashboard' ? 'border-primary bg-muted/50' : 'border-transparent'
+                  )}
+                >
+                  <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
                 </Link>
-                <Link href="/dashboard/profile" passHref legacyBehavior>
-                  <Button 
-                    variant="ghost" 
-                    className={`justify-start px-6 h-12 rounded-none border-l-4 ${pathname === '/dashboard/profile' ? 'border-primary bg-muted/50' : 'border-transparent'}`}
-                  >
-                    <UserIcon className="mr-3 h-4 w-4" /> Profile Info
-                  </Button>
+                <Link 
+                  href="/dashboard/profile" 
+                  className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                    pathname === '/dashboard/profile' ? 'border-primary bg-muted/50' : 'border-transparent'
+                  )}
+                >
+                  <UserIcon className="mr-3 h-4 w-4" /> Profile Info
                 </Link>
-                <Link href="/dashboard/settings" passHref legacyBehavior>
-                  <Button 
-                    variant="ghost" 
-                    className={`justify-start px-6 h-12 rounded-none border-l-4 ${pathname === '/dashboard/settings' ? 'border-primary bg-muted/50' : 'border-transparent'}`}
-                  >
-                    <Settings className="mr-3 h-4 w-4" /> Account Settings
-                  </Button>
+                <Link 
+                  href="/dashboard/settings" 
+                  className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                    pathname === '/dashboard/settings' ? 'border-primary bg-muted/50' : 'border-transparent'
+                  )}
+                >
+                  <Settings className="mr-3 h-4 w-4" /> Account Settings
                 </Link>
                 <Separator />
                 <Button 

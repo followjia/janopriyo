@@ -24,7 +24,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
 
   const handleUpdateQuantity = (item: any, delta: number) => {
       if (item.quantity + delta === 0) {
-          dispatch(removeFromCart({ id: item.id, color: item.color, size: item.size, others: item.others }));
+          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
           toast.info(`${item.name} removed from cart`);
       } else {
           dispatch(addToCart({ ...item, quantity: delta }));
@@ -59,8 +59,8 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
               />
             </div>
           ) : (
-            items.map((item) => (
-              <div key={`${item.id ?? ''}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}`} className="flex gap-4 group">
+            items.map((item, index) => (
+              <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : `fallback-${index}`} className="flex gap-4 group">
                 <div className="h-20 w-20 rounded-md overflow-hidden bg-muted group-hover:scale-105 transition-transform">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
@@ -99,7 +99,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                         size="icon" 
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
                         onClick={() => {
-                            dispatch(removeFromCart({ id: item.id, color: item.color, size: item.size, others: item.others }));
+                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
                             toast.info(`${item.name} removed from cart`);
                         }}
                         aria-label={`Remove ${[item.name, item.color, item.size, item.others].filter(Boolean).join(' - ')} from cart`}

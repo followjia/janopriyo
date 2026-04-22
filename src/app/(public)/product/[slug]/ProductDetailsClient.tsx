@@ -169,18 +169,17 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
   const handleFavorite = async () => {
     if (!product?._id) return;
     
+    if (!session) {
+      toast.error('Please login to add to wishlist');
+      return;
+    }
+
     // Toggle locally (optimistic update)
     dispatch(toggleWishlist(product._id));
     
     // Determine the message based on the NEW state
     const willBeInWishlist = !isInWishlist;
     const successMsg = willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist';
-    
-    // If not authenticated, show success immediately
-    if (!session) {
-      toast.success(successMsg);
-      return;
-    }
 
     // If authenticated, update database and wait for response
     try {

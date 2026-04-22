@@ -48,26 +48,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        // When user logs in, ensure we get their actual MongoDB _id and role
+        // When user logs in, fetch fresh data from DB for role
         if (user.email) {
            await connectToDatabase();
            const dbUser = await User.findOne({ email: user.email });
            if (dbUser) {
              token.id = dbUser._id.toString();
-             token.role = dbUser.role || 'user';
+             token.role = dbUser.role ?? 'user';
+             token.image = dbUser.image || user.image || token.picture;
            } else {
              token.id = user.id;
-             token.role = (user as any).role || 'user';
+             token.role = (user as any).role ?? 'user';
+             token.image = user.image || token.picture;
            }
         } else {
            token.id = user.id;
-           token.role = (user as any).role || 'user';
+           token.role = (user as any).role ?? 'user';
+           token.image = user.image || token.picture;
         }
       }
 
-      // Update session if requested (e.g. name update)
-      if (trigger === 'update' && session?.name) {
-        token.name = session.name;
+      // Update session if requested (e.g. name/image update)
+      if (trigger === 'update') {
+        if (session?.name !== undefined) token.name = session.name;
+        if (session?.image !== undefined) token.image = session.image;
       }
       
       return token;
@@ -76,7 +80,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token && session.user) {
         session.user.id = token.id as string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).role = token.role;
+        (session.user as any).role = token.role ?? 'user';
+        if (token.image) {
+          session.user.image = token.image as string;
+        }
       }
       return session;
     },

@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import cartReducer from './slices/cartSlice';
 import wishlistReducer from './slices/wishlistSlice';
 import { cartMiddleware } from './middleware/cartMiddleware';
-import { wishlistMiddleware } from './middleware/wishlistMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -10,7 +9,7 @@ export const store = configureStore({
     wishlist: wishlistReducer,
   },
   middleware: (getDefaultMiddleware) => 
-    getDefaultMiddleware().concat(cartMiddleware, wishlistMiddleware),
+    getDefaultMiddleware().concat(cartMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

@@ -24,37 +24,37 @@ import { ImageUpload } from '@/components/ui/image-upload';
 const settingsSchema = z.object({
   brandName: z.string().min(2, 'Brand Name is required'),
   logo: z.string().min(1, 'Logo is required'),
-  favicon: z.string().optional(),
+  favicon: z.string().nullish().transform(val => val ?? ''),
   contact: z.object({
     email: z.string().email('Invalid email'),
     phone: z.string().min(10, 'Invalid phone number'),
     address: z.string().min(5, 'Address is required'),
   }),
   socialLinks: z.object({
-    facebook: z.string().url().optional().or(z.literal('')),
-    twitter: z.string().url().optional().or(z.literal('')),
-    instagram: z.string().url().optional().or(z.literal('')),
-    youtube: z.string().url().optional().or(z.literal('')),
-    linkedin: z.string().url().optional().or(z.literal('')),
-    tiktok: z.string().url().optional().or(z.literal('')),
-    whatsapp: z.string().url().optional().or(z.literal('')),
+    facebook: z.string().url().nullish().transform(v => v ?? ''),
+    twitter: z.string().url().nullish().transform(v => v ?? ''),
+    instagram: z.string().url().nullish().transform(v => v ?? ''),
+    youtube: z.string().url().nullish().transform(v => v ?? ''),
+    linkedin: z.string().url().nullish().transform(v => v ?? ''),
+    tiktok: z.string().url().nullish().transform(v => v ?? ''),
+    whatsapp: z.string().url().nullish().transform(v => v ?? ''),
   }),
-  marqueeText: z.string().optional(),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
+  marqueeText: z.string().nullish().transform(val => val ?? ''),
+  metaTitle: z.string().nullish().transform(val => val ?? ''),
+  metaDescription: z.string().nullish().transform(val => val ?? ''),
   courierConfig: z.object({
     activeProvider: z.enum(['steadfast', 'pathao', 'redx', 'none']).default('none'),
     steadfast: z.object({
-      apiKey: z.string().optional().or(z.literal('')),
-      secretKey: z.string().optional().or(z.literal('')),
+      apiKey: z.string().nullish().transform(v => v ?? ''),
+      secretKey: z.string().nullish().transform(v => v ?? ''),
     }).optional(),
     pathao: z.object({
-      clientId: z.string().optional().or(z.literal('')),
-      clientSecret: z.string().optional().or(z.literal('')),
-      storeId: z.string().optional().or(z.literal('')),
+      clientId: z.string().nullish().transform(v => v ?? ''),
+      clientSecret: z.string().nullish().transform(v => v ?? ''),
+      storeId: z.string().nullish().transform(v => v ?? ''),
     }).optional(),
     redx: z.object({
-      apiKey: z.string().optional().or(z.literal('')),
+      apiKey: z.string().nullish().transform(v => v ?? ''),
     }).optional(),
   }).optional(),
 });
@@ -106,28 +106,34 @@ export default function SettingsPage() {
           if (result.success) {
             if (!controller.signal.aborted) {
               // Merge with default values to ensure no fields (including top-level ones) are undefined
-              const sanitizedData = {
+              const sanitizedData: SettingsFormValues = {
                 ...form.getValues(),
                 ...result.data,
+                favicon: result.data.favicon || '',
+                marqueeText: result.data.marqueeText || '',
                 socialLinks: {
-                  ...form.getValues().socialLinks,
-                  ...(result.data.socialLinks || {})
+                  facebook: result.data.socialLinks?.facebook || '',
+                  twitter: result.data.socialLinks?.twitter || '',
+                  instagram: result.data.socialLinks?.instagram || '',
+                  youtube: result.data.socialLinks?.youtube || '',
+                  linkedin: result.data.socialLinks?.linkedin || '',
+                  tiktok: result.data.socialLinks?.tiktok || '',
+                  whatsapp: result.data.socialLinks?.whatsapp || '',
                 },
                 courierConfig: {
-                  ...form.getValues().courierConfig,
-                  ...(result.data.courierConfig || {}),
+                  activeProvider: result.data.courierConfig?.activeProvider || 'none',
                   steadfast: {
-                    ...form.getValues().courierConfig?.steadfast,
-                    ...(result.data.courierConfig?.steadfast || {})
+                    apiKey: result.data.courierConfig?.steadfast?.apiKey || '',
+                    secretKey: result.data.courierConfig?.steadfast?.secretKey || '',
                   },
                   pathao: {
-                    ...form.getValues().courierConfig?.pathao,
-                    ...(result.data.courierConfig?.pathao || {})
+                    clientId: result.data.courierConfig?.pathao?.clientId || '',
+                    clientSecret: result.data.courierConfig?.pathao?.clientSecret || '',
+                    storeId: result.data.courierConfig?.pathao?.storeId || '',
                   },
                   redx: {
-                    ...form.getValues().courierConfig?.redx,
-                    ...(result.data.courierConfig?.redx || {})
-                  }
+                    apiKey: result.data.courierConfig?.redx?.apiKey || '',
+                  },
                 },
                 metaTitle: result.data.metaTitle || '',
                 metaDescription: result.data.metaDescription || '',

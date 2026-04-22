@@ -27,14 +27,14 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const wishlist = useAppSelector((state) => state.wishlist.items);
   const isInWishlist = wishlist.includes(product._id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     dispatch(addToCart({
-      id: product._id,
+      productId: product._id,
       name: product.name,
       price: (product.salePrice !== undefined && product.salePrice !== null) ? product.salePrice : product.price,
       quantity: 1,
@@ -46,6 +46,13 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      toast.error('Please login to add to wishlist');
+      return;
+    }
+
     // Toggle locally (optimistic update)
     dispatch(toggleWishlist(product._id));
     
@@ -53,24 +60,21 @@ export function ProductCard({ product }: ProductCardProps) {
     const willBeInWishlist = !isInWishlist;
     toast.success(willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist');
     
-    // If authenticated, also update database
-    if (session) {
-      try {
-        const res = await fetch('/api/wishlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: product._id }),
-        });
-        
-        if (!res.ok) {
-           throw new Error('Failed to update wishlist server-side');
-        }
-      } catch (err) {
-        console.error('API toggle error:', err);
-        // Rollback optimistic update
-        dispatch(toggleWishlist(product._id));
-        toast.error('Failed to sync wishlist. Please try again.');
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product._id }),
+      });
+      
+      if (!res.ok) {
+         throw new Error('Failed to update wishlist server-side');
       }
+    } catch (err) {
+      console.error('API toggle error:', err);
+      // Rollback optimistic update
+      dispatch(toggleWishlist(product._id));
+      toast.error('Failed to sync wishlist. Please try again.');
     }
   };
 
@@ -125,6 +129,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 variant="secondary" 
                 className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
                 onClick={handleFavorite}
+                disabled={status === 'loading'}
                 aria-label={isInWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             >
                 <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-destructive text-destructive' : ''}`} />
