@@ -154,7 +154,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     const cartItemId = `${product._id}-${selectedColor || ''}-${selectedSize || ''}-${selectedOthers || ''}`;
 
     dispatch(addToCart({
-      id: cartItemId,
+      productId: product._id,
       name: product.name,
       price: displaySalePrice || displayPrice,
       quantity: finalQuantity,
