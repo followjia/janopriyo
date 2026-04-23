@@ -51,6 +51,10 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
+  // Filter out non-http/https schemes (e.g., chrome-extension://)
+  const url = new URL(event.request.url);
+  if (!['http:', 'https:'].includes(url.protocol)) return;
+
   // Stale-while-revalidate strategy
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
