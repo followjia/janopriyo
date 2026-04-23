@@ -39,7 +39,6 @@ async function getGlobalSettings() {
       // Consistent fallback logic
       return {
         brandName: "Janopriyo Shop",
-        logo: "/logo.png",
         contact: {
           email: "support@janopriyo.shop",
           phone: "+8801234567890",
@@ -53,7 +52,6 @@ async function getGlobalSettings() {
     // Hardcoded defaults for ultimate resilience
     return {
       brandName: "Janopriyo Shop",
-      logo: "/logo.png",
       contact: {
         email: "support@janopriyo.shop",
         phone: "+8801234567890",
@@ -91,14 +89,12 @@ export async function generateMetadata(): Promise<Metadata> {
         description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
         url: baseUrl,
         siteName: settings.brandName || "Janopriyo Shop",
-        images: settings.logo ? [{ url: settings.logo }] : [],
         type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
         title: settings.metaTitle || settings.brandName || "Janopriyo Shop",
         description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
-        images: settings.logo ? [settings.logo] : [],
       },
       verification: {
         google: settings.searchConsoleMeta,

@@ -2,8 +2,6 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IGlobalSettings extends Document {
   brandName: string;
-  logo: string;
-  favicon?: string;
   contact: {
     email: string;
     phone: string;
@@ -58,8 +56,6 @@ import { encrypt, decrypt } from '@/lib/encryption';
 const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
   {
     brandName: { type: String },
-    logo: { type: String },
-    favicon: { type: String },
     contact: {
       email: { type: String },
       phone: { type: String },

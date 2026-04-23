@@ -59,7 +59,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
       },
     ],
     totalAmount: { type: Number, required: true, min: [0, 'Total amount cannot be negative'] },
-    deliveryCharge: { type: Number, required: true, min: [0, 'Delivery charge cannot be negative'] },
+    deliveryCharge: { type: Number, required: true, default: 0, min: [0, 'Delivery charge cannot be negative'] },
     shippingAddress: {
       type: {
         fullName: { type: String, required: true },

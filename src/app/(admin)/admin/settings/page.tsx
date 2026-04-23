@@ -23,21 +23,19 @@ import { ImageUpload } from '@/components/ui/image-upload';
 
 const settingsSchema = z.object({
   brandName: z.string().min(2, 'Brand Name is required'),
-  logo: z.string().min(1, 'Logo is required'),
-  favicon: z.string().nullish().transform(val => val ?? ''),
   contact: z.object({
     email: z.string().email('Invalid email'),
     phone: z.string().min(10, 'Invalid phone number'),
     address: z.string().min(5, 'Address is required'),
   }),
   socialLinks: z.object({
-    facebook: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    twitter: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    instagram: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    youtube: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    linkedin: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    tiktok: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
-    whatsapp: z.string().url().or(z.literal('')).nullish().transform(v => v ?? ''),
+    facebook: z.string().nullish().transform(v => v ?? ''),
+    twitter: z.string().nullish().transform(v => v ?? ''),
+    instagram: z.string().nullish().transform(v => v ?? ''),
+    youtube: z.string().nullish().transform(v => v ?? ''),
+    linkedin: z.string().nullish().transform(v => v ?? ''),
+    tiktok: z.string().nullish().transform(v => v ?? ''),
+    whatsapp: z.string().nullish().transform(v => v ?? ''),
   }),
   marqueeText: z.string().nullish().transform(val => val ?? ''),
   metaTitle: z.string().nullish().transform(val => val ?? ''),
@@ -76,8 +74,6 @@ export default function SettingsPage() {
     resolver: zodResolver(settingsSchema) as any,
     defaultValues: {
       brandName: '',
-      logo: '',
-      favicon: '',
       contact: { email: '', phone: '', address: '' },
       socialLinks: {
         facebook: '',
@@ -119,11 +115,13 @@ export default function SettingsPage() {
           const result = settingsSchema.safeParse(data);
           if (result.success) {
             if (!controller.signal.aborted) {
-              // Merge with default values to ensure no fields (including top-level ones) are undefined
               const sanitizedData: SettingsFormValues = {
-                ...form.getValues(),
-                ...result.data,
-                favicon: result.data.favicon || '',
+                brandName: result.data.brandName || '',
+                contact: {
+                  email: result.data.contact?.email || '',
+                  phone: result.data.contact?.phone || '',
+                  address: result.data.contact?.address || '',
+                },
                 marqueeText: result.data.marqueeText || '',
                 socialLinks: {
                   facebook: result.data.socialLinks?.facebook || '',
@@ -133,6 +131,15 @@ export default function SettingsPage() {
                   linkedin: result.data.socialLinks?.linkedin || '',
                   tiktok: result.data.socialLinks?.tiktok || '',
                   whatsapp: result.data.socialLinks?.whatsapp || '',
+                },
+                metaTitle: result.data.metaTitle || '',
+                metaDescription: result.data.metaDescription || '',
+                freeDeliveryThreshold: result.data.freeDeliveryThreshold ?? 0,
+                deliveryChargeInsideDhaka: result.data.deliveryChargeInsideDhaka ?? 60,
+                deliveryChargeOutsideDhaka: result.data.deliveryChargeOutsideDhaka ?? 120,
+                subscriptionConfig: {
+                  activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
+                  rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
                 },
                 courierConfig: {
                   activeProvider: result.data.courierConfig?.activeProvider || 'none',
@@ -149,15 +156,6 @@ export default function SettingsPage() {
                     apiKey: result.data.courierConfig?.redx?.apiKey || '',
                   },
                 },
-                subscriptionConfig: {
-                  activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
-                  rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
-                },
-                freeDeliveryThreshold: result.data.freeDeliveryThreshold ?? 0,
-                deliveryChargeInsideDhaka: result.data.deliveryChargeInsideDhaka ?? 60,
-                deliveryChargeOutsideDhaka: result.data.deliveryChargeOutsideDhaka ?? 120,
-                metaTitle: result.data.metaTitle || '',
-                metaDescription: result.data.metaDescription || '',
               };
               form.reset(sanitizedData);
             }
@@ -228,7 +226,7 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+            <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
@@ -256,40 +254,7 @@ export default function SettingsPage() {
                       </FormItem>
                     )}
                   />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="logo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Logo</FormLabel>
-                          <FormControl>
-                            <ImageUpload
-                              value={field.value}
-                              onUpload={(url) => field.onChange(url)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="favicon"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Favicon</FormLabel>
-                          <FormControl>
-                            <ImageUpload
-                              value={field.value}
-                              onUpload={(url) => field.onChange(url)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+
                   <FormField
                     control={form.control}
                     name="marqueeText"

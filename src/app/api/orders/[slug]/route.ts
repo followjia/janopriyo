@@ -107,7 +107,7 @@ export async function PATCH(
     // ----------------------------
     // Loyalty System: Award Tokens on Success
     // ----------------------------
-    const isOrderSuccessful = ['Delivered', 'Completed', 'Shipped'].includes(body.status);
+    const isOrderSuccessful = status === 'Delivered';
     
     if (isOrderSuccessful && !order.isRewarded && order.user) {
         let session: mongoose.ClientSession | null = null;
@@ -165,6 +165,11 @@ export async function PATCH(
         }
     }
     // ----------------------------
+
+    // Ensure required fields exist for old data
+    if (order.deliveryCharge === undefined || order.deliveryCharge === null) {
+        order.deliveryCharge = 0;
+    }
 
     await order.save();
 

@@ -28,7 +28,11 @@ export async function POST(req: NextRequest) {
         item.quantity <= 0 || 
         !Number.isInteger(item.quantity)
       ) {
-        return NextResponse.json({ message: 'invalid cart item' }, { status: 400 });
+        console.error('Invalid cart item detected:', item);
+        return NextResponse.json({ 
+          message: 'invalid cart item', 
+          details: item ? { productId: item.productId, quantity: item.quantity } : 'null item' 
+        }, { status: 400 });
       }
     }
 

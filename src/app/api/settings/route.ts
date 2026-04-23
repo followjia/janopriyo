@@ -12,7 +12,6 @@ export async function GET() {
     if (!settings) {
       return NextResponse.json({
         brandName: process.env.NEXT_PUBLIC_STORE_NAME || "Janopriyo Shop",
-        logo: "/logo.png",
         contact: {
           email: "support@janopriyo.shop",
           phone: "+8801234567890",
@@ -62,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     // Whitelist allowed fields to prevent mass-assignment
     const allowedFields = [
-      'brandName', 'logo', 'favicon', 'contact', 'socialLinks',
+      'brandName', 'contact', 'socialLinks',
       'marqueeText', 'metaTitle', 'metaDescription',
       'googleTagManagerId', 'searchConsoleMeta', 'facebookDomainVerification', 'metaPixelId',
       'facebookAccessToken', 'facebookTestEventCode',

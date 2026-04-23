@@ -56,21 +56,28 @@ export function CartHydrator({ children }: { children: React.ReactNode }) {
             const dbCartItems = await res.json();
             const currentLocalItems = latestCartItemsRef.current;
             
-            // Merge logic: Combine local items and DB items.
+            // Merge logic: Combine local items and DB items using variant-aware keys.
             const mergedMap = new Map();
             
+            const getVariantKey = (item: any) => 
+                `${item.productId}-${item.color || ''}-${item.size || ''}-${item.others || ''}`;
+
             // Add DB items
             if (Array.isArray(dbCartItems)) {
-                dbCartItems.forEach((item: any) => mergedMap.set(item.productId, item));
+                dbCartItems.forEach((item: any) => {
+                    const key = getVariantKey(item);
+                    mergedMap.set(key, item);
+                });
             }
             
-            // Add Local items (merge quantities if same ID)
+            // Add Local items (merge quantities if same variant)
             currentLocalItems.forEach((item) => {
-                if (mergedMap.has(item.productId)) {
-                    const existing = mergedMap.get(item.productId);
-                    mergedMap.set(item.productId, { ...existing, quantity: Math.max(existing.quantity, item.quantity) });
+                const key = getVariantKey(item);
+                if (mergedMap.has(key)) {
+                    const existing = mergedMap.get(key);
+                    mergedMap.set(key, { ...existing, quantity: Math.max(existing.quantity, item.quantity) });
                 } else {
-                    mergedMap.set(item.productId, item);
+                    mergedMap.set(key, item);
                 }
             });
 

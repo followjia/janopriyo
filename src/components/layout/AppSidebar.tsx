@@ -132,6 +132,10 @@ const data = {
           url: "/admin/marketing",
         },
         {
+          title: "Coupons",
+          url: "/admin/coupons",
+        },
+        {
           title: "General Settings",
           url: "/admin/settings",
         },
