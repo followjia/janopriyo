@@ -503,7 +503,7 @@ export default function CheckoutPage() {
                     <Button 
                       type="button" 
                       size="sm" 
-                      onClick={applyCoupon} 
+                      onClick={() => applyCoupon()} 
                       disabled={applyingCoupon || !couponCode}
                       className="h-9 px-4"
                     >
