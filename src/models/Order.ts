@@ -28,6 +28,11 @@ export interface IOrder extends Document {
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
   status: 'Order Placed' | 'Confirmed' | 'Paid' | 'Ready for Delivery' | 'Released for Delivery' | 'Cancelled' | 'Delivered';
   transactionId?: string;
+  walletAmountUsed?: number;
+  earnedRewardAmount?: number;
+  couponCode?: string;
+  couponDiscountAmount?: number;
+  isRewarded?: boolean;
   shippingDetails?: {
     courierName?: string;
     trackingId?: string;
@@ -75,6 +80,11 @@ const OrderSchema: Schema<IOrder> = new Schema(
       default: 'Order Placed',
     },
     transactionId: { type: String },
+    walletAmountUsed: { type: Number, default: 0, min: 0 },
+    earnedRewardAmount: { type: Number, default: 0, min: 0 },
+    couponCode: { type: String },
+    couponDiscountAmount: { type: Number, default: 0, min: 0 },
+    isRewarded: { type: Boolean, default: false },
     shippingDetails: {
       courierName: { type: String },
       trackingId: { type: String },

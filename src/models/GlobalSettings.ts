@@ -19,6 +19,9 @@ export interface IGlobalSettings extends Document {
     whatsapp?: string;
   };
   marqueeText?: string;
+  freeDeliveryThreshold?: number;
+  deliveryChargeInsideDhaka?: number;
+  deliveryChargeOutsideDhaka?: number;
   metaTitle?: string;
   metaDescription?: string;
   googleTagManagerId?: string;
@@ -41,6 +44,10 @@ export interface IGlobalSettings extends Document {
     redx?: {
       apiKey: string;
     };
+  };
+  subscriptionConfig: {
+    activationThreshold: number;
+    rewardPercentage: number;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -68,6 +75,9 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       whatsapp: { type: String },
     },
     marqueeText: { type: String },
+    freeDeliveryThreshold: { type: Number, default: 0 },
+    deliveryChargeInsideDhaka: { type: Number, default: 60 },
+    deliveryChargeOutsideDhaka: { type: Number, default: 120 },
     metaTitle: { type: String, default: '' },
     metaDescription: { type: String, default: '' },
     googleTagManagerId: { type: String },
@@ -90,6 +100,10 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       redx: {
         apiKey: { type: String, get: decrypt, set: encrypt },
       },
+    },
+    subscriptionConfig: {
+      activationThreshold: { type: Number, default: 5000 },
+      rewardPercentage: { type: Number, default: 5 },
     },
   },
   { 

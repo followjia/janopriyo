@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       'marqueeText', 'metaTitle', 'metaDescription',
       'googleTagManagerId', 'searchConsoleMeta', 'facebookDomainVerification', 'metaPixelId',
       'facebookAccessToken', 'facebookTestEventCode',
-      'courierConfig'
+      'courierConfig', 'subscriptionConfig'
     ];
     const allowedBody: any = {};
 

@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 
@@ -57,6 +57,13 @@ const settingsSchema = z.object({
       apiKey: z.string().nullish().transform(v => v ?? ''),
     }).optional(),
   }).optional(),
+  subscriptionConfig: z.object({
+    activationThreshold: z.number().min(0, 'Threshold cannot be negative'),
+    rewardPercentage: z.number().min(0, 'Percentage cannot be negative').max(100, 'Cannot exceed 100%'),
+  }).optional(),
+  freeDeliveryThreshold: z.number().min(0, 'Threshold cannot be negative').optional(),
+  deliveryChargeInsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
+  deliveryChargeOutsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -72,10 +79,10 @@ export default function SettingsPage() {
       logo: '',
       favicon: '',
       contact: { email: '', phone: '', address: '' },
-      socialLinks: { 
-        facebook: '', 
-        twitter: '', 
-        instagram: '', 
+      socialLinks: {
+        facebook: '',
+        twitter: '',
+        instagram: '',
         youtube: '',
         linkedin: '',
         tiktok: '',
@@ -90,6 +97,13 @@ export default function SettingsPage() {
         pathao: { clientId: '', clientSecret: '', storeId: '' },
         redx: { apiKey: '' },
       },
+      subscriptionConfig: {
+        activationThreshold: 5000,
+        rewardPercentage: 5,
+      },
+      freeDeliveryThreshold: 0,
+      deliveryChargeInsideDhaka: 60,
+      deliveryChargeOutsideDhaka: 120,
     },
   });
 
@@ -101,7 +115,7 @@ export default function SettingsPage() {
         const res = await fetch('/api/settings', { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
-          
+
           const result = settingsSchema.safeParse(data);
           if (result.success) {
             if (!controller.signal.aborted) {
@@ -135,6 +149,13 @@ export default function SettingsPage() {
                     apiKey: result.data.courierConfig?.redx?.apiKey || '',
                   },
                 },
+                subscriptionConfig: {
+                  activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
+                  rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
+                },
+                freeDeliveryThreshold: result.data.freeDeliveryThreshold ?? 0,
+                deliveryChargeInsideDhaka: result.data.deliveryChargeInsideDhaka ?? 60,
+                deliveryChargeOutsideDhaka: result.data.deliveryChargeOutsideDhaka ?? 120,
                 metaTitle: result.data.metaTitle || '',
                 metaDescription: result.data.metaDescription || '',
               };
@@ -212,6 +233,7 @@ export default function SettingsPage() {
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
               <TabsTrigger value="courier">Courier</TabsTrigger>
+              <TabsTrigger value="loyalty">Loyalty</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4">
@@ -242,9 +264,9 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>Logo</FormLabel>
                           <FormControl>
-                            <ImageUpload 
-                                value={field.value} 
-                                onUpload={(url) => field.onChange(url)} 
+                            <ImageUpload
+                              value={field.value}
+                              onUpload={(url) => field.onChange(url)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -258,9 +280,9 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>Favicon</FormLabel>
                           <FormControl>
-                            <ImageUpload 
-                                value={field.value} 
-                                onUpload={(url) => field.onChange(url)} 
+                            <ImageUpload
+                              value={field.value}
+                              onUpload={(url) => field.onChange(url)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -485,15 +507,15 @@ export default function SettingsPage() {
                       <FormItem>
                         <FormLabel>Active Courier Provider</FormLabel>
                         <div className="flex items-center gap-4">
-                            <select 
-                                {...field}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <option value="none">None (Manual Handling)</option>
-                                <option value="steadfast">Steadfast Courier</option>
-                                <option value="pathao">Pathao Courier</option>
-                                <option value="redx">RedX</option>
-                            </select>
+                          <select
+                            {...field}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="none">None (Manual Handling)</option>
+                            <option value="steadfast">Steadfast Courier</option>
+                            <option value="pathao">Pathao Courier</option>
+                            <option value="redx">RedX</option>
+                          </select>
                         </div>
                         <FormDescription>Select which courier service to use for automated booking by default.</FormDescription>
                         <FormMessage />
@@ -503,43 +525,43 @@ export default function SettingsPage() {
 
                   <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                     <h3 className="font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        SteadFast Configuration
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      SteadFast Configuration
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="courierConfig.steadfast.apiKey"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>API Key</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" placeholder="Enter Steadfast API Key" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="courierConfig.steadfast.secretKey"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Secret Key</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" placeholder="Enter Steadfast Secret Key" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.steadfast.apiKey"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>API Key</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Enter Steadfast API Key" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="courierConfig.steadfast.secretKey"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Secret Key</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Enter Steadfast Secret Key" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                     <h3 className="font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                        Pathao Courier
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      Pathao Courier
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
@@ -586,8 +608,8 @@ export default function SettingsPage() {
 
                   <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                     <h3 className="font-bold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-red-500" />
-                        RedX Configuration
+                      <span className="w-2 h-2 rounded-full bg-red-500" />
+                      RedX Configuration
                     </h3>
                     <div className="grid grid-cols-1 gap-4">
                       <FormField
@@ -605,12 +627,137 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
+
+                  <div className="pt-6 border-t">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
+                      <Truck className="h-5 w-5 text-primary" />
+                      Delivery Rules
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="freeDeliveryThreshold"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Free Delivery Threshold (TK)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="2000"
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormDescription>Minimum order total to offer free delivery. Set to 0 to disable.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="deliveryChargeInsideDhaka"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Inside Dhaka Charge (TK)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="60"
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="deliveryChargeOutsideDhaka"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Outside Dhaka Charge (TK)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="120"
+                                {...field}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </CardContent>
-                <CardFooter className="bg-muted/30 py-4">
-                    <p className="text-xs text-muted-foreground italic">
-                        * Note: Ensure you have obtained production API credentials from your courier merchant portal.
-                    </p>
+                <CardFooter className="bg-muted/50 border-t py-4">
+                  <p className="text-xs text-muted-foreground italic">
+                    * Note: Ensure you have obtained production API credentials from your courier merchant portal.
+                  </p>
                 </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="loyalty" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Loyalty & Rewards System</CardTitle>
+                  <CardDescription>Configure how customers activate their lifetime rewards and the percentage they earn.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="subscriptionConfig.activationThreshold"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Activation Threshold (TK)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="5000"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormDescription>Minimum single order amount to activate lifetime rewards for a user.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="subscriptionConfig.rewardPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reward Percentage (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="5"
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormDescription>Percentage of purchase total awarded as tokens to active users.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="rounded-lg border p-4 bg-primary/5">
+                    <h4 className="text-sm font-bold mb-2">How it works:</h4>
+                    <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                      <li>All registered users are enrolled in the loyalty program automatically.</li>
+                      <li>Users become <strong>Active</strong> after a single purchase ≥ {form.watch('subscriptionConfig.activationThreshold')} TK.</li>
+                      <li>Active users earn <strong>{form.watch('subscriptionConfig.rewardPercentage')}%</strong> of every purchase as wallet tokens.</li>
+                      <li>Tokens can be used for discounts on any future purchase.</li>
+                    </ul>
+                  </div>
+                </CardContent>
               </Card>
             </TabsContent>
           </Tabs>

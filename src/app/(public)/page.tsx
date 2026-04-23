@@ -5,6 +5,8 @@ import Category from '@/models/Category';
 import Product from '@/models/Product';
 import Blog from '@/models/Blog';
 import FAQ from '@/models/FAQ';
+import GlobalSettings from '@/models/GlobalSettings';
+import Coupon from '@/models/Coupon';
 import { HeroSlider } from '@/components/storefront/HeroSlider';
 import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
 import { FeaturedProducts } from '@/components/storefront/FeaturedProducts';
@@ -13,6 +15,9 @@ import { BlogRecent } from '@/components/storefront/BlogRecent';
 import { FAQSection } from '@/components/storefront/FAQSection';
 import { Testimonials } from '@/components/storefront/Testimonials';
 import { FeaturesSection } from '@/components/storefront/FeaturesSection';
+import { LoyaltyBanner } from '@/components/storefront/LoyaltyBanner';
+import { ComboOfferBanner } from '@/components/storefront/ComboOfferBanner';
+import { FreeDeliveryBanner } from '@/components/storefront/FreeDeliveryBanner';
 import { NewsletterV2 } from '@/components/storefront/NewsletterV2';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -30,7 +35,9 @@ async function getHomeData() {
       flashSaleRaw,
       trendingRaw,
       blogsRaw,
-      faqsRaw
+      faqsRaw,
+      settingsRaw,
+      activeCouponRaw
     ] = await Promise.all([
       Banner.find({ isActive: true }).sort({ order: 1 }).lean(),
       Category.find({ isActive: true }).sort({ createdAt: -1 }).lean(),
@@ -61,7 +68,11 @@ async function getHomeData() {
       // Recent Blogs
       Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(3).lean(),
       // FAQs
-      FAQ.find({ isActive: true }).sort({ order: 1 }).lean()
+      FAQ.find({ isActive: true }).sort({ order: 1 }).lean(),
+      // Global Settings for Loyalty Info
+      GlobalSettings.findOne({}).lean(),
+      // Active Coupon for Announcement
+      Coupon.findOne({ isActive: true, expiryDate: { $gt: new Date() } }).sort({ createdAt: -1 }).lean()
     ]);
 
 
@@ -75,7 +86,9 @@ async function getHomeData() {
       flashSale: serialize(flashSaleRaw),
       trending: serialize(trendingRaw),
       blogs: serialize(blogsRaw),
-      faqs: serialize(faqsRaw && faqsRaw.length > 0 ? faqsRaw : [])
+      faqs: serialize(faqsRaw && faqsRaw.length > 0 ? faqsRaw : []),
+      settings: serialize(settingsRaw || null),
+      activeCoupon: serialize(activeCouponRaw || null)
     };
   } catch (error) {
     console.error("Error fetching home data directly from DB:", error);
@@ -102,6 +115,9 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* 0. Free Delivery Announcement Bar */}
+      <FreeDeliveryBanner settings={data.settings} />
+
       {/* 1. Hero Section */}
       <HeroSlider banners={data.banners} />
 
@@ -157,7 +173,13 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 7. Featured Products (Existing) */}
+      {/* 7. Combo Discount Promotion */}
+      <ComboOfferBanner activeCoupon={data.activeCoupon} settings={data.settings} />
+
+      {/* 8. Loyalty Promotion */}
+      <LoyaltyBanner settings={data.settings} />
+
+      {/* 8. Featured Products (Existing) */}
       <FeaturedProducts products={data.featuredProducts} />
 
       {/* 8. Testimonials Section */}

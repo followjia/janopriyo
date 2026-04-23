@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, CreditCard, Truck, ShoppingBag } from 'lucide-react';
+import { Loader2, CreditCard, Truck, ShoppingBag, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -45,6 +45,13 @@ export default function CheckoutPage() {
   const dispatch = useAppDispatch();
   const { items, totalAmount, isHydrated } = useAppSelector((state) => state.cart);
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [useWallet, setUseWallet] = useState(false);
+  const [settings, setSettings] = useState<any>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema),
@@ -60,6 +67,22 @@ export default function CheckoutPage() {
       paymentMethod: 'COD',
     },
   });
+
+  useEffect(() => {
+    async function fetchLoyaltyData() {
+      try {
+        const [profileRes, settingsRes] = await Promise.all([
+          fetch('/api/user/profile'),
+          fetch('/api/settings')
+        ]);
+        if (profileRes.ok) setProfile(await profileRes.json());
+        if (settingsRes.ok) setSettings(await settingsRes.json());
+      } catch (error) {
+        console.error('Failed to fetch loyalty data');
+      }
+    }
+    fetchLoyaltyData();
+  }, []);
 
   const submissionSucceededRef = useRef(false);
 
@@ -92,6 +115,8 @@ export default function CheckoutPage() {
         },
         paymentMethod: values.paymentMethod,
         deliveryCharge: deliveryCharge,
+        useWallet: useWallet,
+        couponCode: appliedCoupon || undefined,
       };
 
       const response = await fetch('/api/orders', {
@@ -143,11 +168,75 @@ export default function CheckoutPage() {
     }
   };
 
+  const applyCoupon = async (codeToUse?: string) => {
+    const code = codeToUse || couponCode;
+    if (!code.trim()) return;
+    
+    setApplyingCoupon(true);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, totalAmount })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCouponDiscount(data.discountAmount);
+        setAppliedCoupon(data.code);
+        if (!codeToUse) toast.success(`Coupon "${data.code}" applied!`);
+      } else {
+        // If re-validating an already applied coupon, remove it
+        if (codeToUse) {
+          removeCoupon();
+          toast.info(data.message || 'Coupon removed due to cart changes');
+        } else {
+          toast.error(data.message || 'Invalid coupon');
+        }
+      }
+    } catch (error) {
+      if (!codeToUse) toast.error('Failed to validate coupon');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  // Re-validate coupon when cart total changes
+  useEffect(() => {
+    if (appliedCoupon && totalAmount > 0) {
+      applyCoupon(appliedCoupon);
+    }
+  }, [totalAmount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const removeCoupon = () => {
+    setCouponDiscount(0);
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.info('Coupon removed');
+  };
+
   const city = form.watch('city');
   const state = form.watch('state');
   const isDhaka = city?.toLowerCase().includes('dhaka') || state?.toLowerCase().includes('dhaka');
-  const deliveryCharge = items.length > 0 ? (isDhaka ? 60 : 120) : 0;
-  const finalTotal = totalAmount + deliveryCharge;
+  
+  const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 0;
+  const isFreeDelivery = freeDeliveryThreshold > 0 && totalAmount >= freeDeliveryThreshold;
+  
+  const chargeInsideDhaka = settings?.deliveryChargeInsideDhaka || 60;
+  const chargeOutsideDhaka = settings?.deliveryChargeOutsideDhaka || 120;
+  
+  const deliveryCharge = items.length > 0 ? (isFreeDelivery ? 0 : (isDhaka ? chargeInsideDhaka : chargeOutsideDhaka)) : 0;
+  
+  const totalAfterCoupon = Math.max(0, totalAmount + deliveryCharge - couponDiscount);
+
+  const walletAmountToUse = useWallet && profile?.walletBalance 
+    ? Math.min(profile.walletBalance, totalAfterCoupon) 
+    : 0;
+
+  const finalTotal = totalAfterCoupon - walletAmountToUse;
+
+  const potentialReward = (profile?.isSubscriptionActive && settings?.subscriptionConfig)
+    ? Math.floor(finalTotal * (settings.subscriptionConfig.rewardPercentage / 100))
+    : 0;
 
   // Show loading state or nothing while hydrating to prevent flash of "empty cart" redirect
   if (!isHydrated) return (
@@ -330,6 +419,38 @@ export default function CheckoutPage() {
                   />
                 </CardContent>
               </Card>
+
+              {profile && profile.walletBalance > 0 && (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ShoppingBag className="h-5 w-5 text-primary" />
+                      Token Wallet
+                    </CardTitle>
+                    <CardDescription>Use your earned tokens for an instant discount.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          id="use-wallet" 
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <label htmlFor="use-wallet" className="font-bold cursor-pointer">
+                          Use Token Balance
+                          <p className="text-xs font-normal text-muted-foreground">Available: ৳{profile.walletBalance}</p>
+                        </label>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-primary">- ৳{walletAmountToUse}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </form>
           </Form>
         </div>
@@ -357,6 +478,47 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <Separator />
+              
+              {/* Coupon Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Input 
+                    placeholder="Coupon Code" 
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    disabled={!!appliedCoupon || applyingCoupon}
+                    className="h-9 text-xs"
+                  />
+                  {appliedCoupon ? (
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={removeCoupon}
+                      className="h-9 px-3"
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      onClick={applyCoupon} 
+                      disabled={applyingCoupon || !couponCode}
+                      className="h-9 px-4"
+                    >
+                      {applyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                    </Button>
+                  )}
+                </div>
+                {appliedCoupon && (
+                  <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Coupon "{appliedCoupon}" active!
+                  </p>
+                )}
+              </div>
+
+              <Separator />
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
@@ -364,13 +526,38 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-primary font-bold">৳{deliveryCharge}</span>
+                  <span className={isFreeDelivery ? "text-green-600 font-black" : "text-primary font-bold"}>
+                    {isFreeDelivery ? 'FREE' : `৳${deliveryCharge}`}
+                  </span>
                 </div>
+                {isFreeDelivery && (
+                  <p className="text-[10px] text-green-600 font-bold text-right -mt-1">
+                    Free shipping applied (Order ≥ ৳{freeDeliveryThreshold})
+                  </p>
+                )}
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 font-bold">
+                    <span>Coupon Discount</span>
+                    <span>- ৳{couponDiscount}</span>
+                  </div>
+                )}
+                {walletAmountToUse > 0 && (
+                  <div className="flex justify-between text-sm text-primary font-bold">
+                    <span>Tokens Used</span>
+                    <span>- ৳{walletAmountToUse}</span>
+                  </div>
+                )}
                 <Separator className="mt-4" />
                 <div className="flex justify-between text-lg font-black pt-2">
                   <span>Total</span>
                   <span className="text-primary">৳{Math.round(finalTotal)}</span>
                 </div>
+                {potentialReward > 0 && (
+                  <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Loyalty Perk</p>
+                    <p className="text-xs font-bold">You will earn <span className="text-primary">৳{potentialReward}</span> tokens from this order!</p>
+                  </div>
+                )}
               </div>
             </CardContent>
             <CardFooter>

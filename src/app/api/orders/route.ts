@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Order, { IOrderItem } from '@/models/Order';
 import Product from '@/models/Product';
+import User from '@/models/User';
+import GlobalSettings from '@/models/GlobalSettings';
+import WalletTransaction from '@/models/WalletTransaction';
+import Coupon from '@/models/Coupon';
 import { auth } from '@/auth';
 
 import { z } from 'zod';
@@ -46,6 +50,8 @@ const orderSchema = z.object({
     return val;
   }, z.enum(['COD', 'Online'])),
   deliveryCharge: z.number().min(0).optional(),
+  useWallet: z.boolean().optional().default(false),
+  couponCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -64,23 +70,31 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const { items, shippingAddress, paymentMethod } = validation.data;
+    const { items, shippingAddress, paymentMethod, useWallet, couponCode } = validation.data;
     const clientProvidedDeliveryCharge = validation.data.deliveryCharge;
 
     const conn = await connectToDatabase();
+    
+    // Fetch Settings
+    const settings = await GlobalSettings.findOne({});
+    const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
+
     session = await conn.startSession();
     if (!session) {
         throw new Error('Failed to start database session');
     }
     session.startTransaction();
 
+    let user = null;
+    if (sessionUser?.user?.id) {
+      user = await User.findById(sessionUser.user.id).session(session);
+    }
+
     let serverComputedTotal = 0;
     const validatedItems: IOrderItem[] = [];
 
     // 2. Atomic Stock Validation and Price Verification
     for (const item of items) {
-      // Use findOneAndUpdate with stock check for atomicity
-      // We both verify the product exists AND has enough stock in ONE operation
       const product = await Product.findOneAndUpdate(
         { 
           _id: item.product, 
@@ -95,7 +109,6 @@ export async function POST(req: NextRequest) {
         throw new StockError(`Insufficient stock or product not found: ${item.name}`);
       }
 
-      // 3. Re-calculate price using server source of truth
       const itemPrice = product.salePrice ?? product.price;
       const lineTotal = itemPrice * item.quantity;
       serverComputedTotal += lineTotal;
@@ -109,13 +122,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Calculate Delivery Charge
+    // 3. Calculate Delivery Charge
     const isDhaka = 
       shippingAddress.city.toLowerCase().includes('dhaka') || 
       shippingAddress.state.toLowerCase().includes('dhaka');
-    const serverComputedDeliveryCharge = isDhaka ? 60 : 120;
+    
+    const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 0;
+    const isFreeDelivery = freeDeliveryThreshold > 0 && serverComputedTotal >= freeDeliveryThreshold;
+    
+    const chargeInsideDhaka = settings?.deliveryChargeInsideDhaka || 60;
+    const chargeOutsideDhaka = settings?.deliveryChargeOutsideDhaka || 120;
+    
+    const serverComputedDeliveryCharge = isFreeDelivery ? 0 : (isDhaka ? chargeInsideDhaka : chargeOutsideDhaka);
 
-    // 5. Verify Delivery Charge (if provided by client)
+    // 4. Verify Delivery Charge (if provided by client)
     if (clientProvidedDeliveryCharge !== undefined && clientProvidedDeliveryCharge !== serverComputedDeliveryCharge) {
       if (session) await session.abortTransaction();
       return NextResponse.json({ 
@@ -124,14 +144,98 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 6. Create the order within the transaction
+    // 5. Discount & Loyalty Logic
+    let couponDiscountAmount = 0;
+    let walletAmountUsed = 0;
+    let earnedRewardAmount = 0;
+    let walletTxId: string | null = null;
+
+    const baseTotal = serverComputedTotal + serverComputedDeliveryCharge;
+
+    // --- A. Coupon Logic ---
+    if (couponCode) {
+      const coupon = await Coupon.findOneAndUpdate(
+        { 
+          code: couponCode.toUpperCase(), 
+          isActive: true,
+          expiryDate: { $gt: new Date() },
+          minPurchase: { $lte: baseTotal },
+          $or: [
+            { usageLimit: { $exists: false } },
+            { usageLimit: { $gt: 0 }, $expr: { $lt: ["$usedCount", "$usageLimit"] } }
+          ]
+        },
+        { $inc: { usedCount: 1 } },
+        { session, new: true }
+      );
+
+      if (!coupon) {
+        if (session) await session.abortTransaction();
+        return NextResponse.json({ 
+          message: 'Invalid, expired, or minimum purchase not met for this coupon code.' 
+        }, { status: 400 });
+      }
+
+      if (coupon.discountType === 'fixed') {
+        couponDiscountAmount = coupon.discountValue;
+      } else {
+        couponDiscountAmount = Math.floor(serverComputedTotal * (coupon.discountValue / 100));
+      }
+      // Ensure discount doesn't exceed total
+      couponDiscountAmount = Math.min(couponDiscountAmount, serverComputedTotal);
+    }
+
+    const totalAfterCoupon = baseTotal - couponDiscountAmount;
+
+    // --- B. Wallet & Loyalty Logic ---
+    if (user) {
+      // Wallet Deduction (Apply on amount after coupon)
+      if (useWallet && user.walletBalance > 0) {
+        walletAmountUsed = Math.min(user.walletBalance, totalAfterCoupon);
+        user.walletBalance -= walletAmountUsed;
+        await user.save({ session });
+
+        // Log Wallet Transaction (Spent)
+        const [walletTx] = await WalletTransaction.create([{
+          userId: user._id,
+          amount: walletAmountUsed,
+          type: 'spent',
+          status: 'completed',
+          description: `Used tokens for order payment`
+        }], { session });
+        
+        walletTxId = walletTx._id.toString();
+      }
+
+      // Calculate potential rewards (only if already active or this order hits threshold)
+      const isAlreadyActive = user.isSubscriptionActive;
+      const willBeActive = isAlreadyActive || (totalAfterCoupon >= subConfig.activationThreshold);
+
+      if (willBeActive) {
+        // If not already active, activate it now (atomic update)
+        if (!isAlreadyActive) {
+          user.isSubscriptionActive = true;
+          await user.save({ session });
+        }
+        
+        // Calculate reward on the remaining amount paid
+        const payableAmount = totalAfterCoupon - walletAmountUsed;
+        earnedRewardAmount = Math.floor(payableAmount * (subConfig.rewardPercentage / 100));
+      }
+    }
+
+    // 6. Create the order
     const [newOrder] = (await Order.create(
       [
         {
-          user: (sessionUser?.user?.id as any) || undefined, // Allow guest checkout
+          user: user?._id || undefined,
           items: validatedItems,
           deliveryCharge: serverComputedDeliveryCharge,
-          totalAmount: serverComputedTotal + serverComputedDeliveryCharge,
+          totalAmount: baseTotal,
+          walletAmountUsed,
+          couponCode: couponDiscountAmount > 0 ? couponCode?.toUpperCase() : undefined,
+          couponDiscountAmount,
+          earnedRewardAmount,
           shippingAddress,
           paymentMethod,
           paymentStatus: 'Pending',
@@ -142,6 +246,15 @@ export async function POST(req: NextRequest) {
       { session }
     )) as any;
 
+    // Link transaction to order ID if we had one
+    if (walletTxId) {
+      await WalletTransaction.findByIdAndUpdate(
+        walletTxId,
+        { orderId: newOrder._id },
+        { session }
+      );
+    }
+
     await session.commitTransaction();
     return NextResponse.json(newOrder, { status: 201 });
 
@@ -149,7 +262,7 @@ export async function POST(req: NextRequest) {
     if (session) {
       await session.abortTransaction();
     }
-    console.error('Error creating order (Hardened):', error);
+    console.error('Error creating order (Combo Discount):', error);
     const isClientError = error instanceof StockError;
     return NextResponse.json({ 
         message: isClientError ? error.message : 'Internal Server Error' 

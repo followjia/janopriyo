@@ -31,14 +31,16 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [ordersRes, settingsRes] = await Promise.all([
+        const [ordersRes, settingsRes, profileRes] = await Promise.all([
             fetch('/api/orders'),
-            fetch('/api/settings')
+            fetch('/api/settings'),
+            fetch('/api/user/profile')
         ]);
 
         if (ordersRes.ok) {
@@ -52,6 +54,12 @@ export default function OrdersPage() {
           setSettings(await settingsRes.json());
         } else {
           toast.error(`Failed to load settings: ${settingsRes.statusText || settingsRes.status}`);
+        }
+        
+        if (profileRes.ok) {
+          setProfile(await profileRes.json());
+        } else {
+          toast.error(`Failed to load profile details: ${profileRes.statusText || profileRes.status}`);
         }
       } catch (error) {
         toast.error('Failed to load dashboard data');
@@ -169,7 +177,21 @@ export default function OrdersPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-10">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-10">
+          <Card className="bg-primary/5 border-none shadow-none">
+              <CardContent className="pt-6 flex flex-col items-center text-center gap-2">
+                  <Package className="h-6 w-6 text-primary" />
+                  <div className="text-2xl font-black">৳{profile?.walletBalance || 0}</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
+                    Available Tokens
+                  </div>
+                  {profile?.isSubscriptionActive ? (
+                    <Badge variant="default" className="text-[8px] h-4">Active Subscriber</Badge>
+                  ) : (
+                    <div className="text-[8px] text-muted-foreground">Inactive</div>
+                  )}
+              </CardContent>
+          </Card>
           <Card className="bg-primary/5 border-none shadow-none">
               <CardContent className="pt-6 flex flex-col items-center text-center gap-2">
                   <Clock className="h-6 w-6 text-primary" />

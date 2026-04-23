@@ -11,6 +11,8 @@ export interface IUser extends Document {
   googleId?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  isSubscriptionActive: boolean;
+  walletBalance: number;
   addresses: {
     street?: string;
     division?: string;
@@ -53,6 +55,8 @@ const UserSchema: Schema<IUser> = new Schema(
     googleId: { type: String },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date },
+    isSubscriptionActive: { type: Boolean, default: false },
+    walletBalance: { type: Number, default: 0, min: 0 },
     addresses: [
       {
         street: { type: String },

@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
+import User from '@/models/User';
+import GlobalSettings from '@/models/GlobalSettings';
+import WalletTransaction from '@/models/WalletTransaction';
 import { auth } from '@/auth';
 
 // GET single order details
@@ -80,8 +83,7 @@ export async function PATCH(
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
 
-    // Update only allowed fields with validation
-    const allowedStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    const allowedStatuses = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
     const allowedPaymentStatuses = ['Pending', 'Paid', 'Failed'];
 
     if (status) {
@@ -101,6 +103,68 @@ export async function PATCH(
         }
         order.paymentStatus = paymentStatus;
     }
+
+    // ----------------------------
+    // Loyalty System: Award Tokens on Success
+    // ----------------------------
+    const isOrderSuccessful = ['Delivered', 'Completed', 'Shipped'].includes(body.status);
+    
+    if (isOrderSuccessful && !order.isRewarded && order.user) {
+        let session: mongoose.ClientSession | null = null;
+        try {
+            const conn = await connectToDatabase();
+            session = await conn.startSession();
+            if (!session) throw new Error('Failed to start session');
+            session.startTransaction();
+
+            const user = await User.findById(order.user).session(session);
+            const settings = await GlobalSettings.findOne({}).session(session);
+            const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
+
+            if (user) {
+                // 1. Check for Subscription Activation (if not already active)
+                if (!user.isSubscriptionActive) {
+                    if (order.totalAmount >= subConfig.activationThreshold) {
+                        await User.findByIdAndUpdate(user._id, { isSubscriptionActive: true }, { session });
+                    }
+                } 
+                
+                // 2. Award Tokens
+                const rewardAmount = order.earnedRewardAmount || 0;
+                if ((user.isSubscriptionActive || order.totalAmount >= subConfig.activationThreshold) && rewardAmount > 0) {
+                    // Atomic increment
+                    await User.findByIdAndUpdate(user._id, { 
+                        $inc: { walletBalance: rewardAmount } 
+                    }, { session });
+                    
+                    // Log Wallet Transaction (Earned)
+                    await WalletTransaction.create([{
+                        userId: user._id,
+                        amount: rewardAmount,
+                        type: 'earned',
+                        status: 'completed',
+                        orderId: order._id,
+                        description: `Tokens earned from order #${order._id.toString().slice(-6).toUpperCase()}`
+                    }], { session });
+                }
+
+                // 3. Mark order as rewarded
+                await Order.findByIdAndUpdate(order._id, { isRewarded: true }, { session });
+                if (session) await session.commitTransaction();
+                
+                // Refresh local order object for response
+                order.isRewarded = true;
+            }
+        } catch (error) {
+            if (session) await session.abortTransaction();
+            console.error('Failed to award loyalty rewards atomically:', error);
+            // We don't throw here to avoid failing the whole order update, 
+            // but the transaction ensures consistency for the reward part.
+        } finally {
+            if (session) await session.endSession();
+        }
+    }
+    // ----------------------------
 
     await order.save();
 
