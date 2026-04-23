@@ -9,6 +9,8 @@ export interface IUser extends Document {
   image?: string;
   phone?: string;
   googleId?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   addresses: {
     street?: string;
     division?: string;
@@ -49,6 +51,8 @@ const UserSchema: Schema<IUser> = new Schema(
     image: { type: String },
     phone: { type: String },
     googleId: { type: String },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date },
     addresses: [
       {
         street: { type: String },

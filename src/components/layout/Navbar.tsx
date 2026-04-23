@@ -25,6 +25,7 @@ import { ModeToggle } from '@/components/mode-toggle';
 import { useAppSelector } from '@/store/hooks';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import { CategoryNav } from '@/components/layout/CategoryNav';
+import { AIChatbot } from '@/components/layout/AIChatbot';
 import {
   Accordion,
   AccordionContent,
@@ -177,6 +178,11 @@ export default function Navbar() {
               {/* Theme Toggle (Left of group) */}
               <div className="hidden sm:block">
                 <ModeToggle />
+              </div>
+
+              {/* AI Chatbot */}
+              <div className="hidden sm:block">
+                <AIChatbot />
               </div>
 
               {/* Wishlist */}

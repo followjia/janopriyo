@@ -4,9 +4,9 @@ import User from '@/models/User';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, phone, address, division, district, thana } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return NextResponse.json(
         { message: 'Please provide all required fields.' },
         { status: 400 }
@@ -35,6 +35,15 @@ export async function POST(req: NextRequest) {
       name,
       email,
       password,
+      phone,
+      addresses: [{
+        street: address,
+        division: division,
+        state: district,
+        city: thana,
+        country: 'Bangladesh',
+        isDefault: true
+      }],
       role: 'user',
     });
 
