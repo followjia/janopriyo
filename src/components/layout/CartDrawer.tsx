@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { 
@@ -30,6 +29,8 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
           dispatch(addToCart({ ...item, quantity: delta }));
       }
   };
+
+
 
   return (
     <Sheet>
@@ -140,26 +141,19 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
         {items.length > 0 && (
           <SheetFooter className="mt-auto pt-6 border-t flex-col gap-4">
             <div className="flex flex-col gap-2 w-full">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-bold">৳{Math.round(totalAmount)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Shipping</span>
-                <span className="font-bold text-green-600">FREE</span>
-              </div>
-              <Separator className="my-2" />
               <div className="flex items-center justify-between text-lg font-extrabold tracking-tight">
                 <span>Total Amount</span>
                 <span className="text-primary">৳{Math.round(totalAmount)}</span>
               </div>
             </div>
             <div className="flex flex-col gap-2 w-full">
-                <Button 
-                    className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs group"
-                    nativeButton={false}
-                    render={<Link href="/checkout">Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>}
-                />
+                <SheetClose nativeButton={false} render={
+                  <Button 
+                      className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs group"
+                      nativeButton={false}
+                      render={<Link href="/checkout">Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>}
+                  />
+                } />
                 <Button 
                     variant="ghost" 
                     size="sm" 

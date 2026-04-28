@@ -47,6 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
       productId: product._id,
       name: product.name,
       price: (product.salePrice !== undefined && product.salePrice !== null) ? product.salePrice : product.price,
+      basePrice: product.price,
       quantity: 1,
       image: product.images?.[0]
     }));

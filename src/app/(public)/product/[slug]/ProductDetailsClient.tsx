@@ -180,6 +180,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       productId: product._id,
       name: product.name,
       price: displaySalePrice || displayPrice,
+      basePrice: displayPrice,
       quantity: finalQuantity,
       image: activeVariant?.image || product.images?.[0],
       color: selectedColor || undefined,

@@ -44,28 +44,28 @@ async function getHomeData() {
       Product.find({ isPublished: true, isFeatured: true })
         .populate('categories')
         .sort({ createdAt: -1 })
-        .limit(8)
+        .limit(10)
         .lean(),
       // New Arrivals
       Product.find({ isPublished: true, isNewArrival: true })
         .populate('categories')
         .sort({ createdAt: -1 })
-        .limit(8)
+        .limit(10)
         .lean(),
       // Flash Sale (Items on sale)
       Product.find({ isPublished: true, salePrice: { $exists: true, $ne: null } })
         .populate('categories')
-        .sort({ discountRate: -1 })
-        .limit(4)
+        .sort({ salePrice: 1 })
+        .limit(10)
         .lean(),
       // Trending (Based on ratings/reviews)
       Product.find({ isPublished: true })
         .populate('categories')
         .sort({ ratings: -1, numReviews: -1 })
-        .limit(4)
+        .limit(10)
         .lean(),
       // Recent Blogs
-      Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(3).lean(),
+      Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(1).lean(),
       // FAQs
       FAQ.find({ isActive: true }).sort({ order: 1 }).lean(),
       // Global Settings for Loyalty Info
@@ -79,7 +79,7 @@ async function getHomeData() {
 
     return {
       banners: serialize(bannersRaw),
-      categories: serialize(categoriesRaw).slice(0, 6),
+      categories: serialize(categoriesRaw),
       featuredProducts: serialize(featuredProductsRaw),
       newArrivals: serialize(newArrivalsRaw),
       flashSale: serialize(flashSaleRaw),
@@ -120,67 +120,77 @@ export default async function Home() {
       {/* 1. Hero Section */}
       <HeroSlider banners={data.banners} />
 
-      {/* 2. Our Features (Trust Badges) */}
-      <FeaturesSection />
+
+
+
+
+      {/* 4. Categories Showcase */}
+      <CategoryShowcase categories={data.categories} />
+
+
+      {/* 8. Featured Products */}
+      {data.featuredProducts.length > 0 && (
+        <ProductCarouselSection
+          title="Featured Collections"
+          description="Explore our best-selling and most popular products hand-picked just for you."
+          products={data.featuredProducts}
+          viewAllLink="/shop"
+          bgColor="bg-background"
+        />
+      )}
+
+      {/* 8. Loyalty Promotion */}
+      <LoyaltyBanner settings={data.settings} />
 
       {/* 3. Flash Sale (Timed) */}
       {data.flashSale.length > 0 && (
-        <ProductCarouselSection 
-          title="Flash Sale" 
-          products={data.flashSale} 
+        <ProductCarouselSection
+          title="Flash Sale"
+          products={data.flashSale}
           viewAllLink="/shop?filter=sale"
           isFlashSale={true}
           bgColor="bg-primary/5"
         />
       )}
 
-      {/* 4. Categories Showcase */}
-      <CategoryShowcase categories={data.categories} />
-
-      {/* 5. New Arrivals */}
-      {data.newArrivals.length > 0 && (
-        <ProductCarouselSection 
-          title="New Arrivals" 
-          description="Discover the latest additions to our collection. Stay ahead of the curve."
-          products={data.newArrivals} 
-          viewAllLink="/shop?filter=new"
-          bgColor="bg-background"
-        />
-      )}
+      {/* 7. Combo Discount Promotion */}
+      <ComboOfferBanner activeCoupon={data.activeCoupon} settings={data.settings} />
 
       {/* 6. Trending Products */}
       {data.trending.length > 0 && (
-        <ProductCarouselSection 
-          title="Trending Now" 
+        <ProductCarouselSection
+          title="Trending Now"
           description="The most popular items according to our community ratings and reviews."
-          products={data.trending} 
+          products={data.trending}
           viewAllLink="/shop"
           bgColor="bg-muted/20"
         />
       )}
 
-      {/* 7. Combo Discount Promotion */}
-      <ComboOfferBanner activeCoupon={data.activeCoupon} settings={data.settings} />
 
-      {/* 8. Loyalty Promotion */}
-      <LoyaltyBanner settings={data.settings} />
+      {/* 9. Recent Blogs section */}
+      <BlogRecent blogs={data.blogs} />
 
-      {/* 8. Featured Products */}
-      {data.featuredProducts.length > 0 && (
-        <ProductCarouselSection 
-          title="Featured Collections" 
-          description="Explore our best-selling and most popular products hand-picked just for you."
-          products={data.featuredProducts} 
-          viewAllLink="/shop"
+      {/* 5. New Arrivals */}
+      {data.newArrivals.length > 0 && (
+        <ProductCarouselSection
+          title="New Arrivals"
+          description="Discover the latest additions to our collection. Stay ahead of the curve."
+          products={data.newArrivals}
+          viewAllLink="/shop?filter=new"
           bgColor="bg-background"
         />
       )}
 
+
+
+      {/* 2. Our Features (Trust Badges) */}
+      <FeaturesSection />
+
       {/* 8. Testimonials Section */}
       <Testimonials />
 
-      {/* 9. Recent Blogs section */}
-      <BlogRecent blogs={data.blogs} />
+
 
       {/* 10. FAQ Accordion Section */}
       <FAQSection faqs={data.faqs} />

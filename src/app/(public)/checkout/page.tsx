@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { clearCart } from '@/store/slices/cartSlice';
+import { addToCart, removeFromCart, clearCart } from '@/store/slices/cartSlice';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,19 +20,26 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, CreditCard, Truck, ShoppingBag, CheckCircle2 } from 'lucide-react';
+import { Loader2, CreditCard, Truck, ShoppingBag, CheckCircle2, Plus, Minus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+import { divisions, bdDivisions, bdLocations } from '@/lib/bd-locations';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 const checkoutSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Invalid phone number'),
+  phone: z.string().min(11, 'Invalid phone number'),
   street: z.string().min(5, 'Street address is required'),
-  city: z.string().min(2, 'City is required'),
-  state: z.string().min(2, 'State is required'),
-  zipCode: z.string().min(4, 'Invalid zip code'),
-  country: z.string().min(2, 'Country is required'),
+  division: z.string().min(1, 'Division is required'),
+  district: z.string().min(1, 'District is required'),
+  thana: z.string().min(1, 'Thana is required'),
   paymentMethod: z.enum(['COD', 'Online'], {
     message: 'Select a payment method'
   }),
@@ -57,16 +64,20 @@ export default function CheckoutPage() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       fullName: '',
-      email: '',
       phone: '',
       street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'Bangladesh',
+      division: '',
+      district: '',
+      thana: '',
       paymentMethod: 'COD',
     },
   });
+
+  const selectedDivision = form.watch('division');
+  const selectedDistrict = form.watch('district');
+
+  const availableDistricts = selectedDivision ? bdDivisions[selectedDivision] : [];
+  const availableThanas = selectedDistrict ? bdLocations[selectedDistrict] : [];
 
   useEffect(() => {
     async function fetchLoyaltyData() {
@@ -75,14 +86,30 @@ export default function CheckoutPage() {
           fetch('/api/user/profile'),
           fetch('/api/settings')
         ]);
-        if (profileRes.ok) setProfile(await profileRes.json());
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setProfile(profileData);
+          
+          // Pre-fill form if user is logged in
+          if (profileData) {
+            form.reset({
+              fullName: profileData.name || '',
+              phone: profileData.phone || '',
+              street: profileData.address || '',
+              division: profileData.division || '',
+              district: profileData.district || '',
+              thana: profileData.thana || '',
+              paymentMethod: 'COD',
+            });
+          }
+        }
         if (settingsRes.ok) setSettings(await settingsRes.json());
       } catch (error) {
         console.error('Failed to fetch loyalty data');
       }
     }
     fetchLoyaltyData();
-  }, []);
+  }, [form]);
 
   const submissionSucceededRef = useRef(false);
 
@@ -102,16 +129,20 @@ export default function CheckoutPage() {
             name: item.name,
             quantity: item.quantity,
             price: item.price,
-            image: item.image
+            image: item.image,
+            color: item.color,
+            size: item.size,
+            others: item.others
         })),
         shippingAddress: {
             fullName: values.fullName,
             phone: values.phone,
             street: values.street,
-            city: values.city,
-            state: values.state,
-            zipCode: values.zipCode,
-            country: values.country
+            city: values.thana,
+            state: values.district,
+            division: values.division,
+            zipCode: '0000',
+            country: 'Bangladesh'
         },
         paymentMethod: values.paymentMethod,
         deliveryCharge: deliveryCharge,
@@ -214,9 +245,9 @@ export default function CheckoutPage() {
     toast.info('Coupon removed');
   };
 
-  const city = form.watch('city');
-  const state = form.watch('state');
-  const isDhaka = city?.toLowerCase().includes('dhaka') || state?.toLowerCase().includes('dhaka');
+  const division = form.watch('division');
+  const district = form.watch('district');
+  const isDhaka = division?.toLowerCase().includes('dhaka') || district?.toLowerCase().includes('dhaka');
   
   const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 0;
   const isFreeDelivery = freeDeliveryThreshold > 0 && totalAmount >= freeDeliveryThreshold;
@@ -224,8 +255,13 @@ export default function CheckoutPage() {
   const chargeInsideDhaka = settings?.deliveryChargeInsideDhaka || 60;
   const chargeOutsideDhaka = settings?.deliveryChargeOutsideDhaka || 120;
   
+  const totalProductDiscount = items.reduce((sum, item) => {
+    const itemBasePrice = item.basePrice || item.price;
+    return sum + Math.max(0, itemBasePrice - item.price) * item.quantity;
+  }, 0);
+
   const deliveryCharge = items.length > 0 ? (isFreeDelivery ? 0 : (isDhaka ? chargeInsideDhaka : chargeOutsideDhaka)) : 0;
-  
+
   const totalAfterCoupon = Math.max(0, totalAmount + deliveryCharge - couponDiscount);
 
   const walletAmountToUse = useWallet && profile?.walletBalance 
@@ -238,6 +274,15 @@ export default function CheckoutPage() {
     ? Math.floor(finalTotal * (settings.subscriptionConfig.rewardPercentage / 100))
     : 0;
 
+  const handleUpdateQuantity = (item: any, delta: number) => {
+      if (item.quantity + delta === 0) {
+          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+          toast.info(`${item.name} removed from cart`);
+      } else {
+          dispatch(addToCart({ ...item, quantity: delta }));
+      }
+  };
+
   // Show loading state or nothing while hydrating to prevent flash of "empty cart" redirect
   if (!isHydrated) return (
     <div className="container min-h-[60vh] flex items-center justify-center">
@@ -249,44 +294,96 @@ export default function CheckoutPage() {
 
   return (
     <div className="container px-4 md:px-6 py-12">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        {/* Left Side: Order Summary */}
+        <div className="hidden lg:block sticky top-24 self-start space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Items</CardTitle>
+              <CardDescription>Items you are about to purchase.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-h-[500px] overflow-y-auto space-y-4 pr-2 -mr-2">
+                {items.map((item, index) => (
+                  <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : index} className="flex gap-4 items-start relative group">
+                    <div className="h-16 w-16 rounded-md border bg-muted flex-shrink-0 relative overflow-hidden">
+                      {item.image && <img src={item.image} alt={item.name || 'Product'} className="h-full w-full object-cover" />}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <p className="text-sm font-bold truncate pr-4">{item.name}</p>
+                        <button 
+                          onClick={() => {
+                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+                            toast.info(`${item.name} removed from cart`);
+                          }}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1 -mt-1 -mr-1"
+                          aria-label={`Remove ${item.name} from cart`}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center border rounded-full bg-muted/50 scale-90 -ml-2">
+                          <button 
+                            type="button" 
+                            onClick={() => handleUpdateQuantity(item, -1)}
+                            className="h-7 w-7 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
+                            aria-label={`Decrease quantity of ${item.name}`}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item, 1)}
+                            className="h-7 w-7 flex items-center justify-center hover:bg-muted rounded-full transition-colors"
+                            aria-label={`Increase quantity of ${item.name}`}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-bold text-primary">৳{Math.round(item.price * item.quantity)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-base font-bold">Items Total</span>
+                <span className="text-xl font-black text-primary">৳{Math.round(totalAmount)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Side: Delivery & Payment */}
+        <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Checkout</h1>
             <p className="text-muted-foreground mt-2">Complete your order by filling in the details below.</p>
           </div>
 
           <Form {...form}>
-            <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Truck className="h-5 w-5 text-primary" />
-                    Shipping Information
+                    Delivery Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
                     name="fullName"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
+                      <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="john@example.com" {...field} />
+                          <Input placeholder="John Doe" {...field} className="h-11 focus-visible:ring-primary/20" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -297,9 +394,9 @@ export default function CheckoutPage() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>Mobile Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="+880 1XXXXXXXXX" {...field} />
+                          <Input placeholder="017XXXXXXXX" {...field} className="h-11 focus-visible:ring-primary/20" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -309,78 +406,213 @@ export default function CheckoutPage() {
                     control={form.control}
                     name="street"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Street Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="House #123, Road #4, Sector #5" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>City</FormLabel>
+                        <FormLabel>Address Line</FormLabel>
                         <FormControl>
-                          <Input placeholder="Dhaka" {...field} />
+                          <Input placeholder="House #, Road #, Area" {...field} className="h-11 focus-visible:ring-primary/20" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State / Division</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Dhaka" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="division"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Division</FormLabel>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              form.setValue('district', '');
+                              form.setValue('thana', '');
+                            }} 
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 focus:ring-primary/20">
+                                <SelectValue placeholder="Select division" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {divisions.map((division) => (
+                                <SelectItem key={division} value={division}>
+                                  {division}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="district"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>District</FormLabel>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              form.setValue('thana', '');
+                            }} 
+                            value={field.value}
+                            disabled={!selectedDivision}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 focus:ring-primary/20">
+                                <SelectValue placeholder="Select district" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableDistricts?.map((district) => (
+                                <SelectItem key={district} value={district}>
+                                  {district}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="thana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Thana</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            value={field.value}
+                            disabled={!selectedDistrict}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 focus:ring-primary/20">
+                                <SelectValue placeholder="Select thana" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableThanas?.map((thana) => (
+                                <SelectItem key={thana} value={thana}>
+                                  {thana}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detailed Summary Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Order Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Coupon Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        placeholder="Coupon Code" 
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        disabled={!!appliedCoupon || applyingCoupon}
+                        className="h-10 text-xs"
+                      />
+                      {appliedCoupon ? (
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={removeCoupon}
+                          className="h-10 px-3"
+                        >
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          onClick={() => applyCoupon()} 
+                          disabled={applyingCoupon || !couponCode}
+                          className="h-10 px-4"
+                        >
+                          {applyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                        </Button>
+                      )}
+                    </div>
+                    {appliedCoupon && (
+                      <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Coupon "{appliedCoupon}" active!
+                      </p>
                     )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Zip Code</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1230" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>৳{Math.round(totalAmount + totalProductDiscount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Product Discount</span>
+                      <span>- ৳{Math.round(totalProductDiscount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Coupon Discount</span>
+                      <span className={couponDiscount > 0 ? "text-green-600 font-bold" : ""}>
+                        - ৳{Math.round(couponDiscount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span className={isFreeDelivery ? "text-green-600 font-black" : "text-primary font-bold"}>
+                        {isFreeDelivery ? 'FREE' : `৳${deliveryCharge}`}
+                      </span>
+                    </div>
+                    {isFreeDelivery && (
+                      <p className="text-[10px] text-green-600 font-bold text-right -mt-1">
+                        Free shipping applied (Order ≥ ৳{freeDeliveryThreshold})
+                      </p>
                     )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Loyalty Discount</span>
+                      <span className={walletAmountToUse > 0 ? "text-primary font-bold" : ""}>
+                        - ৳{Math.round(walletAmountToUse)}
+                      </span>
+                    </div>
+                    <Separator className="mt-4" />
+                    <div className="flex justify-between text-lg font-black pt-2">
+                      <span>Final Total</span>
+                      <span className="text-primary">৳{Math.round(finalTotal)}</span>
+                    </div>
+                    {potentialReward > 0 && (
+                      <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Loyalty Perk</p>
+                        <p className="text-xs font-bold">You will earn <span className="text-primary">৳{potentialReward}</span> tokens from this order!</p>
+                      </div>
                     )}
-                  />
+                  </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-primary" />
                     Payment Method
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
                     name="paymentMethod"
@@ -417,161 +649,41 @@ export default function CheckoutPage() {
                       </FormItem>
                     )}
                   />
-                </CardContent>
-              </Card>
 
-              {profile && profile.walletBalance > 0 && (
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ShoppingBag className="h-5 w-5 text-primary" />
-                      Token Wallet
-                    </CardTitle>
-                    <CardDescription>Use your earned tokens for an instant discount.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
-                      <div className="flex items-center gap-3">
-                        <input 
-                          type="checkbox" 
-                          id="use-wallet" 
-                          checked={useWallet}
-                          onChange={(e) => setUseWallet(e.target.checked)}
-                          className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                        />
-                        <label htmlFor="use-wallet" className="font-bold cursor-pointer">
-                          Use Token Balance
-                          <p className="text-xs font-normal text-muted-foreground">Available: ৳{profile.walletBalance}</p>
-                        </label>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-black text-primary">- ৳{walletAmountToUse}</p>
+                  {profile && profile.walletBalance > 0 && (
+                    <div className="p-4 border rounded-lg bg-primary/5 border-primary/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="checkbox" 
+                            id="use-wallet" 
+                            checked={useWallet}
+                            onChange={(e) => setUseWallet(e.target.checked)}
+                            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <label htmlFor="use-wallet" className="font-bold cursor-pointer">
+                            Use Token Balance
+                            <p className="text-xs font-normal text-muted-foreground">Available: ৳{profile.walletBalance}</p>
+                          </label>
+                        </div>
+                        {useWallet && <span className="text-sm font-black text-primary">-৳{walletAmountToUse}</span>}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                </CardContent>
+                <CardFooter className="pt-2 border-t">
+                  <Button 
+                    type="submit"
+                    className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs" 
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingBag className="mr-2 h-4 w-4" />}
+                    Confirm Order
+                  </Button>
+                </CardFooter>
+              </Card>
             </form>
           </Form>
-        </div>
-
-        {/* Order Summary Sidebar */}
-        <div className="space-y-6">
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-              <CardDescription>Verify your items before placing the order.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2">
-                {items.map((item, index) => (
-                  <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : index} className="flex gap-4 items-center">
-                    <div className="h-12 w-12 rounded border bg-muted flex-shrink-0">
-                      {item.image && <img src={item.image} alt={item.name || 'Product'} className="h-full w-full object-cover rounded" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.quantity} x ৳{Math.round(item.price)}</p>
-                    </div>
-                    <p className="text-sm font-bold">৳{Math.round(item.price * item.quantity)}</p>
-                  </div>
-                ))}
-              </div>
-              <Separator />
-              
-              {/* Coupon Section */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Input 
-                    placeholder="Coupon Code" 
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    disabled={!!appliedCoupon || applyingCoupon}
-                    className="h-9 text-xs"
-                  />
-                  {appliedCoupon ? (
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={removeCoupon}
-                      className="h-9 px-3"
-                    >
-                      Remove
-                    </Button>
-                  ) : (
-                    <Button 
-                      type="button" 
-                      size="sm" 
-                      onClick={() => applyCoupon()} 
-                      disabled={applyingCoupon || !couponCode}
-                      className="h-9 px-4"
-                    >
-                      {applyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
-                    </Button>
-                  )}
-                </div>
-                {appliedCoupon && (
-                  <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Coupon "{appliedCoupon}" active!
-                  </p>
-                )}
-              </div>
-
-              <Separator />
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>৳{Math.round(totalAmount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className={isFreeDelivery ? "text-green-600 font-black" : "text-primary font-bold"}>
-                    {isFreeDelivery ? 'FREE' : `৳${deliveryCharge}`}
-                  </span>
-                </div>
-                {isFreeDelivery && (
-                  <p className="text-[10px] text-green-600 font-bold text-right -mt-1">
-                    Free shipping applied (Order ≥ ৳{freeDeliveryThreshold})
-                  </p>
-                )}
-                {couponDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600 font-bold">
-                    <span>Coupon Discount</span>
-                    <span>- ৳{couponDiscount}</span>
-                  </div>
-                )}
-                {walletAmountToUse > 0 && (
-                  <div className="flex justify-between text-sm text-primary font-bold">
-                    <span>Tokens Used</span>
-                    <span>- ৳{walletAmountToUse}</span>
-                  </div>
-                )}
-                <Separator className="mt-4" />
-                <div className="flex justify-between text-lg font-black pt-2">
-                  <span>Total</span>
-                  <span className="text-primary">৳{Math.round(finalTotal)}</span>
-                </div>
-                {potentialReward > 0 && (
-                  <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Loyalty Perk</p>
-                    <p className="text-xs font-bold">You will earn <span className="text-primary">৳{potentialReward}</span> tokens from this order!</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                type="submit"
-                form="checkout-form"
-                className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs" 
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingBag className="mr-2 h-4 w-4" />}
-                Place Your Order
-              </Button>
-            </CardFooter>
-          </Card>
         </div>
       </div>
     </div>

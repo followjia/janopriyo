@@ -4,6 +4,7 @@ interface CartItem {
   productId: string;
   name: string;
   price: number;
+  basePrice?: number;
   quantity: number;
   image?: string;
   color?: string;
@@ -94,8 +95,13 @@ const cartSlice = createSlice({
       state.totalAmount = 0;
     },
     hydrateCart(state, action: PayloadAction<CartState>) {
+      const items = (action.payload.items || []).map(item => ({
+        ...item,
+        basePrice: item.basePrice ?? item.price
+      }));
       return {
         ...action.payload,
+        items,
         isHydrated: true
       };
     },

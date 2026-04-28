@@ -1,21 +1,19 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format, isValid } from 'date-fns';
 
 export async function generateInvoicePDF(order: any, settings: any) {
-  // @ts-ignore - jspdf-autotable extends jsPDF types
-  const doc = new jsPDF() as any;
+  const doc = new jsPDF();
 
   const brandName = settings?.brandName || "Janopriyo Shop";
-  const brandLogo = settings?.logo;
   const brandEmail = settings?.contact?.email || "";
   const brandPhone = settings?.contact?.phone || "";
   const brandAddress = settings?.contact?.address || "";
 
   // Set Colors
-  const primaryColor = [0, 209, 178]; // #00D1B2 (Teal)
-  const secondaryColor = [100, 100, 100];
-  const accentColor = [240, 240, 240];
+  const primaryColor: [number, number, number] = [0, 209, 178]; // #00D1B2 (Teal)
+  const secondaryColor: [number, number, number] = [100, 100, 100];
+  const accentColor: [number, number, number] = [240, 240, 240];
 
   // Header / Brand
   doc.setFontSize(22);
@@ -34,7 +32,7 @@ export async function generateInvoicePDF(order: any, settings: any) {
   doc.setTextColor(230, 230, 230);
   doc.setFont("helvetica", "bold");
   doc.text("INVOICE", 140, 30);
-  
+
   // Horizontal Line
   doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
   doc.line(14, 35, 196, 35);
@@ -44,7 +42,7 @@ export async function generateInvoicePDF(order: any, settings: any) {
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.text("BILL TO:", 14, 45);
-  
+
   doc.setFont("helvetica", "normal");
   doc.text(order.shippingAddress?.fullName || "Customer", 14, 50);
   doc.text(order.shippingAddress?.street || "", 14, 54);
@@ -80,20 +78,21 @@ export async function generateInvoicePDF(order: any, settings: any) {
     index + 1,
     item.name,
     item.quantity,
-    `৳${Math.round(item.price)}`,
-    `৳${Math.round(item.price * item.quantity)}`,
+    `\u09f3${Math.round(item.price)}`,
+    `\u09f3${Math.round(item.price * item.quantity)}`,
   ]);
 
-  doc.autoTable({
+  // Use autoTable as a standalone function (correct API for Next.js bundling)
+  autoTable(doc, {
     startY: 75,
     head: [["#", "Product", "Qty", "Unit Price", "Subtotal"]],
     body: tableRows,
     theme: "striped",
-    headStyles: { 
-      fillColor: primaryColor, 
+    headStyles: {
+      fillColor: primaryColor,
       textColor: [255, 255, 255],
       fontSize: 10,
-      fontStyle: "bold"
+      fontStyle: "bold",
     },
     bodyStyles: { fontSize: 9 },
     alternateRowStyles: { fillColor: [248, 248, 248] },
@@ -108,37 +107,60 @@ export async function generateInvoicePDF(order: any, settings: any) {
 
   // Totals
   const finalY = (doc as any).lastAutoTable.finalY + 10;
-  
+
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-  
+
   const subtotalRaw = items.reduce((acc: number, item: any) => {
     const price = Number(item.price) || 0;
     const quantity = Number(item.quantity) || 0;
-    return acc + (price * quantity);
+    return acc + price * quantity;
   }, 0);
-  
+
   const subtotal = Number.isFinite(subtotalRaw) ? subtotalRaw : 0;
-  
-  const shippingCharge = order.shippingCharge !== undefined 
-    ? (Number(order.shippingCharge) || 0)
+
+  // order.totalAmount in this system represents the Gross Total (Subtotal + Delivery Charge) 
+  // before any coupon or wallet discounts are applied.
+  const deliveryCharge = order.deliveryCharge !== undefined
+    ? Number(order.deliveryCharge) || 0
     : Math.max(0, (Number(order.totalAmount) || 0) - subtotal);
 
+  const couponDiscount = Number(order.couponDiscountAmount) || 0;
+  const walletUsed = Number(order.walletAmountUsed) || 0;
+
   doc.text("Subtotal:", 140, finalY);
-  doc.text(`৳${Math.round(subtotal)}`, 190, finalY, { align: "right" });
+  doc.text(`\u09f3${Math.round(subtotal)}`, 190, finalY, { align: "right" });
 
   doc.text("Shipping Charge:", 140, finalY + 6);
-  doc.text(`৳${Math.round(shippingCharge)}`, 190, finalY + 6, { align: "right" });
+  doc.text(`\u09f3${Math.round(deliveryCharge)}`, 190, finalY + 6, { align: "right" });
+
+  if (couponDiscount > 0) {
+    doc.setTextColor(0, 150, 80);
+    doc.text("Coupon Discount:", 140, finalY + 12);
+    doc.text(`- \u09f3${Math.round(couponDiscount)}`, 190, finalY + 12, { align: "right" });
+    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+  }
+
+  if (walletUsed > 0) {
+    const loyaltyY = couponDiscount > 0 ? finalY + 18 : finalY + 12;
+    doc.setTextColor(0, 150, 80);
+    doc.text("Loyalty Discount:", 140, loyaltyY);
+    doc.text(`- \u09f3${Math.round(walletUsed)}`, 190, loyaltyY, { align: "right" });
+    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+  }
+
+  const lineOffset = (couponDiscount > 0 ? 6 : 0) + (walletUsed > 0 ? 6 : 0);
 
   doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
-  doc.line(140, finalY + 9, 196, finalY + 9);
+  doc.line(140, finalY + 9 + lineOffset, 196, finalY + 9 + lineOffset);
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("Total Amount:", 140, finalY + 16);
-  doc.text(`৳${Math.round(order.totalAmount)}`, 190, finalY + 16, { align: "right" });
+  doc.text("Total Amount:", 140, finalY + 16 + lineOffset);
+  // Final total is Gross Total minus discounts. verified that order.totalAmount is Gross (pre-discount).
+  doc.text(`\u09f3${Math.round(order.totalAmount - couponDiscount - walletUsed)}`, 190, finalY + 16 + lineOffset, { align: "right" });
 
   // Footer
   const pageHeight = doc.internal.pageSize.height;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -10,6 +10,8 @@ import {
   User,
   Search,
   Menu,
+  Mic,
+  MicOff,
   LayoutDashboard,
   LogOut,
   Settings,
@@ -53,6 +55,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const router = useRouter();
   const { data: session, status } = useSession();
   const { totalQuantity: cartCount, totalAmount } = useAppSelector((state) => state.cart);
@@ -106,6 +110,25 @@ export default function Navbar() {
     };
   }, [status]);
 
+  // Voice Search Cleanup
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore if already stopped
+        }
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    };
+  }, []);
+
   const mainCategories = categories.filter(c => !c.parentCategory);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -114,6 +137,39 @@ export default function Navbar() {
       router.push(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
       setSearchTerm('');
     }
+  };
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in your browser. Please use Chrome.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchTerm(transcript);
+      router.push(`/shop?search=${encodeURIComponent(transcript.trim())}`);
+    };
+
+    recognition.start();
   };
 
   return (
@@ -132,11 +188,19 @@ export default function Navbar() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder={isListening ? 'Listening...' : 'Search...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-muted/40 border-none rounded-full py-2.5 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                  className="w-full bg-muted/40 border-none rounded-full py-2.5 pl-10 pr-10 text-xs focus:ring-1 focus:ring-primary/20 transition-all outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  title={isListening ? 'Stop listening' : 'Search by voice'}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-primary'}`}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
               </form>
             </div>
 

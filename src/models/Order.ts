@@ -8,6 +8,7 @@ export interface IOrderItem {
   image?: string;
   color?: string;
   size?: string;
+  others?: string;
 }
 
 export interface IOrder extends Document {
@@ -21,6 +22,7 @@ export interface IOrder extends Document {
     street: string;
     city: string;
     state: string;
+    division?: string;
     zipCode: string;
     country: string;
   };
@@ -56,6 +58,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
         image: { type: String },
         color: { type: String },
         size: { type: String },
+        others: { type: String },
       },
     ],
     totalAmount: { type: Number, required: true, min: [0, 'Total amount cannot be negative'] },
@@ -67,6 +70,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
         street: { type: String, required: true },
         city: { type: String, required: true },
         state: { type: String, required: true },
+        division: { type: String, required: false },
         zipCode: { type: String, required: true },
         country: { type: String, required: true },
       },

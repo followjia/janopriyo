@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight, BookOpen } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -23,62 +23,90 @@ interface BlogRecentProps {
 export function BlogRecent({ blogs }: BlogRecentProps) {
   if (!blogs || blogs.length === 0) return null;
 
+  const blog = blogs[0];
+
   return (
-    <section className="py-20">
+    <section className="py-20 bg-muted/20">
       <div className="container px-4 md:px-6">
-        <div className="text-center mb-16 space-y-4">
-            <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
-                The Journal
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-                Latest from our <span className="text-primary italic">Blog</span>
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-                Discover tips, news, and trends from the Janopriyo Shop community.
-            </p>
+        {/* Section Header */}
+        <div className="text-center mb-12 space-y-4">
+          <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
+            The Journal
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+            Latest from our <span className="text-primary italic">Blog</span>
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Discover tips, news, and trends from the Janopriyo Shop community.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {blogs.map((blog) => (
-                <Link 
-                    key={blog._id} 
-                    href={`/blog/${blog.slug}`}
-                    className="group flex flex-col bg-card border rounded-[2rem] overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
-                >
-                    <div className="aspect-[16/10] overflow-hidden bg-muted relative">
-                        {blog.thumbnail ? (
-                            <img 
-                                src={blog.thumbnail} 
-                                alt={blog.title} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center opacity-20">No Image</div>
-                        )}
-                    </div>
-                    <div className="p-8">
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(blog.createdAt), 'MMMM dd, yyyy')}
-                        </div>
-                        <h3 className="text-xl font-black leading-tight mb-4 group-hover:text-primary transition-colors">
-                            {blog.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
-                            {blog.metaDescription}
-                        </p>
-                    </div>
-                </Link>
-            ))}
-        </div>
+        {/* Single Blog — Split Layout */}
+        <Link
+          href={`/blog/${blog.slug}`}
+          className="group grid grid-cols-1 lg:grid-cols-2 rounded-3xl overflow-hidden border bg-card hover:shadow-2xl transition-all duration-500"
+        >
+          {/* Left — Image */}
+          <div className="relative aspect-[4/3] lg:aspect-auto overflow-hidden bg-muted min-h-[300px]">
+            {blog.thumbnail ? (
+              <img
+                src={blog.thumbnail}
+                alt={blog.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">
+                <BookOpen className="h-16 w-16 opacity-20" />
+              </div>
+            )}
+            {/* Overlay gradient on hover */}
+            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
 
-        <div className="text-center">
-            <Link 
-                href="/blog"
-                className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), "rounded-full px-8 font-bold group")}
-            >
-                View All Stories <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+          {/* Right — Content */}
+          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 space-y-6">
+            <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              <Calendar className="h-3.5 w-3.5 text-primary" />
+              {(() => {
+                try {
+                  const date = new Date(blog.createdAt);
+                  return isNaN(date.getTime()) ? 'Recent Post' : format(date, 'MMMM dd, yyyy');
+                } catch (e) {
+                  return 'Recent Post';
+                }
+              })()}
+            </div>
+
+            <h3 className="text-3xl md:text-4xl font-black tracking-tight leading-tight group-hover:text-primary transition-colors duration-300">
+              {blog.title}
+            </h3>
+
+            {blog.metaDescription && (
+              <p className="text-muted-foreground text-base leading-relaxed line-clamp-4">
+                {blog.metaDescription}
+              </p>
+            )}
+
+            <div className="pt-2">
+              <span className={cn(
+                buttonVariants({ size: 'default', variant: 'default' }),
+                "rounded-full font-bold group/btn inline-flex items-center gap-2 pointer-events-none"
+              )}>
+                Read Article
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        {/* View All Link */}
+        <div className="text-center mt-10">
+          <Link
+            href="/blog"
+            className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), "rounded-full px-8 font-bold group")}
+          >
+            View All Stories <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </div>
     </section>

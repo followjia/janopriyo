@@ -26,7 +26,10 @@ const orderItemSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   quantity: z.number().int().positive('Quantity must be at least 1'),
   price: z.number().positive(), // We will re-validate this on the server
-  image: z.string().url().optional().or(z.literal('')),
+  image: z.string().nullish().or(z.literal('')),
+  color: z.string().optional(),
+  size: z.string().optional(),
+  others: z.string().optional(),
 });
 
 const orderSchema = z.object({
@@ -37,8 +40,9 @@ const orderSchema = z.object({
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
-    zipCode: z.string().min(4, 'Invalid zip code'),
-    country: z.string().min(1, 'Country is required'),
+    division: z.string().min(1, 'Division is required'),
+    zipCode: z.string().optional().default('0000'),
+    country: z.string().optional().default('Bangladesh'),
   }),
   paymentMethod: z.preprocess((val) => {
     if (typeof val === 'string') {
@@ -49,9 +53,9 @@ const orderSchema = z.object({
     }
     return val;
   }, z.enum(['COD', 'Online'])),
-  deliveryCharge: z.number().min(0).optional(),
-  useWallet: z.boolean().optional().default(false),
-  couponCode: z.string().optional(),
+  deliveryCharge: z.number().min(0).nullish(),
+  useWallet: z.boolean().nullish().default(false),
+  couponCode: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -64,6 +68,7 @@ export async function POST(req: NextRequest) {
     // 1. Validate Input Schema
     const validation = orderSchema.safeParse(body);
     if (!validation.success) {
+      console.error('Order Validation Error:', validation.error.flatten().fieldErrors);
       return NextResponse.json({ 
         message: 'Validation failed', 
         errors: validation.error.flatten().fieldErrors 
@@ -95,21 +100,60 @@ export async function POST(req: NextRequest) {
 
     // 2. Atomic Stock Validation and Price Verification
     for (const item of items) {
-      const product = await Product.findOneAndUpdate(
-        { 
-          _id: item.product, 
-          stock: { $gte: item.quantity },
-          isPublished: true 
-        },
-        { $inc: { stock: -item.quantity } },
-        { session, new: true }
-      );
+      let product;
+      const hasVariant = !!(item.color || item.size || item.others);
 
-      if (!product) {
-        throw new StockError(`Insufficient stock or product not found: ${item.name}`);
+      if (hasVariant) {
+        // Attempt to update variant stock
+        const variantQuery: any = { 
+          _id: item.product, 
+          isPublished: true,
+          variants: {
+            $elemMatch: {
+              ...(item.color && { color: item.color }),
+              ...(item.size && { size: item.size }),
+              ...(item.others && { others: item.others }),
+              stock: { $gte: item.quantity }
+            }
+          }
+        };
+        
+        product = await Product.findOneAndUpdate(
+          variantQuery,
+          { $inc: { "variants.$.stock": -item.quantity } },
+          { session, returnDocument: 'after' }
+        );
+      } else {
+        // Fallback to main stock
+        product = await Product.findOneAndUpdate(
+          { 
+            _id: item.product, 
+            stock: { $gte: item.quantity },
+            isPublished: true 
+          },
+          { $inc: { stock: -item.quantity } },
+          { session, returnDocument: 'after' }
+        );
       }
 
-      const itemPrice = product.salePrice ?? product.price;
+      if (!product) {
+        const variantDesc = [item.color, item.size, item.others].filter(Boolean).join(' / ');
+        throw new StockError(`Insufficient stock or product not found: ${item.name}${variantDesc ? ` (${variantDesc})` : ''}`);
+      }
+
+      // 2b. Determine Price (Server-side source of truth)
+      let itemPrice = product.salePrice ?? product.price;
+      if (hasVariant) {
+        const variant = product.variants?.find((v: any) => 
+          (v.color || undefined) === (item.color || undefined) &&
+          (v.size || undefined) === (item.size || undefined) &&
+          (v.others || undefined) === (item.others || undefined)
+        );
+        if (variant) {
+          itemPrice = (variant.salePrice ?? variant.price) ?? (product.salePrice ?? product.price);
+        }
+      }
+
       const lineTotal = itemPrice * item.quantity;
       serverComputedTotal += lineTotal;
 
@@ -118,14 +162,18 @@ export async function POST(req: NextRequest) {
         name: product.name,
         quantity: item.quantity,
         price: itemPrice,
-        image: product.images?.[0] || '',
+        image: item.image || product.images?.[0] || '',
+        color: item.color,
+        size: item.size,
+        others: item.others,
       });
     }
 
     // 3. Calculate Delivery Charge
     const isDhaka = 
       shippingAddress.city.toLowerCase().includes('dhaka') || 
-      shippingAddress.state.toLowerCase().includes('dhaka');
+      shippingAddress.state.toLowerCase().includes('dhaka') ||
+      shippingAddress.division.toLowerCase().includes('dhaka');
     
     const freeDeliveryThreshold = settings?.freeDeliveryThreshold || 0;
     const isFreeDelivery = freeDeliveryThreshold > 0 && serverComputedTotal >= freeDeliveryThreshold;
@@ -136,7 +184,13 @@ export async function POST(req: NextRequest) {
     const serverComputedDeliveryCharge = isFreeDelivery ? 0 : (isDhaka ? chargeInsideDhaka : chargeOutsideDhaka);
 
     // 4. Verify Delivery Charge (if provided by client)
-    if (clientProvidedDeliveryCharge !== undefined && clientProvidedDeliveryCharge !== serverComputedDeliveryCharge) {
+    if (clientProvidedDeliveryCharge !== undefined && clientProvidedDeliveryCharge !== null && clientProvidedDeliveryCharge !== serverComputedDeliveryCharge) {
+      console.warn('Delivery Charge Mismatch:', { 
+        client: clientProvidedDeliveryCharge, 
+        server: serverComputedDeliveryCharge,
+        city: shippingAddress.city,
+        state: shippingAddress.state
+      });
       if (session) await session.abortTransaction();
       return NextResponse.json({ 
         message: 'Delivery charge mismatch. Please refresh your cart.',
@@ -166,10 +220,11 @@ export async function POST(req: NextRequest) {
           ]
         },
         { $inc: { usedCount: 1 } },
-        { session, new: true }
+        { session, returnDocument: 'after' }
       );
 
       if (!coupon) {
+        console.warn('Invalid or Expired Coupon:', { couponCode, baseTotal });
         if (session) await session.abortTransaction();
         return NextResponse.json({ 
           message: 'Invalid, expired, or minimum purchase not met for this coupon code.' 
