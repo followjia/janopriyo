@@ -48,6 +48,10 @@ const data = {
         {
           title: "Dashboard",
           url: "/admin/dashboard",
+        },
+        {
+          title: "Analytics",
+          url: "/admin/dashboard/analytics",
         }
       ],
     },
@@ -157,7 +161,7 @@ function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: st
                 pathname === subItem.url ||
                 (subItem.url !== "#" &&
                   subItem.url !== "/admin" &&
-                  pathname.startsWith(subItem.url))
+                  pathname.startsWith(subItem.url + "/"))
             ) || pathname === item.url
 
           return (
@@ -182,7 +186,7 @@ function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: st
                             pathname === subItem.url ||
                             (subItem.url !== "#" &&
                               subItem.url !== "/admin" &&
-                              pathname.startsWith(subItem.url))
+                              pathname.startsWith(subItem.url + "/"))
                           }
                         >
                           <span>{subItem.title}</span>

@@ -7,9 +7,9 @@ import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { cache } from 'react';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
-import ProductDetailsClient from './ProductDetailsClient'; 
+import ProductDetailsClient from './ProductDetailsClient';
 import { ProductCard } from '@/components/storefront/ProductCard';
- 
+
 const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 };
@@ -21,7 +21,7 @@ const getProduct = cache(async (slug: string) => {
     const product = await Product.findOne({ slug })
       .populate('categories')
       .lean();
-    
+
     if (!product) return null;
 
     // Stringify ObjectIDs and other non-serializable fields for client components
@@ -33,30 +33,30 @@ const getProduct = cache(async (slug: string) => {
 });
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-    const { slug } = await params;
-    const product = await getProduct(slug);
-    if (!product) return { title: 'Product Not Found' };
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) return { title: 'Product Not Found' };
 
-    const safeDescription = (product.description ?? '').slice(0, 160);
-    const mainImage = product.images?.[0] ? [{ url: product.images[0] }] : [];
-    const twitterImage = product.images?.[0] ? [product.images[0]] : [];
+  const safeDescription = (product.description ?? '').slice(0, 160);
+  const mainImage = product.images?.[0] ? [{ url: product.images[0] }] : [];
+  const twitterImage = product.images?.[0] ? [product.images[0]] : [];
 
-    return {
-        title: product.name,
-        description: safeDescription,
-        openGraph: {
-            title: product.name,
-            description: safeDescription,
-            images: mainImage,
-            type: 'article',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: product.name,
-            description: safeDescription,
-            images: twitterImage,
-        }
-    };
+  return {
+    title: product.name,
+    description: safeDescription,
+    openGraph: {
+      title: product.name,
+      description: safeDescription,
+      images: mainImage,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: safeDescription,
+      images: twitterImage,
+    }
+  };
 }
 
 import Script from 'next/script';
@@ -99,9 +99,9 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
   const productSchema = generateProductSchema(product);
   const breadcrumbSchema = generateBreadcrumbSchema([
-      { name: 'Home', item: '/' },
-      { name: 'Shop', item: '/shop' },
-      { name: product.name, item: `/product/${product.slug}` }
+    { name: 'Home', item: '/' },
+    { name: 'Shop', item: '/shop' },
+    { name: product.name, item: `/product/${product.slug}` }
   ]);
 
   return (
@@ -120,7 +120,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
           dangerouslySetInnerHTML={{ __html: sanitizeForScript(breadcrumbSchema) }}
         />
       )}
-      
+
       <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3 w-3" />

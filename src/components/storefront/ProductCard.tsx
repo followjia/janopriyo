@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Heart, Eye } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, MoreVertical, Edit, Trash2, Settings, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -9,6 +9,14 @@ import { addToCart } from '@/store/slices/cartSlice';
 import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 interface ProductCardProps {
   product: {
@@ -30,6 +38,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { data: session, status } = useSession();
   const wishlist = useAppSelector((state) => state.wishlist.items);
   const isInWishlist = wishlist.includes(product._id);
+  const router = useRouter();
+  const isAdmin = (session?.user as any)?.role === 'admin';
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -82,6 +92,22 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     // TODO: Implement Quick View functionality
     toast.info('Quick View coming soon!');
+  };
+
+  const handleDeleteProduct = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      const res = await fetch(`/api/products/${product.slug}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      toast.success('Product deleted successfully');
+      router.refresh();
+    } catch (err) {
+      toast.error('Error deleting product');
+    }
   };
 
   const discount = (product.salePrice !== undefined && product.salePrice !== null && product.price > 0) 
@@ -145,6 +171,32 @@ export function ProductCard({ product }: ProductCardProps) {
             </Button>
         </div>
       </Link>
+
+      {/* Admin Quick Actions Overlay */}
+      {isAdmin && (
+        <div className="absolute top-2 right-2 z-20">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="outline-none transition-transform hover:scale-110 drop-shadow-md">
+              <MoreVertical className="h-5 w-5 text-foreground/80 hover:text-primary" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => router.push(`/admin/products/${product.slug}`)} className="cursor-pointer">
+                <Edit className="mr-2 h-4 w-4" /> Edit Product
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDeleteProduct} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Product
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/admin/products')} className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" /> Manage Products
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/products/new')} className="cursor-pointer">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Product
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col p-4">
         <div className="mb-2">

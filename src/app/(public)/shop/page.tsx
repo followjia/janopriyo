@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Pagination } from '@/components/ui/pagination';
 
 interface ShopCategory {
   _id: string;
@@ -63,6 +64,8 @@ interface ShopProduct {
 // Component for the SearchParams usage to avoid deopting the whole page from static optimization
 function ShopContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const initialCategory = searchParams.get('category');
   const initialSearch = searchParams.get('q');
   const initialFilter = searchParams.get('filter');
@@ -76,10 +79,31 @@ function ShopContent() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : []
   );
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const [showOnlyNew, setShowOnlyNew] = useState(initialFilter === 'new');
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
+  const itemsPerPage = 40;
+  const skipClampRef = useRef(false);
+
+  // Sync state to URL without full reload
+  const setPageAndUrl = useCallback((page: number) => {
+    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) {
+      params.set('page', page.toString());
+    } else {
+      params.delete('page');
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  useEffect(() => {
+    skipClampRef.current = true;
+    setPageAndUrl(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategories, priceRange, sortBy, searchTerm, showOnlyNew]);
 
   useEffect(() => {
     async function fetchData() {
@@ -131,6 +155,26 @@ function ShopContent() {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Handle page clamping when filters change or products are loaded
+  useEffect(() => {
+    if (skipClampRef.current) {
+      skipClampRef.current = false;
+      return;
+    }
+    if (!loading && products.length > 0) {
+      const safePage = Math.max(1, Math.min(currentPage, totalPages || 1));
+      if (safePage !== currentPage) {
+        setPageAndUrl(safePage);
+      }
+    }
+  }, [currentPage, totalPages, loading, products.length, setPageAndUrl]);
+
   const toggleCategory = (slug: string) => {
     setSelectedCategories(prev => 
         prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
@@ -139,7 +183,7 @@ function ShopContent() {
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, 5000]);
+    setPriceRange([0, 50000]);
     setSearchTerm('');
     setShowOnlyNew(false);
   };
@@ -171,8 +215,8 @@ function ShopContent() {
         <h3 className="text-sm font-bold uppercase tracking-wider mb-6">Price Range</h3>
         <Slider 
           value={priceRange} 
-          max={5000} 
-          step={50}
+          max={50000} 
+          step={500}
           onValueChange={(val) => {
             if (Array.isArray(val)) setPriceRange([...val]);
           }}
@@ -276,7 +320,7 @@ function ShopContent() {
 
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {loading ? 'Loading products...' : `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'} found`}
+              {loading ? 'Loading products...' : filteredProducts.length === 0 ? '0 products found' : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredProducts.length)} of ${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
             </p>
             {filteredProducts.length > 0 && (
               <Badge variant="outline" className="text-[10px] uppercase tracking-widest">
@@ -286,7 +330,7 @@ function ShopContent() {
           </div>
 
           {/* Active Filters Bar */}
-          {(selectedCategories.length > 0 || searchTerm || priceRange[0] > 0 || priceRange[1] < 5000 || showOnlyNew) && (
+          {(selectedCategories.length > 0 || searchTerm || priceRange[0] > 0 || priceRange[1] < 50000 || showOnlyNew) && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs font-bold uppercase text-muted-foreground mr-2">Filtered By:</span>
               {selectedCategories.map(cat => (
@@ -299,7 +343,7 @@ function ShopContent() {
                   Search: {searchTerm} <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm('')} />
                 </Badge>
               )}
-              {(priceRange[0] !== 0 || priceRange[1] !== 5000) && (
+              {(priceRange[0] !== 0 || priceRange[1] !== 50000) && (
                 <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
                    Price: ${priceRange[0]} - ${priceRange[1]}
                 </Badge>
@@ -334,9 +378,22 @@ function ShopContent() {
             </div>
           ) : (
             <div className={`grid gap-6 ${view === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
+            </div>
+          )}
+
+          {!loading && filteredProducts.length > 0 && totalPages > 1 && (
+            <div className="mt-8 border-t pt-8">
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => {
+                    setPageAndUrl(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             </div>
           )}
         </div>

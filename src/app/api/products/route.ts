@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const ids = searchParams.get('ids');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    // TODO: Consider requiring admin auth for limits > 100 or implementing a separate bulk endpoint
     const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '40')));
     const skip = (page - 1) * limit;
 

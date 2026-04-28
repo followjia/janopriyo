@@ -9,13 +9,15 @@ import {
     Newspaper,
     Type,
     FileSearch,
-    ImageIcon
+    ImageIcon,
+    Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -238,26 +240,15 @@ export default function EditBlogPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold">Thumbnail URL</label>
-                <Input
-                  name="thumbnail"
-                  value={formData.thumbnail || ''}
-                  onChange={handleChange}
-                  placeholder="https://imgbb.com/..."
+                <label className="text-sm font-bold">Thumbnail Image</label>
+                <ImageUpload 
+                  value={formData.thumbnail}
+                  onUpload={(url) => {
+                    setFormData(prev => ({ ...prev, thumbnail: url }));
+                    setImageLoadError(false);
+                  }}
                 />
               </div>
-              {formData.thumbnail && (
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted border max-w-2xl relative">
-                  <Image
-                    src={imageLoadError ? 'https://placehold.co/400x225?text=Invalid+Image+URL' : formData.thumbnail}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                    onError={() => setImageLoadError(true)}
-                    unoptimized
-                  />
-                </div>
-              )}
             </CardContent>
           </Card>
 

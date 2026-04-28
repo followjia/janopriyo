@@ -9,8 +9,7 @@ import GlobalSettings from '@/models/GlobalSettings';
 import Coupon from '@/models/Coupon';
 import { HeroSlider } from '@/components/storefront/HeroSlider';
 import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
-import { FeaturedProducts } from '@/components/storefront/FeaturedProducts';
-import { FlashSale } from '@/components/storefront/FlashSale';
+import { ProductCarouselSection } from '@/components/storefront/ProductCarouselSection';
 import { BlogRecent } from '@/components/storefront/BlogRecent';
 import { FAQSection } from '@/components/storefront/FAQSection';
 import { Testimonials } from '@/components/storefront/Testimonials';
@@ -125,53 +124,40 @@ export default async function Home() {
       <FeaturesSection />
 
       {/* 3. Flash Sale (Timed) */}
-      <FlashSale products={data.flashSale} />
+      {data.flashSale.length > 0 && (
+        <ProductCarouselSection 
+          title="Flash Sale" 
+          products={data.flashSale} 
+          viewAllLink="/shop?filter=sale"
+          isFlashSale={true}
+          bgColor="bg-primary/5"
+        />
+      )}
 
       {/* 4. Categories Showcase */}
       <CategoryShowcase categories={data.categories} />
 
       {/* 5. New Arrivals */}
-      <section className="py-20">
-        <div className="container px-4 md:px-6">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl font-black tracking-tighter">New Arrivals</h2>
-            <Link href="/shop?filter=new" className="text-sm font-bold text-primary hover:underline flex items-center gap-1 group">
-              View All <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {data.newArrivals.map((product: any) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-          {!hasAnyProducts && (
-            <div className="mt-8 text-center rounded-2xl border border-dashed p-10 bg-muted/20">
-              <h3 className="text-xl font-bold mb-2">Storefront is getting ready</h3>
-              <p className="text-muted-foreground mb-4">Add products from admin to make this section live.</p>
-              <Button render={<Link href="/shop" />} nativeButton={false}>
-                Visit Shop
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
+      {data.newArrivals.length > 0 && (
+        <ProductCarouselSection 
+          title="New Arrivals" 
+          description="Discover the latest additions to our collection. Stay ahead of the curve."
+          products={data.newArrivals} 
+          viewAllLink="/shop?filter=new"
+          bgColor="bg-background"
+        />
+      )}
 
       {/* 6. Trending Products */}
-      <section className="py-20 bg-muted/20">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center text-center space-y-4 mb-16">
-            <h2 className="text-4xl font-black tracking-tighter">Trending Now</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
-              The most popular items according to our community ratings and reviews.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {data.trending.map((product: any) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {data.trending.length > 0 && (
+        <ProductCarouselSection 
+          title="Trending Now" 
+          description="The most popular items according to our community ratings and reviews."
+          products={data.trending} 
+          viewAllLink="/shop"
+          bgColor="bg-muted/20"
+        />
+      )}
 
       {/* 7. Combo Discount Promotion */}
       <ComboOfferBanner activeCoupon={data.activeCoupon} settings={data.settings} />
@@ -179,8 +165,16 @@ export default async function Home() {
       {/* 8. Loyalty Promotion */}
       <LoyaltyBanner settings={data.settings} />
 
-      {/* 8. Featured Products (Existing) */}
-      <FeaturedProducts products={data.featuredProducts} />
+      {/* 8. Featured Products */}
+      {data.featuredProducts.length > 0 && (
+        <ProductCarouselSection 
+          title="Featured Collections" 
+          description="Explore our best-selling and most popular products hand-picked just for you."
+          products={data.featuredProducts} 
+          viewAllLink="/shop"
+          bgColor="bg-background"
+        />
+      )}
 
       {/* 8. Testimonials Section */}
       <Testimonials />

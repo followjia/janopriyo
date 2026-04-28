@@ -59,6 +59,7 @@ export default function Navbar() {
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
 
   const [categories, setCategories] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const isAdmin = (session?.user as any)?.role === 'admin';
   const dashboardHref = isAdmin ? '/admin/dashboard' : '/dashboard';
 
@@ -76,6 +77,34 @@ export default function Navbar() {
     }
     fetchCats();
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    if (status === 'authenticated') {
+      fetch('/api/user/profile', { signal: controller.signal })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch profile');
+          return res.json();
+        })
+        .then(data => {
+          if (isMounted) setProfile(data);
+        })
+        .catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error('Failed to fetch profile', err);
+          }
+        });
+    } else {
+      setProfile(null);
+    }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [status]);
 
   const mainCategories = categories.filter(c => !c.parentCategory);
 
@@ -243,6 +272,12 @@ export default function Navbar() {
                         <div className="flex flex-col">
                           <span>{session.user.name}</span>
                           <span className="text-xs font-normal text-muted-foreground truncate">{session.user.email}</span>
+                          {profile && (
+                            <div className="mt-1.5 flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-full w-fit border border-primary/20">
+                              <Package className="h-3 w-3 text-primary" />
+                              <span className="text-[10px] font-bold text-primary">৳{profile.walletBalance || 0} Tokens</span>
+                            </div>
+                          )}
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
