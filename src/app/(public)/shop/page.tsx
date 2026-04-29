@@ -13,21 +13,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { 
-    Filter, 
-    Search, 
-    X, 
-    Loader2, 
-    LayoutGrid, 
-    LayoutList,
-    SlidersHorizontal
+import {
+  Filter,
+  Search,
+  X,
+  Loader2,
+  LayoutGrid,
+  LayoutList,
+  SlidersHorizontal
 } from 'lucide-react';
-import { 
-    Sheet, 
-    SheetContent, 
-    SheetTrigger, 
-    SheetHeader, 
-    SheetTitle 
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -137,10 +137,10 @@ function ShopContent() {
 
   const filteredProducts = products
     .filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (p.description?.toLowerCase() ?? '').includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategories.length === 0 || 
-                             (p.categories ?? []).some((c) => selectedCategories.includes(c.slug || '') || selectedCategories.includes(c._id || ''));
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.description?.toLowerCase() ?? '').includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategories.length === 0 ||
+        (p.categories ?? []).some((c) => selectedCategories.includes(c.slug || '') || selectedCategories.includes(c._id || ''));
       const price = p.salePrice || p.price;
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
       const matchesNewArrival = !showOnlyNew || p.isNewArrival === true;
@@ -176,8 +176,8 @@ function ShopContent() {
   }, [currentPage, totalPages, loading, products.length, setPageAndUrl]);
 
   const toggleCategory = (slug: string) => {
-    setSelectedCategories(prev => 
-        prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    setSelectedCategories(prev =>
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
     );
   };
 
@@ -195,13 +195,13 @@ function ShopContent() {
         <div className="space-y-3">
           {categories.map((cat) => (
             <div key={cat._id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={cat._id} 
+              <Checkbox
+                id={cat._id}
                 checked={selectedCategories.includes(cat.slug)}
                 onCheckedChange={() => toggleCategory(cat.slug)}
               />
-              <Label 
-                htmlFor={cat._id} 
+              <Label
+                htmlFor={cat._id}
                 className="text-sm font-medium leading-none cursor-pointer hover:text-primary transition-colors"
               >
                 {cat.name}
@@ -213,9 +213,9 @@ function ShopContent() {
 
       <div>
         <h3 className="text-sm font-bold uppercase tracking-wider mb-6">Price Range</h3>
-        <Slider 
-          value={priceRange} 
-          max={50000} 
+        <Slider
+          value={priceRange}
+          max={50000}
           step={500}
           onValueChange={(val) => {
             if (Array.isArray(val)) setPriceRange([...val]);
@@ -235,7 +235,7 @@ function ShopContent() {
   );
 
   return (
-    <div className="container px-4 md:px-6 py-10">
+    <div className="container mx-auto py-10">
       <div className="mb-10 rounded-3xl border bg-gradient-to-r from-primary/[0.08] via-background to-background p-6 md:p-10">
         <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
@@ -252,7 +252,7 @@ function ShopContent() {
       </div>
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Desktop Sidebar */}
-        <aside className="hidden w-64 shrink-0 md:block">
+        <aside className="hidden w-64 shrink-0 md:block sticky top-20 self-start h-fit max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/40">
           <Sidebar />
         </aside>
 
@@ -277,10 +277,10 @@ function ShopContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left">
-                    <SheetHeader className="mb-6">
-                        <SheetTitle>Filter Products</SheetTitle>
-                    </SheetHeader>
-                   <Sidebar />
+                  <SheetHeader className="mb-6">
+                    <SheetTitle>Filter Products</SheetTitle>
+                  </SheetHeader>
+                  <Sidebar />
                 </SheetContent>
               </Sheet>
 
@@ -298,21 +298,21 @@ function ShopContent() {
               </Select>
 
               <div className="hidden items-center border rounded-md p-1 sm:flex">
-                <Button 
-                    variant={view === 'grid' ? 'secondary' : 'ghost'} 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => setView('grid')}
+                <Button
+                  variant={view === 'grid' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setView('grid')}
                 >
-                    <LayoutGrid className="h-4 w-4" />
+                  <LayoutGrid className="h-4 w-4" />
                 </Button>
-                <Button 
-                    variant={view === 'list' ? 'secondary' : 'ghost'} 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => setView('list')}
+                <Button
+                  variant={view === 'list' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setView('list')}
                 >
-                    <LayoutList className="h-4 w-4" />
+                  <LayoutList className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -345,7 +345,7 @@ function ShopContent() {
               )}
               {(priceRange[0] !== 0 || priceRange[1] !== 50000) && (
                 <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
-                   Price: ${priceRange[0]} - ${priceRange[1]}
+                  Price: ${priceRange[0]} - ${priceRange[1]}
                 </Badge>
               )}
               {showOnlyNew && (
@@ -361,20 +361,20 @@ function ShopContent() {
 
           {/* Product Grid */}
           {loading ? (
-             <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground animate-pulse text-sm">Getting your shop ready...</p>
-             </div>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-muted-foreground animate-pulse text-sm">Getting your shop ready...</p>
+            </div>
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                <div className="rounded-full bg-muted p-6">
-                    <Search className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h2 className="text-xl font-bold">No products found</h2>
-                <p className="text-muted-foreground max-w-xs">
-                    Try adjusting your filters or search terms to find what you&apos;re looking for.
-                </p>
-                <Button variant="outline" onClick={clearFilters}>Reset All Filters</Button>
+              <div className="rounded-full bg-muted p-6">
+                <Search className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-bold">No products found</h2>
+              <p className="text-muted-foreground max-w-xs">
+                Try adjusting your filters or search terms to find what you&apos;re looking for.
+              </p>
+              <Button variant="outline" onClick={clearFilters}>Reset All Filters</Button>
             </div>
           ) : (
             <div className={`grid gap-6 ${view === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
@@ -386,12 +386,12 @@ function ShopContent() {
 
           {!loading && filteredProducts.length > 0 && totalPages > 1 && (
             <div className="mt-8 border-t pt-8">
-              <Pagination 
+              <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={(page) => {
-                    setPageAndUrl(page);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setPageAndUrl(page);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />
             </div>
@@ -403,13 +403,13 @@ function ShopContent() {
 }
 
 export default function ShopPage() {
-    return (
-        <Suspense fallback={
-            <div className="container py-20 flex justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            </div>
-        }>
-            <ShopContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="container py-20 flex justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
+  );
 }

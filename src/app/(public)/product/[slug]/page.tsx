@@ -105,7 +105,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   ]);
 
   return (
-    <div className="container px-4 md:px-6 py-10">
+    <div className="container  mx-auto py-10">
       {productSchema && (
         <Script
           id="product-schema"

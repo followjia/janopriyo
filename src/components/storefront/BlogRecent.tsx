@@ -26,8 +26,8 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
   const blog = blogs[0];
 
   return (
-    <section className="py-20 bg-muted/20">
-      <div className="container px-4 md:px-6">
+    <section className="py-12 bg-muted/20">
+      <div className="container mx-auto px-4 md:px-6">
         {/* Section Header */}
         <div className="text-center mb-12 space-y-4">
           <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">

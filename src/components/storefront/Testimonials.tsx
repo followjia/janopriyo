@@ -30,46 +30,46 @@ const reviews = [
     avatar: "https://i.pravatar.cc/150?u=3"
   },
   {
-      name: "Nusrat Jahan",
-      role: "Verified Buyer",
-      content: "I love the variety of products they have. It's my one-stop shop for everything I need. The prices are very competitive compared to other local shops.",
-      avatar: "https://i.pravatar.cc/150?u=4"
+    name: "Nusrat Jahan",
+    role: "Verified Buyer",
+    content: "I love the variety of products they have. It's my one-stop shop for everything I need. The prices are very competitive compared to other local shops.",
+    avatar: "https://i.pravatar.cc/150?u=4"
   }
 ];
 
 export function Testimonials() {
   return (
-    <section className="py-24 overflow-hidden">
-      <div className="container px-4 md:px-6">
+    <section className="py-12 overflow-hidden">
+      <div className="container mx-auto">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
-            <div className="space-y-4 text-left max-w-xl">
-                <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-                   What our <span className="text-primary italic">Customers</span> say
-                </h2>
-                <p className="text-muted-foreground">
-                   Don't just take our word for it. Join thousands of happy customers all over Bangladesh!
-                </p>
+          <div className="space-y-4 text-left max-w-xl">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+              What our <span className="text-primary italic">Customers</span> say
+            </h2>
+            <p className="text-muted-foreground">
+              Don't just take our word for it. Join thousands of happy customers all over Bangladesh!
+            </p>
+          </div>
+          <div className="flex items-center gap-2 pb-2">
+            <div className="flex -space-x-3">
+              {reviews.slice(0, 3).map((r, i) => (
+                <Avatar key={i} className="border-2 border-white size-10">
+                  <AvatarImage src={r.avatar} alt={`${r.name} avatar`} />
+                  <AvatarFallback>{r.name[0]}</AvatarFallback>
+                </Avatar>
+              ))}
             </div>
-            <div className="flex items-center gap-2 pb-2">
-                <div className="flex -space-x-3">
-                    {reviews.slice(0, 3).map((r, i) => (
-                        <Avatar key={i} className="border-2 border-white size-10">
-                            <AvatarImage src={r.avatar} alt={`${r.name} avatar`} />
-                            <AvatarFallback>{r.name[0]}</AvatarFallback>
-                        </Avatar>
-                    ))}
-                </div>
-                <div className="text-sm font-bold pl-2">
-                    <div className="flex text-yellow-500 scale-75 -ml-4 mb-0.5">
-                        <Star className="fill-current size-3" />
-                        <Star className="fill-current size-3" />
-                        <Star className="fill-current size-3" />
-                        <Star className="fill-current size-3" />
-                        <Star className="fill-current size-3" />
-                    </div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground italic">4.9/5 Average Rating</p>
-                </div>
+            <div className="text-sm font-bold pl-2">
+              <div className="flex text-yellow-500 scale-75 -ml-4 mb-0.5">
+                <Star className="fill-current size-3" />
+                <Star className="fill-current size-3" />
+                <Star className="fill-current size-3" />
+                <Star className="fill-current size-3" />
+                <Star className="fill-current size-3" />
+              </div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground italic">4.9/5 Average Rating</p>
             </div>
+          </div>
         </div>
 
         <Carousel
@@ -84,7 +84,7 @@ export function Testimonials() {
               <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <div className="h-full border bg-card rounded-[2.5rem] p-8 md:p-10 flex flex-col hover:border-primary/20 transition-colors group relative overflow-hidden">
                   <div className="absolute -top-4 -right-4 text-primary/5 group-hover:text-primary/10 transition-colors">
-                      <Quote className="size-32 fill-current" />
+                    <Quote className="size-32 fill-current" />
                   </div>
                   <div className="flex text-yellow-500 gap-1 mb-6">
                     <Star className="fill-current size-4" />
@@ -111,8 +111,8 @@ export function Testimonials() {
             ))}
           </CarouselContent>
           <div className="flex justify-end gap-3 mt-10">
-              <CarouselPrevious className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
-              <CarouselNext className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
+            <CarouselPrevious className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
+            <CarouselNext className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
           </div>
         </Carousel>
       </div>

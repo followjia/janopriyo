@@ -364,15 +364,9 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       {/* Product Info Section */}
       <div className="flex flex-col gap-6">
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            {product.categories?.map((cat: any) => (
-              <Badge key={cat._id} variant="outline" className="text-[10px] uppercase font-bold tracking-widest text-primary italic">
-                {cat.name}
-              </Badge>
-            ))}
-          </div>
+
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{product.name}</h1>
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
             {isAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none transition-colors hover:text-primary">
@@ -452,8 +446,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                       key={i}
                       onClick={() => setSelectedColor(colorName)}
                       className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedColor === colorName
-                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10'
-                          : 'border-muted hover:border-primary/30'
+                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10'
+                        : 'border-muted hover:border-primary/30'
                         }`}
                     >
                       {colorVariant?.image && (
@@ -485,8 +479,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                       disabled={!isAvailable}
                       onClick={() => setSelectedSize(sizeName)}
                       className={`min-w-[48px] h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${selectedSize === sizeName
-                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
-                          : 'border-muted hover:border-primary/30 text-muted-foreground'
+                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
+                        : 'border-muted hover:border-primary/30 text-muted-foreground'
                         }`}
                     >
                       {sizeName}
@@ -513,8 +507,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                       disabled={!isAvailable}
                       onClick={() => setSelectedOthers(optName)}
                       className={`px-4 h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${selectedOthers === optName
-                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
-                          : 'border-muted hover:border-primary/30 text-muted-foreground'
+                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
+                        : 'border-muted hover:border-primary/30 text-muted-foreground'
                         }`}
                     >
                       {optName}
@@ -585,20 +579,20 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       <div className="col-span-full mt-16">
         <Tabs defaultValue="description" className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 mb-8 h-auto">
-            <TabsTrigger 
-              value="description" 
+            <TabsTrigger
+              value="description"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-4 font-bold uppercase tracking-wider text-muted-foreground data-[state=active]:text-foreground"
             >
               Description
             </TabsTrigger>
-            <TabsTrigger 
-              value="reviews" 
+            <TabsTrigger
+              value="reviews"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-4 font-bold uppercase tracking-wider text-muted-foreground data-[state=active]:text-foreground"
             >
               Reviews
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="description" className="animate-in fade-in-50 duration-500">
             <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
               <div className="whitespace-pre-line text-muted-foreground leading-relaxed text-base">
@@ -606,7 +600,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="reviews" className="animate-in fade-in-50 duration-500">
             <ReviewsSection productId={product._id} />
           </TabsContent>
@@ -619,7 +613,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
           <DialogHeader>
             <DialogTitle className="text-xl">Delete Product</DialogTitle>
             <DialogDescription className="pt-2">
-              Are you sure you want to delete <span className="font-bold text-foreground">"{product.name}"</span>? 
+              Are you sure you want to delete <span className="font-bold text-foreground">"{product.name}"</span>?
               This action cannot be undone and will remove all associated data including variants and reviews.
             </DialogDescription>
           </DialogHeader>

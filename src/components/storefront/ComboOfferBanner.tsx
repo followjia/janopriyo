@@ -82,14 +82,14 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
     const expiryDate = isValidDate ? new Date(expiryDateValue) : new Date();
 
     return (
-      <section className="py-10 bg-primary text-black relative overflow-hidden">
+      <section className="py-12 bg-primary text-black relative overflow-hidden">
         {/* Background texture */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
         {/* Decorative slants */}
         <div className="absolute top-0 right-0 w-32 h-full bg-white/10 -skew-x-12 translate-x-16" />
         <div className="absolute top-0 right-0 w-16 h-full bg-white/5 -skew-x-12 translate-x-8" />
 
-        <div className="container px-4 md:px-6 relative z-10">
+        <div className="container px-4 mx-auto relative z-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
 
             {/* Left — Offer text */}

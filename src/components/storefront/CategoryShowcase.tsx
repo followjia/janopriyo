@@ -24,8 +24,8 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <section className="bg-muted/30 py-16 overflow-hidden">
-      <div className="container px-4 md:px-6">
+    <section className="bg-muted/30 py-12 overflow-hidden">
+      <div className="container px-4 mx-auto">
         <div className="flex flex-col items-center justify-center text-center space-y-4 mb-10">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
             Browse by Category

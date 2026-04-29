@@ -44,22 +44,22 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-20 border-y bg-muted/20">
-      <div className="container px-4 md:px-6">
+    <section className="py-12 border-y bg-muted/20">
+      <div className="container mx-auto ">
         <div className="text-center mb-16 space-y-4">
-            <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
-                Our Promises
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-                Why Shop With <span className="text-primary italic">Janopriyo</span>
-            </h2>
+          <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
+            Our Promises
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+            Why Shop With <span className="text-primary italic">Janopriyo</span>
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8">
           {features.map((item, index) => (
-            <div 
-                key={index} 
-                className="flex flex-col items-center text-center p-6 rounded-3xl bg-card border border-border/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group"
+            <div
+              key={index}
+              className="flex flex-col items-center text-center p-6 rounded-3xl bg-card border border-border/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group"
             >
               <div className={`p-4 rounded-2xl mb-4 transition-transform group-hover:scale-110 ${item.color}`}>
                 <item.icon className="h-6 w-6" />
