@@ -27,12 +27,10 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
 
   return (
     <section className="py-12 bg-muted/20">
-      <div className="container mx-auto px-4 md:px-6">
+      <div className="container mx-auto px-4 ">
         {/* Section Header */}
         <div className="text-center mb-12 space-y-4">
-          <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
-            The Journal
-          </Badge>
+
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
             Latest from our <span className="text-primary italic">Blog</span>
           </h2>
@@ -82,7 +80,7 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
             </h3>
 
             {blog.metaDescription && (
-              <p className="text-muted-foreground text-base leading-relaxed line-clamp-4">
+              <p className="text-muted-foreground text-base leading-relaxed line-clamp-3">
                 {blog.metaDescription}
               </p>
             )}
@@ -99,15 +97,7 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
           </div>
         </Link>
 
-        {/* View All Link */}
-        <div className="text-center mt-10">
-          <Link
-            href="/blog"
-            className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), "rounded-full px-8 font-bold group")}
-          >
-            View All Stories <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
+
       </div>
     </section>
   );
