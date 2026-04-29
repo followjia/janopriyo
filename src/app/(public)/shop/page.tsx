@@ -84,7 +84,7 @@ function ShopContent() {
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const [showOnlyNew, setShowOnlyNew] = useState(initialFilter === 'new');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
-  const itemsPerPage = 40;
+  const itemsPerPage = 12;
   const skipClampRef = useRef(false);
 
   // Sync state to URL without full reload
@@ -119,7 +119,7 @@ function ShopContent() {
         }
 
         // Fetch products
-        const prodRes = await fetch('/api/products');
+        const prodRes = await fetch('/api/products?limit=1000');
         if (prodRes.ok) {
           const prodData = await prodRes.json();
           if (Array.isArray(prodData)) {
