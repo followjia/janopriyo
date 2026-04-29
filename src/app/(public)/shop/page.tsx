@@ -17,11 +17,11 @@ import {
   Filter,
   Search,
   X,
-  Loader2,
   LayoutGrid,
   LayoutList,
   SlidersHorizontal
 } from 'lucide-react';
+import { ProductCardSkeleton, ShopHeaderSkeleton } from '@/components/storefront/Skeletons';
 import {
   Sheet,
   SheetContent,
@@ -320,7 +320,12 @@ function ShopContent() {
 
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {loading ? 'Loading products...' : filteredProducts.length === 0 ? '0 products found' : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredProducts.length)} of ${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                  Loading products...
+                </span>
+              ) : filteredProducts.length === 0 ? '0 products found' : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredProducts.length)} of ${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`}
             </p>
             {filteredProducts.length > 0 && (
               <Badge variant="outline" className="text-[10px] uppercase tracking-widest">
@@ -361,9 +366,10 @@ function ShopContent() {
 
           {/* Product Grid */}
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground animate-pulse text-sm">Getting your shop ready...</p>
+            <div className={`grid gap-6 ${view === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+              {[...Array(8)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
@@ -405,8 +411,30 @@ function ShopContent() {
 export default function ShopPage() {
   return (
     <Suspense fallback={
-      <div className="container py-20 flex justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="container py-10">
+        <ShopHeaderSkeleton />
+        <div className="flex flex-col gap-8 md:flex-row">
+          <aside className="hidden w-64 shrink-0 md:block">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="h-4 w-4 bg-muted animate-pulse rounded" />
+                    <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+          <div className="flex-1">
+             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+             </div>
+          </div>
+        </div>
       </div>
     }>
       <ShopContent />

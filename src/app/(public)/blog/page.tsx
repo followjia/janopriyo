@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { 
     Calendar, 
     ArrowRight, 
-    Loader2,
     Newspaper,
     Search
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { BlogFeaturedSkeleton, BlogCardSkeleton } from '@/components/storefront/Skeletons';
 
 interface BlogListItem {
   _id: string;
@@ -126,9 +126,13 @@ export default function BlogListingPage() {
 
         
         {loading ? (
-          <div className="flex flex-col items-center justify-center min-h-[35vh] gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-sm font-bold text-muted-foreground">Loading our latest stories...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="md:col-span-2 lg:col-span-3">
+              <BlogFeaturedSkeleton />
+            </div>
+            {[...Array(6)].map((_, i) => (
+              <BlogCardSkeleton key={i} />
+            ))}
           </div>
         ) : filteredBlogs.length === 0 ? (
           <div className="text-center py-20 bg-muted/30 rounded-3xl border border-dashed border-border/50">
