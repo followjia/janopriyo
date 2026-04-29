@@ -84,7 +84,7 @@ function ShopContent() {
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const [showOnlyNew, setShowOnlyNew] = useState(initialFilter === 'new');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 20;
   const skipClampRef = useRef(false);
 
   // Sync state to URL without full reload
