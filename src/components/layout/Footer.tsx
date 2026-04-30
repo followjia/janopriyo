@@ -46,7 +46,7 @@ export default async function Footer() {
 
   return (
     <footer className="border-t bg-background pt-12 mt-10">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 md:px-0">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
             <Logo textClassName="text-xl md:text-2xl" />

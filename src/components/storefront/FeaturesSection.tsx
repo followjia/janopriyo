@@ -45,7 +45,7 @@ const features = [
 export function FeaturesSection() {
   return (
     <section className="py-12 border-y bg-muted/20">
-      <div className="container mx-auto ">
+      <div className="container mx-auto px-4 md:px-0 ">
         <div className="text-center mb-16 space-y-4">
           <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
             Our Promises

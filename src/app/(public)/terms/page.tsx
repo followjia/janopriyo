@@ -45,7 +45,7 @@ export default async function TermsPage() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Header */}
       <section className="bg-primary/5 py-16 md:py-24 border-b">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 md:px-0 text-center">
           <div className="inline-flex items-center justify-center p-3 mb-6 rounded-full bg-primary/10 text-primary">
             <FileText className="h-8 w-8" />
           </div>
@@ -63,9 +63,9 @@ export default async function TermsPage() {
 
       {/* Content Section */}
       <section className="py-12 md:py-20 font-serif">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 md:px-0 max-w-4xl">
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-12">
-            
+
             {/* Agreement to Terms */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -161,8 +161,8 @@ export default async function TermsPage() {
                   Our support team is here to help you understand our terms and ensure a smooth shopping experience.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <a 
-                    href={`mailto:${contactEmail}`} 
+                  <a
+                    href={`mailto:${contactEmail}`}
                     className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:shadow-lg transition-all"
                   >
                     Contact Support
@@ -178,9 +178,9 @@ export default async function TermsPage() {
 
       {/* Final Footer Bottom */}
       <section className="bg-muted py-12 border-t mt-auto">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 md:px-0 text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {brandName}. All rights reserved. 
+            © {new Date().getFullYear()} {brandName}. All rights reserved.
             <br className="sm:hidden" />
             <span className="hidden sm:inline mx-2">|</span>
             Crafted for premium service.

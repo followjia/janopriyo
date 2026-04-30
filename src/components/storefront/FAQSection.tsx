@@ -19,7 +19,7 @@ export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
     if (!faqs || faqs.length === 0) return null;
     return (
         <section className="py-12 bg-muted/20">
-            <div className="container mx-auto ">
+            <div className="container mx-auto px-4 md:px-0 ">
                 <div className="grid lg:grid-cols-2 gap-16 items-start">
                     <div className="space-y-6">
                         <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">

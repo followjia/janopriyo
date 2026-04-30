@@ -40,7 +40,7 @@ const reviews = [
 export function Testimonials() {
   return (
     <section className="py-12 overflow-hidden">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 md:px-0">
         <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
           <div className="space-y-4 text-left max-w-xl">
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter">

@@ -12,7 +12,7 @@ export default function WishlistPage() {
   const { status } = useSession();
   const wishlistIds = useAppSelector((state) => state.wishlist.items);
   const isHydrated = useAppSelector((state) => state.wishlist.isHydrated);
-  
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl">
+    <div className="container mx-auto px-4 md:px-0 py-12 max-w-7xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
@@ -78,9 +78,9 @@ export default function WishlistPage() {
             My Wishlist
           </h1>
           <p className="text-muted-foreground">
-            {products.length === 0 
-                ? "Your wishlist is empty." 
-                : `You have ${products.length} item${products.length === 1 ? '' : 's'} in your wishlist.`}
+            {products.length === 0
+              ? "Your wishlist is empty."
+              : `You have ${products.length} item${products.length === 1 ? '' : 's'} in your wishlist.`}
           </p>
         </div>
         <Button render={<Link href="/shop" />} variant="outline" nativeButton={false}>
@@ -98,10 +98,10 @@ export default function WishlistPage() {
             Looks like you haven't added anything to your wishlist yet.
             Start exploring our shop to find something you'll love!
           </p>
-          <Button 
+          <Button
             render={<Link href="/shop" />}
             nativeButton={false}
-            size="lg" 
+            size="lg"
             className="rounded-full px-8"
           >
             Go to Shop

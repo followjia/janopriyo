@@ -43,7 +43,7 @@ export function ProductCarouselSection({
 
   return (
     <section className={`py-12 ${bgColor} overflow-hidden`}>
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 md:px-0">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-6">

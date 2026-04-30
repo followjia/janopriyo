@@ -179,7 +179,7 @@ export default function Navbar() {
       {/* Sticky on mobile, static on desktop — scrolls away on desktop so the  */}
       {/* bottom nav can then stick to the top of the viewport.                 */}
       <header className="sticky top-0 z-50 md:relative w-full bg-background border-b md:border-b-0">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           {/* Middle Main Row: Search | Logo | Icons */}
           <div className="flex h-20 items-center justify-between px-4 md:px-6 border-b border-muted/30">
 
@@ -222,11 +222,10 @@ export default function Navbar() {
                           <React.Fragment key={item.href}>
                             <Link
                               href={item.href}
-                              className={`block px-4 py-2 rounded-xl transition-all ${
-                                isActive 
-                                ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' 
+                              className={`block px-4 py-2 rounded-xl transition-all ${isActive
+                                ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20'
                                 : 'hover:text-primary font-medium'
-                              }`}
+                                }`}
                               onClick={() => setOpen(false)}
                             >
                               {item.label}
@@ -386,7 +385,7 @@ export default function Navbar() {
       {/* Siblings with <header> so sticky works relative to the viewport,      */}
       {/* not the parent's bounding box. Only visible on desktop (md+).         */}
       <nav className="hidden md:flex sticky top-0 z-40 w-full h-12 items-center justify-center border-b bg-background/95 backdrop-blur-sm shadow-sm">
-        <div className="container mx-auto flex justify-center">
+        <div className="container mx-auto px-4 flex justify-center">
           <ul className="flex items-center gap-10">
             {navItems.map((item, index) => {
               const isActive = pathname === item.href;
@@ -396,11 +395,10 @@ export default function Navbar() {
                   <li className="flex items-center">
                     <Link
                       href={item.href}
-                      className={`text-[12px] font-bold uppercase tracking-[0.25em] transition-all px-4 py-1.5 rounded-full ${
-                        isActive 
-                        ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                      className={`text-[12px] font-bold uppercase tracking-[0.25em] transition-all px-4 py-1.5 rounded-full ${isActive
+                        ? 'bg-primary text-white shadow-md shadow-primary/20'
                         : 'text-foreground/70 hover:text-primary'
-                      }`}
+                        }`}
                     >
                       {item.label}
                     </Link>

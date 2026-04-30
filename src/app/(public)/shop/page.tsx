@@ -251,7 +251,7 @@ function ShopContent() {
   );
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto px-4 md:px-0 py-10">
       <div className="mb-10 rounded-3xl border bg-gradient-to-r from-primary/[0.08] via-background to-background p-6 md:p-10">
         <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
@@ -459,11 +459,11 @@ export default function ShopPage() {
             </div>
           </aside>
           <div className="flex-1">
-             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <ProductCardSkeleton key={i} />
-                ))}
-             </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
