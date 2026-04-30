@@ -7,11 +7,12 @@ interface LogoProps {
   imageClassName?: string;
   textClassName?: string;
   showText?: boolean;
+  onClick?: () => void;
 }
 
-export function Logo({ className, imageClassName, textClassName, showText = true }: LogoProps) {
+export function Logo({ className, imageClassName, textClassName, showText = true, onClick }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex items-center gap-2 group", className)}>
+    <Link href="/" className={cn("flex items-center gap-2 group", className)} onClick={onClick}>
       <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105", imageClassName)}>
         <Image
           src="/logo.png"
