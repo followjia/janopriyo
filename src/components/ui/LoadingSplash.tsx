@@ -25,25 +25,22 @@ export default function LoadingSplash() {
       <span className="sr-only">Loading, please wait...</span>
       
       <div className="relative flex flex-col items-center justify-center gap-10">
-        {/* Logo with Zoom In-Out Effect */}
+        {/* Logo with Smooth Zoom In-Out Effect */}
         <motion.div
           animate={{ 
-            scale: [0.85, 1.05, 0.85],
-            opacity: [0.7, 1, 0.7]
+            scale: [1, 1.15, 1],
           }}
           transition={{
-            duration: 3,
+            duration: 2.5,
             repeat: Infinity,
             ease: "easeInOut",
           }}
           className="relative"
         >
-          {/* Animated Glow Background */}
-          <div className="absolute -inset-8 bg-primary/5 blur-[40px] rounded-full animate-pulse" />
-          
           <Logo 
             showText={false} 
-            imageClassName="size-28 md:size-36 drop-shadow-[0_0_15px_rgba(0,209,178,0.2)]" 
+            sizes="(max-width: 768px) 200px, 300px"
+            imageClassName="size-28 md:size-36" 
             className="pointer-events-none relative z-10"
           />
         </motion.div>

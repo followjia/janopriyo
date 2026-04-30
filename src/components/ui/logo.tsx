@@ -16,9 +16,10 @@ interface LogoProps {
   textClassName?: string;
   showText?: boolean;
   onClick?: () => void;
+  sizes?: string;
 }
 
-export function Logo({ className, imageClassName, textClassName, showText = true, onClick }: LogoProps) {
+export function Logo({ className, imageClassName, textClassName, showText = true, onClick, sizes }: LogoProps) {
   return (
     <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
       <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 size-10 md:size-12", imageClassName)}>
@@ -26,8 +27,9 @@ export function Logo({ className, imageClassName, textClassName, showText = true
           src="/logo.png"
           alt="Janopriyo Logo"
           fill
-          sizes="(max-width: 768px) 40px, 48px"
+          sizes={sizes || "(max-width: 768px) 40px, 48px"}
           className="object-contain"
+          quality={100}
           priority
         />
       </div>
