@@ -155,7 +155,7 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-2">
             {discount > 0 && (
-                <Badge variant="destructive" className="font-bold">-{discount}%</Badge>
+                <Badge variant="default" className="bg-primary text-primary-foreground font-bold">-{discount}%</Badge>
             )}
             {product.isFeatured && (
                 <Badge variant="default" className="bg-primary hover:bg-primary font-bold uppercase text-[10px]">Featured</Badge>
@@ -167,7 +167,7 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
                 <Badge variant="secondary" className="font-bold uppercase text-[10px]">Out of Stock</Badge>
             )}
             {isFlashSale && (
-                <Badge variant="destructive" className="bg-orange-600 animate-pulse font-bold uppercase text-[10px]">Flash Deal</Badge>
+                <Badge variant="default" className="bg-primary text-primary-foreground animate-pulse font-bold uppercase text-[10px]">Flash Deal</Badge>
             )}
         </div>
 

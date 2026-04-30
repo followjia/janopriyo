@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import Link from 'next/link';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface ProductCarouselSectionProps {
   title: string;
@@ -26,21 +28,32 @@ export function ProductCarouselSection({
   bgColor = "bg-background"
 }: ProductCarouselSectionProps) {
 
+  // Initialize Embla Carousel with Autoplay
+  const [emblaRef] = useEmblaCarousel(
+    {
+      loop: true,
+      align: 'start',
+      slidesToScroll: 1,
+      dragFree: true,
+    },
+    [Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })]
+  );
+
   if (!products || products.length === 0) return null;
 
   return (
-    <section className={`py-12 ${bgColor}`}>
-      <div className="container mx-auto px-4">
+    <section className={`py-12 ${bgColor} overflow-hidden`}>
+      <div className="container mx-auto">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-black tracking-tighter sm:text-4xl">
+              <h2 className="text-3xl font-black tracking-tighter sm:text-4xl text-foreground">
                 {title}
               </h2>
               {isFlashSale && (
-                <Badge variant="destructive" className="bg-red-600 animate-pulse border-none rounded-full flex items-center gap-1.5 px-3">
+                <Badge variant="default" className="bg-primary text-primary-foreground animate-pulse border-none rounded-full flex items-center gap-1.5 px-3">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
@@ -49,16 +62,12 @@ export function ProductCarouselSection({
                 </Badge>
               )}
             </div>
-            {description && (
-              <p className="text-muted-foreground max-w-[600px]">
-                {description}
-              </p>
-            )}
+
           </div>
 
           <Button
-            variant="outline"
-            className="rounded-full font-bold group"
+            variant="default"
+            className="rounded-full font-bold group bg-primary text-primary-foreground hover:bg-primary/90"
             render={<Link href={viewAllLink} />}
             nativeButton={false}
           >
@@ -67,15 +76,20 @@ export function ProductCarouselSection({
           </Button>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-          {products.map((product) => (
-            <ProductCard 
-              key={product._id} 
-              product={product} 
-              isFlashSale={isFlashSale} 
-            />
-          ))}
+        {/* Embla Carousel Viewport */}
+        <div className="relative group">
+          <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
+            <div className="flex -ml-4">
+              {products.map((product) => (
+                <div
+                  key={product._id}
+                  className="flex-[0_0_80%] min-w-0 pl-4 sm:flex-[0_0_45%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%]"
+                >
+                  <ProductCard product={product} isFlashSale={isFlashSale} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>
