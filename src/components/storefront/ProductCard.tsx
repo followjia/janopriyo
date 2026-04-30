@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
+import { QuickAddModal } from './QuickAddModal';
 
 interface ProductCardProps {
   product: {
@@ -30,6 +32,7 @@ interface ProductCardProps {
     isNewArrival?: boolean;
     stock: number;
     categories?: any[];
+    variants?: any[];
   }
 }
 
@@ -40,14 +43,28 @@ export function ProductCard({ product }: ProductCardProps) {
   const isInWishlist = wishlist.includes(product._id);
   const router = useRouter();
   const isAdmin = (session?.user as any)?.role === 'admin';
+  const hasVariants = product.variants && product.variants.length > 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const [showVariantModal, setShowVariantModal] = useState(false);
+
+  const handleAddToCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (hasVariants) {
+      setShowVariantModal(true);
+    } else {
+      executeAddToCart();
+    }
+  };
+
+  const executeAddToCart = () => {
+    const displayPrice = product.price;
+    const displaySalePrice = product.salePrice;
+
     dispatch(addToCart({
       productId: product._id,
       name: product.name,
-      price: (product.salePrice !== undefined && product.salePrice !== null) ? product.salePrice : product.price,
-      basePrice: product.price,
+      price: (displaySalePrice !== undefined && displaySalePrice !== null) ? displaySalePrice : displayPrice,
+      basePrice: displayPrice,
       quantity: 1,
       image: product.images?.[0]
     }));
@@ -222,15 +239,23 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
           <Button 
             size="sm" 
-            className="h-8 w-8 rounded-full p-0 flex items-center justify-center"
+            className="h-8 w-8 rounded-full p-0 flex items-center justify-center transition-all hover:scale-105"
             disabled={product.stock === 0}
-            onClick={handleAddToCart}
+            onClick={handleAddToCartClick}
             aria-label={`Add ${product.name} to cart`}
           >
             <ShoppingCart className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {hasVariants && (
+        <QuickAddModal
+          product={product}
+          isOpen={showVariantModal}
+          onClose={() => setShowVariantModal(false)}
+        />
+      )}
     </div>
   );
 }

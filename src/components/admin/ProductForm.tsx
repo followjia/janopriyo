@@ -58,7 +58,6 @@ const productSchema = z.object({
   variants: z.array(z.object({
     color: z.string().optional(),
     size: z.string().optional(),
-    others: z.string().optional().default(''),
     price: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
     discountRate: z.union([z.coerce.number().min(0).max(100), z.literal('')]).optional(),
     salePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
@@ -101,7 +100,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
     attributes: initialData?.attributes || [],
     variants: initialData?.variants?.map((v: any) => ({
       ...v,
-      others: v.others || '',
       price: v.price ?? '',
       stock: v.stock ?? '',
       discountRate: calculateDiscount(v.price, v.salePrice) || '',
@@ -164,7 +162,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
       stock: values.stock === '' ? 0 : Number(values.stock),
       variants: (values.variants || []).map(v => ({
         ...v,
-        others: v.others || '',
         price: v.price === '' ? 0 : Number(v.price),
         salePrice: v.salePrice === '' ? undefined : Number(v.salePrice),
         discountRate: v.discountRate === '' || isNaN(Number(v.discountRate)) ? undefined : Number(v.discountRate),
@@ -425,7 +422,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                   variant="outline" 
                   size="sm" 
                   className="bg-background hover:bg-primary hover:text-white transition-all border-primary/20"
-                  onClick={() => appendVariant({ color: '', size: '', others: '', price: form.getValues('price') || '', stock: '', sku: '' })}
+                  onClick={() => appendVariant({ color: '', size: '', price: form.getValues('price') || '', stock: '', sku: '' })}
                 >
                   <Plus className="mr-2 h-4 w-4" /> Add New Variation
                 </Button>
@@ -438,7 +435,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
                           <th className="px-4 py-3 text-left w-[120px]">Image</th>
                           <th className="px-4 py-3 text-left">Color</th>
                           <th className="px-4 py-3 text-left">Size</th>
-                          <th className="px-4 py-3 text-left">Others</th>
                           <th className="px-4 py-3 text-left w-[100px]">Price</th>
                           <th className="px-4 py-3 text-left w-[80px]">Disc (%)</th>
                           <th className="px-4 py-3 text-left w-[100px]">Sale</th>
@@ -488,13 +484,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
                               <Input 
                                 {...form.register(`variants.${index}.size` as const)} 
                                 placeholder="XL" 
-                                className="h-9 border-muted-foreground/20 focus:border-primary transition-all"
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <Input 
-                                {...form.register(`variants.${index}.others` as const)} 
-                                placeholder="Others" 
                                 className="h-9 border-muted-foreground/20 focus:border-primary transition-all"
                               />
                             </td>

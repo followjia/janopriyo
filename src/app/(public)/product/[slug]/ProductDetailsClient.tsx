@@ -59,7 +59,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
   const [showZoom, setShowZoom] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedOthers, setSelectedOthers] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -74,11 +73,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     [product.variants]
   );
 
-  const uniqueOthers = useMemo(() =>
-    Array.from(new Set((product.variants || []).map((v: any) => v.others))).filter(Boolean) as string[],
-    [product.variants]
-  );
-
   // Hierarchical filtering
   const availableSizes = useMemo(() =>
     (product.variants || [])
@@ -88,22 +82,13 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     [product.variants, selectedColor]
   );
 
-  const availableOthers = useMemo(() =>
-    (product.variants || [])
-      .filter((v: any) => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize))
-      .map((v: any) => v.others)
-      .filter(Boolean) as string[],
-    [product.variants, selectedColor, selectedSize]
-  );
-
   const activeVariant = useMemo(() =>
     (product.variants || []).find(
       (v: any) =>
         (v.color || null) === (selectedColor || null) &&
-        (v.size || null) === (selectedSize || null) &&
-        (v.others || null) === (selectedOthers || null)
+        (v.size || null) === (selectedSize || null)
     ),
-    [product.variants, selectedColor, selectedSize, selectedOthers]
+    [product.variants, selectedColor, selectedSize]
   );
 
   // Auto-select first available options on mount or product change
@@ -120,12 +105,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     const initialSize = initialSizes[0] || null;
     setSelectedSize(initialSize);
 
-    const initialOthersList = (product.variants || [])
-      .filter((v: any) => (!initialColor || v.color === initialColor) && (!initialSize || v.size === initialSize))
-      .map((v: any) => v.others)
-      .filter(Boolean);
-    setSelectedOthers(initialOthersList[0] || null);
-
     setSelectedImage(0);
     setQuantity(1);
   }, [product?._id, uniqueColors, product.variants]);
@@ -135,9 +114,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     if (selectedSize == null || !availableSizes.includes(selectedSize)) {
       setSelectedSize(availableSizes[0] || null);
     }
-    if (selectedOthers == null || !availableOthers.includes(selectedOthers)) {
-      setSelectedOthers(availableOthers[0] || null);
-    }
 
     // Update main image if variant has one
     if (activeVariant?.image) {
@@ -146,7 +122,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
         setSelectedImage(variantImgIndex);
       }
     }
-  }, [selectedColor, selectedSize, selectedOthers, availableSizes, availableOthers, activeVariant, product.images]);
+  }, [selectedColor, selectedSize, availableSizes, activeVariant, product.images]);
 
   const displayPrice = activeVariant?.price || product.price;
   const displaySalePrice = activeVariant?.salePrice || product.salePrice;
@@ -161,10 +137,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       toast.error('Please select a size');
       return;
     }
-    if (uniqueOthers.length > 0 && !selectedOthers) {
-      toast.error('Please select an option');
-      return;
-    }
 
     const stock = displayStock || 0;
     const finalQuantity = Math.min(quantity, stock);
@@ -174,7 +146,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       return;
     }
 
-    const cartItemId = `${product._id}-${selectedColor || ''}-${selectedSize || ''}-${selectedOthers || ''}`;
 
     dispatch(addToCart({
       productId: product._id,
@@ -184,8 +155,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       quantity: finalQuantity,
       image: activeVariant?.image || product.images?.[0],
       color: selectedColor || undefined,
-      size: selectedSize || undefined,
-      others: selectedOthers || undefined
+      size: selectedSize || undefined
     }));
     toast.success(`Added ${finalQuantity} ${product.name} to cart`);
   };
@@ -484,34 +454,6 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                         }`}
                     >
                       {sizeName}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Others Selection */}
-          {uniqueOthers.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold uppercase tracking-wider">Option:</span>
-                <span className="text-sm text-primary font-medium">{selectedOthers || 'Select an option'}</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {uniqueOthers.map((optName, i) => {
-                  const isAvailable = availableOthers.includes(optName);
-                  return (
-                    <button
-                      key={i}
-                      disabled={!isAvailable}
-                      onClick={() => setSelectedOthers(optName)}
-                      className={`px-4 h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${selectedOthers === optName
-                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
-                        : 'border-muted hover:border-primary/30 text-muted-foreground'
-                        }`}
-                    >
-                      {optName}
                     </button>
                   );
                 })}

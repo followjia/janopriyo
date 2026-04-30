@@ -15,6 +15,7 @@ import {
   Megaphone,
   Store
 } from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 
 import {
   Collapsible,
@@ -186,7 +187,13 @@ function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: st
                             pathname === subItem.url ||
                             (subItem.url !== "#" &&
                               subItem.url !== "/admin" &&
-                              pathname.startsWith(subItem.url + "/"))
+                              pathname.startsWith(subItem.url + "/") &&
+                              !item.items.some(
+                                (otherItem) =>
+                                  otherItem !== subItem &&
+                                  otherItem.url.length > subItem.url.length &&
+                                  (pathname === otherItem.url || pathname.startsWith(otherItem.url + "/"))
+                              ))
                           }
                         >
                           <span>{subItem.title}</span>
@@ -210,10 +217,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader className="border-b h-14 lg:h-[60px] px-6 flex items-center">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <Store className="h-6 w-6 text-primary" />
-          <span className="text-xl tracking-tight">Janopriyo</span>
-        </Link>
+        <Logo imageClassName="size-6" textClassName="text-xl" />
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <NavMain items={data.navMain} pathname={pathname} />

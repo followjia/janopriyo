@@ -8,7 +8,6 @@ export interface IOrderItem {
   image?: string;
   color?: string;
   size?: string;
-  others?: string;
 }
 
 export interface IOrder extends Document {
@@ -58,7 +57,6 @@ const OrderSchema: Schema<IOrder> = new Schema(
         image: { type: String },
         color: { type: String },
         size: { type: String },
-        others: { type: String },
       },
     ],
     totalAmount: { type: Number, required: true, min: [0, 'Total amount cannot be negative'] },

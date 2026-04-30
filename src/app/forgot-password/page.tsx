@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Logo } from '@/components/ui/logo';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
@@ -89,12 +90,7 @@ export default function ForgotPasswordPage() {
       {/* Right Side: Forgot Password Form */}
       <div className="flex flex-col p-6 md:p-10 bg-background lg:ml-[50%] min-h-screen">
         <div className="flex justify-center gap-2 md:justify-start mb-8">
-          <Link href="/" className="flex items-center gap-2 font-medium transition-transform hover:scale-105">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              <GalleryVerticalEnd className="size-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight uppercase font-serif">Janopriyo</span>
-          </Link>
+          <Logo />
         </div>
 
         <motion.div 

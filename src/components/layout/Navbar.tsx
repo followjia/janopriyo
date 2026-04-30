@@ -28,6 +28,7 @@ import { useAppSelector } from '@/store/hooks';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import { CategoryNav } from '@/components/layout/CategoryNav';
 import { AIChatbot } from '@/components/layout/AIChatbot';
+import { Logo } from '@/components/ui/logo';
 import {
   Accordion,
   AccordionContent,
@@ -213,7 +214,7 @@ export default function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px]">
                   <nav className="flex flex-col gap-6 mt-12 px-2">
-                    <Link href="/" className="text-xl font-bold font-serif" onClick={() => setOpen(false)}>Janopriyo Shop</Link>
+                    <Logo onClick={() => setOpen(false)} />
                     <div className="space-y-4 pt-6 border-t font-medium tracking-tight">
                       {navItems.map((item, index) => {
                         const isActive = pathname === item.href;
@@ -257,12 +258,7 @@ export default function Navbar() {
 
             {/* Logo (Centered in desktop, Left-ish in mobile) */}
             <div className="flex items-center justify-center flex-1 md:flex-initial">
-              <Link href="/" className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl font-serif font-black tracking-tight text-foreground uppercase transition-all hover:opacity-80 leading-none">
-                  Janopriyo
-                </span>
-
-              </Link>
+              <Logo textClassName="text-3xl md:text-4xl" imageClassName="size-8 md:size-10" />
             </div>
 
             {/* Icons/Action Row (Right) */}

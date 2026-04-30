@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Logo } from '@/components/ui/logo';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
@@ -276,12 +277,7 @@ export default function ResetPasswordPage() {
       {/* Right Side: Reset Password Form */}
       <div className="flex flex-col p-6 md:p-10 bg-background lg:ml-[50%] min-h-screen">
         <div className="flex justify-center gap-2 md:justify-start mb-8">
-          <Link href="/" className="flex items-center gap-2 font-medium transition-transform hover:scale-105">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              <GalleryVerticalEnd className="size-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight uppercase font-serif">Janopriyo</span>
-          </Link>
+          <Logo />
         </div>
 
         <motion.div 

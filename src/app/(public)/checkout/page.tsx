@@ -131,8 +131,7 @@ export default function CheckoutPage() {
             price: item.price,
             image: item.image,
             color: item.color,
-            size: item.size,
-            others: item.others
+            size: item.size
         })),
         shippingAddress: {
             fullName: values.fullName,
@@ -276,7 +275,7 @@ export default function CheckoutPage() {
 
   const handleUpdateQuantity = (item: any, delta: number) => {
       if (item.quantity + delta === 0) {
-          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
           toast.info(`${item.name} removed from cart`);
       } else {
           dispatch(addToCart({ ...item, quantity: delta }));
@@ -305,7 +304,7 @@ export default function CheckoutPage() {
             <CardContent className="space-y-4">
               <div className="max-h-[500px] overflow-y-auto space-y-4 pr-2 -mr-2">
                 {items.map((item, index) => (
-                  <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : index} className="flex gap-4 items-start relative group">
+                  <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}` : index} className="flex gap-4 items-start relative group">
                     <div className="h-16 w-16 rounded-md border bg-muted flex-shrink-0 relative overflow-hidden">
                       {item.image && <img src={item.image} alt={item.name || 'Product'} className="h-full w-full object-cover" />}
                     </div>
@@ -314,7 +313,7 @@ export default function CheckoutPage() {
                         <p className="text-sm font-bold truncate pr-4">{item.name}</p>
                         <button 
                           onClick={() => {
-                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
                             toast.info(`${item.name} removed from cart`);
                           }}
                           className="text-muted-foreground hover:text-destructive transition-colors p-1 -mt-1 -mr-1"

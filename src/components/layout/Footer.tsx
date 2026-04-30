@@ -8,6 +8,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 
 async function getGlobalSettings() {
   try {
@@ -48,7 +49,7 @@ export default async function Footer() {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
-            <h3 className="text-xl font-bold">{settings?.brandName || 'Janopriyo Shop'}</h3>
+            <Logo textClassName="text-2xl" imageClassName="size-8" />
             <p className="text-sm text-muted-foreground w-4/5">
               Your ultimate destination for quality products across multiple categories including groceries, electronics, and fashion.
             </p>

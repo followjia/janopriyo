@@ -59,8 +59,15 @@ export function CartHydrator({ children }: { children: React.ReactNode }) {
             // Merge logic: Combine local items and DB items using variant-aware keys.
             const mergedMap = new Map();
             
-            const getVariantKey = (item: any) => 
-                `${item.productId}-${item.color || ''}-${item.size || ''}-${item.others || ''}`;
+            const getVariantKey = (item: any) => {
+                const othersStr = item.others 
+                  ? JSON.stringify(Object.keys(item.others).sort().reduce((obj: any, key) => {
+                      obj[key] = item.others[key];
+                      return obj;
+                    }, {}))
+                  : '';
+                return `${item.productId}-${item.color || ''}-${item.size || ''}-${othersStr}`;
+            };
 
             // Add DB items
             if (Array.isArray(dbCartItems)) {

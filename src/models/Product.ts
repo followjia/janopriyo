@@ -20,7 +20,6 @@ export interface IProduct extends Document {
   variants?: {
     color?: string;
     size?: string;
-    others?: string;
     price: number;
     salePrice?: number;
     discountRate?: number;
@@ -64,7 +63,6 @@ const ProductSchema: Schema<IProduct> = new Schema(
       {
         color: { type: String },
         size: { type: String },
-        others: { type: String },
         price: { type: Number, required: true, min: [0, 'Price cannot be negative'] },
         salePrice: { type: Number, min: [0, 'Sale price cannot be negative'] },
         discountRate: { type: Number },
@@ -100,7 +98,7 @@ ProductSchema.pre('validate', function(this: any) {
         typeof v.price === 'number' &&
         v.salePrice > v.price
       ) {
-        const variantDesc = [v.color, v.size, v.others].filter(Boolean).join(' / ') || `at index ${index}`;
+        const variantDesc = [v.color, v.size].filter(Boolean).join(' / ') || `at index ${index}`;
         throw new Error(
           `Variant "${variantDesc}" has a sale price (৳${v.salePrice}) higher than its regular price (৳${v.price})`
         );

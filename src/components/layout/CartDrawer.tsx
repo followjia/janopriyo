@@ -23,7 +23,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
 
   const handleUpdateQuantity = (item: any, delta: number) => {
       if (item.quantity + delta === 0) {
-          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+          dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
           toast.info(`${item.name} removed from cart`);
       } else {
           dispatch(addToCart({ ...item, quantity: delta }));
@@ -61,7 +61,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
             </div>
           ) : (
             items.map((item, index) => (
-              <div key={item.productId ? `${item.productId}-${item.color ?? ''}-${item.size ?? ''}-${item.others ?? ''}` : `fallback-${index}`} className="flex gap-4 group">
+              <div key={`${item.productId}-${item.color || ''}-${item.size || ''}-${index}`} className="flex gap-4 group">
                 <div className="h-20 w-20 rounded-md overflow-hidden bg-muted group-hover:scale-105 transition-transform">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
@@ -75,7 +75,7 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex flex-col flex-1">
                       <h4 className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">{item.name}</h4>
-                      {(item.color || item.size || item.others) && (
+                      {(item.color || item.size) && (
                         <div className="flex flex-wrap gap-2 mt-1">
                           {item.color && (
                             <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium uppercase tracking-tighter">
@@ -87,11 +87,6 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                               Size: {item.size}
                             </span>
                           )}
-                          {item.others && (
-                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-medium uppercase tracking-tighter">
-                              Option: {item.others}
-                            </span>
-                          )}
                         </div>
                       )}
                     </div>
@@ -100,10 +95,10 @@ export function CartDrawer({ children }: { children: React.ReactElement }) {
                         size="icon" 
                         className="h-6 w-6 text-muted-foreground hover:text-destructive"
                         onClick={() => {
-                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size, others: item.others }));
+                            dispatch(removeFromCart({ productId: item.productId, color: item.color, size: item.size }));
                             toast.info(`${item.name} removed from cart`);
                         }}
-                        aria-label={`Remove ${[item.name, item.color, item.size, item.others].filter(Boolean).join(' - ')} from cart`}
+                        aria-label={`Remove ${[item.name, item.color, item.size].filter(Boolean).join(' - ')} from cart`}
                     >
                         <X className="h-4 w-4" />
                     </Button>

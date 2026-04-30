@@ -70,26 +70,26 @@ import { toast } from "sonner"
 // --- Chart Configurations ---
 
 const visitorChartConfig = {
-  visitors: { label: "Total Visitors", color: "hsl(var(--chart-1))" },
-  sessions: { label: "Sessions", color: "hsl(var(--chart-2))" }
+  visitors: { label: "Total Visitors", color: "var(--chart-1)" },
+  sessions: { label: "Sessions", color: "var(--chart-2)" }
 } satisfies ChartConfig
 
 const searchChartConfig = {
-  clicks: { label: "Clicks", color: "hsl(var(--chart-1))" },
-  impressions: { label: "Impressions", color: "hsl(var(--chart-3))" }
+  clicks: { label: "Clicks", color: "var(--chart-1)" },
+  impressions: { label: "Impressions", color: "var(--chart-3)" }
 } satisfies ChartConfig
 
 const deviceChartConfig = {
   visitors: { label: "Visitors" },
-  desktop: { label: "Desktop", color: "hsl(var(--chart-1))" },
-  mobile: { label: "Mobile", color: "hsl(var(--chart-2))" },
-  tablet: { label: "Tablet", color: "hsl(var(--chart-3))" },
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
+  tablet: { label: "Tablet", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
 const retentionChartConfig = {
   value: { label: "Users" },
-  new: { label: "New Users", color: "hsl(var(--chart-1))" },
-  returning: { label: "Returning", color: "hsl(var(--chart-2))" },
+  new: { label: "New Users", color: "var(--chart-1)" },
+  returning: { label: "Returning", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
 // --- Main Component ---
@@ -140,12 +140,6 @@ export default function AnalyticsPage() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-3xl font-bold tracking-tight">Business Analytics</h2>
-            {stats?.activeUsersNow > 0 && (
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 animate-pulse gap-1.5 py-1 px-2.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                {stats.activeUsersNow} Live Users
-              </Badge>
-            )}
           </div>
           <p className="text-muted-foreground mt-1">Real-time performance from Google Analytics & Search Console.</p>
         </div>
@@ -173,79 +167,63 @@ export default function AnalyticsPage() {
         <MetricCard title="Avg. Search Pos." value={(stats?.avgPosition ?? 0).toFixed(1)} change={stats?.positionChange} icon={<TrendingUp />} description="Ranking position" inverseChange />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* --- Visitor Trends --- */}
-        <Card className="col-span-4 shadow-sm border-muted-foreground/10">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>Visitor Growth</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground opacity-50" />
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <div className="h-[350px] w-full">
-              <ChartContainer config={visitorChartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={visitorTrends} margin={{ left: 10, right: 10 }}>
-                    <defs>
-                      <linearGradient id="fillVisitors" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-visitors)" stopOpacity={0.3}/><stop offset="95%" stopColor="var(--color-visitors)" stopOpacity={0}/></linearGradient>
-                      <linearGradient id="fillSessions" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-sessions)" stopOpacity={0.3}/><stop offset="95%" stopColor="var(--color-sessions)" stopOpacity={0}/></linearGradient>
-                    </defs>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
-                    <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                    <Area dataKey="visitors" type="monotone" fill="url(#fillVisitors)" stroke="var(--color-visitors)" strokeWidth={2} />
-                    <Area dataKey="sessions" type="monotone" fill="url(#fillSessions)" stroke="var(--color-sessions)" strokeWidth={2} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                  </AreaChart>
+      {/* --- Visitor Trends --- */}
+      <Card className="shadow-sm border-muted-foreground/10">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle>Visitor Growth</CardTitle>
+          <Activity className="h-4 w-4 text-muted-foreground opacity-50" />
+        </CardHeader>
+        <CardContent className="px-2 sm:px-6">
+          <div className="h-[350px] w-full">
+            <ChartContainer config={visitorChartConfig} className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <AreaChart data={visitorTrends} margin={{ left: 10, right: 10 }}>
+                  <defs>
+                    <linearGradient id="fillVisitors" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-visitors)" stopOpacity={0.3}/><stop offset="95%" stopColor="var(--color-visitors)" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="fillSessions" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-sessions)" stopOpacity={0.3}/><stop offset="95%" stopColor="var(--color-sessions)" stopOpacity={0}/></linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
+                  <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                  <Area dataKey="visitors" type="monotone" fill="url(#fillVisitors)" stroke="var(--color-visitors)" strokeWidth={2} />
+                  <Area dataKey="sessions" type="monotone" fill="url(#fillSessions)" stroke="var(--color-sessions)" strokeWidth={2} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* --- Devices --- */}
+        <Card className="shadow-sm border-muted-foreground/10">
+          <CardHeader className="pb-2"><CardTitle>Devices</CardTitle></CardHeader>
+          <CardContent>
+            <div className="h-[250px] w-full">
+              <ChartContainer config={deviceChartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <PieChart>
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <Pie data={deviceData} dataKey="visitors" nameKey="device" innerRadius={45} strokeWidth={5}>
+                      {deviceData.map((e: any, i: number) => <Cell key={i} fill={e.fill} />)}
+                    </Pie>
+                  </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {deviceData.map((d: any) => (
+                <div key={d.device} className="text-center">
+                  <p className="text-[10px] uppercase text-muted-foreground font-semibold">{d.device}</p>
+                  <p className="text-sm font-bold">{Math.round((d.visitors / (stats.visitors || 1)) * 100)}%</p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* --- Devices & Countries --- */}
-        <div className="col-span-3 space-y-6">
-          <Card className="shadow-sm border-muted-foreground/10">
-            <CardHeader className="pb-2"><CardTitle>Devices</CardTitle></CardHeader>
-            <CardContent>
-              <div className="h-[180px] w-full">
-                <ChartContainer config={deviceChartConfig} className="h-full w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                      <Pie data={deviceData} dataKey="visitors" nameKey="device" innerRadius={45} strokeWidth={5}>
-                        {deviceData.map((e: any, i: number) => <Cell key={i} fill={e.fill} />)}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {deviceData.map((d: any) => (
-                  <div key={d.device} className="text-center">
-                    <p className="text-[10px] uppercase text-muted-foreground font-semibold">{d.device}</p>
-                    <p className="text-sm font-bold">{Math.round((d.visitors / (stats.visitors || 1)) * 100)}%</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border-muted-foreground/10">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-bold flex items-center gap-2"><Globe className="h-4 w-4" /> Top Countries</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {countryData?.map((c: any) => (
-                <div key={c.name} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" /><span className="text-xs font-medium group-hover:text-primary transition-colors">{c.name}</span></div>
-                  <span className="text-xs font-bold bg-muted px-1.5 py-0.5 rounded">{c.value}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         {/* --- Traffic Sources --- */}
         <Card className="shadow-sm border-muted-foreground/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -255,7 +233,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="h-[250px] w-full">
               <ChartContainer config={{ value: { label: "Users" } }} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <PieChart>
                     <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                     <Pie data={sourceData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} strokeWidth={5}>
@@ -269,6 +247,19 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
+        {/* --- Top Countries --- */}
+        <Card className="shadow-sm border-muted-foreground/10">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-bold flex items-center gap-2"><Globe className="h-4 w-4" /> Top Countries</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {countryData?.map((c: any) => (
+              <div key={c.name} className="flex items-center justify-between group">
+                <div className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-primary" /><span className="text-xs font-medium group-hover:text-primary transition-colors">{c.name}</span></div>
+                <span className="text-xs font-bold bg-muted px-1.5 py-0.5 rounded">{c.value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
         {/* --- New vs Returning --- */}
         <Card className="shadow-sm border-muted-foreground/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -278,7 +269,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="h-[250px] w-full">
               <ChartContainer config={retentionChartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={retentionData} layout="vertical" margin={{ left: 20 }}>
                     <CartesianGrid horizontal={false} strokeDasharray="3 3" opacity={0.1} />
                     <XAxis type="number" hide />
@@ -305,7 +296,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="h-[300px] w-full">
               <ChartContainer config={searchChartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={searchTrends}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="date" tickLine={false} axisLine={false} tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })} />

@@ -9,7 +9,6 @@ interface CartItem {
   image?: string;
   color?: string;
   size?: string;
-  others?: string;
 }
 
 interface CartState {
@@ -36,8 +35,7 @@ const cartSlice = createSlice({
         (item) => 
           item.productId === newItem.productId && 
           item.color === newItem.color && 
-          item.size === newItem.size && 
-          item.others === newItem.others
+          item.size === newItem.size
       );
 
       if (!existingItem) {
@@ -50,12 +48,12 @@ const cartSlice = createSlice({
         existingItem.quantity += newItem.quantity;
       }
     },
-    removeFromCart(state, action: PayloadAction<{ productId: string; color?: string; size?: string; others?: string } | string>) {
+    removeFromCart(state, action: PayloadAction<{ productId: string; color?: string; size?: string } | string>) {
       const payload = action.payload;
       const payloadWasString = typeof payload === 'string';
       
-      const { productId, color, size, others } = payloadWasString
-        ? { productId: payload, color: undefined, size: undefined, others: undefined }
+      const { productId, color, size } = payloadWasString
+        ? { productId: payload, color: undefined, size: undefined }
         : payload;
 
       const matchingItems = state.items.filter((item) => {
@@ -65,8 +63,7 @@ const cartSlice = createSlice({
         return (
           item.productId === productId &&
           item.color === color &&
-          item.size === size &&
-          item.others === others
+          item.size === size
         );
       });
 
@@ -83,8 +80,7 @@ const cartSlice = createSlice({
           return !(
             item.productId === productId &&
             item.color === color &&
-            item.size === size &&
-            item.others === others
+            item.size === size
           );
         });
       }

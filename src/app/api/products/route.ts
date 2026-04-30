@@ -88,7 +88,6 @@ export async function POST(req: NextRequest) {
       _id: v._id || v.id,
       color: v.color,
       size: v.size,
-      others: v.others,
       sku: v.sku,
       image: v.image,
       price: Number.isFinite(parseFloat(v.price)) ? parseFloat(v.price) : 0,

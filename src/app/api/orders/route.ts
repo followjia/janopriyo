@@ -29,7 +29,6 @@ const orderItemSchema = z.object({
   image: z.string().nullish().or(z.literal('')),
   color: z.string().optional(),
   size: z.string().optional(),
-  others: z.string().optional(),
 });
 
 const orderSchema = z.object({
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
     // 2. Atomic Stock Validation and Price Verification
     for (const item of items) {
       let product;
-      const hasVariant = !!(item.color || item.size || item.others);
+      const hasVariant = !!(item.color || item.size);
 
       if (hasVariant) {
         // Attempt to update variant stock
@@ -112,7 +111,6 @@ export async function POST(req: NextRequest) {
             $elemMatch: {
               ...(item.color && { color: item.color }),
               ...(item.size && { size: item.size }),
-              ...(item.others && { others: item.others }),
               stock: { $gte: item.quantity }
             }
           }
@@ -137,7 +135,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!product) {
-        const variantDesc = [item.color, item.size, item.others].filter(Boolean).join(' / ');
+        const variantDesc = [item.color, item.size].filter(Boolean).join(' / ');
         throw new StockError(`Insufficient stock or product not found: ${item.name}${variantDesc ? ` (${variantDesc})` : ''}`);
       }
 
@@ -146,8 +144,7 @@ export async function POST(req: NextRequest) {
       if (hasVariant) {
         const variant = product.variants?.find((v: any) => 
           (v.color || undefined) === (item.color || undefined) &&
-          (v.size || undefined) === (item.size || undefined) &&
-          (v.others || undefined) === (item.others || undefined)
+          (v.size || undefined) === (item.size || undefined)
         );
         if (variant) {
           itemPrice = (variant.salePrice ?? variant.price) ?? (product.salePrice ?? product.price);
@@ -165,7 +162,6 @@ export async function POST(req: NextRequest) {
         image: item.image || product.images?.[0] || '',
         color: item.color,
         size: item.size,
-        others: item.others,
       });
     }
 

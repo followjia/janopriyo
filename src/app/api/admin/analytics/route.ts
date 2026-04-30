@@ -171,7 +171,7 @@ export async function GET(request: Request) {
       .sort((a, b) => b.value - a.value)
       .map((item, i) => ({
         ...item,
-        fill: `hsl(var(--chart-${(i % 5) + 1}))`
+        fill: `var(--chart-${(i % 5) + 1})`
       }));
 
     const totalVisitors = Array.from(visitorTrendsMap.values()).reduce((acc, curr) => acc + curr.visitors, 0);
@@ -209,15 +209,15 @@ export async function GET(request: Request) {
         ctr: (row.ctr || 0) * 100
       })) || [],
       deviceData: [
-        { device: "desktop", visitors: devices.desktop, fill: "hsl(var(--chart-1))" },
-        { device: "mobile", visitors: devices.mobile, fill: "hsl(var(--chart-2))" },
-        { device: "tablet", visitors: devices.tablet, fill: "hsl(var(--chart-3))" },
+        { device: "desktop", visitors: devices.desktop, fill: "var(--chart-1)" },
+        { device: "mobile", visitors: devices.mobile, fill: "var(--chart-2)" },
+        { device: "tablet", visitors: devices.tablet, fill: "var(--chart-3)" },
       ],
       countryData,
       sourceData,
       retentionData: [
-        { type: "New Users", value: retention.new, fill: "hsl(var(--chart-1))" },
-        { type: "Returning", value: retention.returning, fill: "hsl(var(--chart-2))" }
+        { type: "New Users", value: retention.new, fill: "var(--chart-1)" },
+        { type: "Returning", value: retention.returning, fill: "var(--chart-2)" }
       ]
     });
 

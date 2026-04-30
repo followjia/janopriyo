@@ -31,7 +31,6 @@ export interface IUser extends Document {
     image?: string;
     color?: string;
     size?: string;
-    others?: string;
   }[];
   createdAt: Date;
   updatedAt: Date;
@@ -78,7 +77,6 @@ const UserSchema: Schema<IUser> = new Schema(
         image: { type: String },
         color: { type: String },
         size: { type: String },
-        others: { type: String },
       }
     ],
   },

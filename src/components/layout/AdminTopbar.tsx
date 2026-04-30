@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LiveTrafficWidget } from '@/components/admin/LiveTrafficWidget';
 
 export default function AdminTopbar() {
   const { data: session } = useSession();
@@ -35,6 +36,7 @@ export default function AdminTopbar() {
       </div>
       <div className="hidden md:flex flex-1" />
       <div className="flex items-center gap-4">
+        <LiveTrafficWidget />
         <ModeToggle />
         
         {session?.user ? (
