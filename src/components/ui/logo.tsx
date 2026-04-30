@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Great_Vibes } from 'next/font/google';
+import { Pinyon_Script } from 'next/font/google';
 
-const greatVibes = Great_Vibes({ 
+const pinyonScript = Pinyon_Script({
   subsets: ['latin'],
   weight: '400'
 });
@@ -18,7 +18,7 @@ interface LogoProps {
 
 export function Logo({ className, imageClassName, textClassName, showText = true, onClick }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex items-center gap-2 group", className)} onClick={onClick}>
+    <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
       <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 size-9 md:size-10", imageClassName)}>
         <Image
           src="/logo.png"
@@ -31,8 +31,8 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       </div>
       {showText && (
         <span className={cn(
-          greatVibes.className,
-          "text-3xl md:text-4xl text-primary transition-all drop-shadow-sm group-hover:text-primary/80", 
+          pinyonScript.className,
+          "text-3xl md:text-5xl text-primary transition-all drop-shadow-sm group-hover:text-primary/90",
           textClassName
         )}>
           Janopriyo
