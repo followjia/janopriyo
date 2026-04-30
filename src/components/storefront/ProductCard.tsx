@@ -33,10 +33,11 @@ interface ProductCardProps {
     stock: number;
     categories?: any[];
     variants?: any[];
-  }
+  };
+  isFlashSale?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isFlashSale }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const { data: session, status } = useSession();
   const wishlist = useAppSelector((state) => state.wishlist.items);
@@ -163,6 +164,9 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
             {product.stock === 0 && (
                 <Badge variant="secondary" className="font-bold uppercase text-[10px]">Out of Stock</Badge>
+            )}
+            {isFlashSale && (
+                <Badge variant="destructive" className="bg-orange-600 animate-pulse font-bold uppercase text-[10px]">Flash Deal</Badge>
             )}
         </div>
 

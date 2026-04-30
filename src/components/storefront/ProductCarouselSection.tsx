@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, FreeMode } from 'swiper/modules';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import Link from 'next/link';
 
@@ -57,9 +58,20 @@ export function ProductCarouselSection({
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-6">
           <div className="space-y-2">
-            <h2 className="text-3xl font-black tracking-tighter sm:text-4xl">
-              {title}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-black tracking-tighter sm:text-4xl">
+                {title}
+              </h2>
+              {isFlashSale && (
+                <Badge variant="destructive" className="bg-red-600 animate-pulse border-none rounded-full flex items-center gap-1.5 px-3">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  LIVE
+                </Badge>
+              )}
+            </div>
             {description && (
               <p className="text-muted-foreground max-w-[600px]">
                 {description}
@@ -115,7 +127,7 @@ export function ProductCarouselSection({
             >
               {safeProducts.map((product, index) => (
                 <SwiperSlide key={product._id + index}>
-                  <ProductCard product={product} />
+                  <ProductCard product={product} isFlashSale={isFlashSale} />
                 </SwiperSlide>
               ))}
             </Swiper>
