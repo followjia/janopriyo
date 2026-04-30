@@ -13,17 +13,18 @@ interface LogoProps {
 export function Logo({ className, imageClassName, textClassName, showText = true, onClick }: LogoProps) {
   return (
     <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
-      <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105", imageClassName)}>
+      <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105 size-8", imageClassName)}>
         <Image
           src="/logo.png"
           alt="Janopriyo Logo"
-          width={32}
-          height={32}
+          fill
+          sizes="40px"
           className="object-contain"
+          priority
         />
       </div>
       {showText && (
-        <span className={cn("font-bold text-xl uppercase tracking-tight text-primary", textClassName)}>
+        <span className={cn("font-bold text-xl uppercase tracking-tight text-primary transition-colors", textClassName)}>
           Janopriyo
         </span>
       )}
