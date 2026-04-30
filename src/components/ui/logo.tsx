@@ -12,7 +12,7 @@ interface LogoProps {
 
 export function Logo({ className, imageClassName, textClassName, showText = true, onClick }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex items-center gap-2 group", className)} onClick={onClick}>
+    <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
       <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105", imageClassName)}>
         <Image
           src="/logo.png"
@@ -23,7 +23,7 @@ export function Logo({ className, imageClassName, textClassName, showText = true
         />
       </div>
       {showText && (
-        <span className={cn("font-bold text-xl tracking-tight text-primary", textClassName)}>
+        <span className={cn("font-bold text-xl uppercase tracking-tight text-primary", textClassName)}>
           Janopriyo
         </span>
       )}
