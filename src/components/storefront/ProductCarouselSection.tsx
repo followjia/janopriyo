@@ -18,6 +18,8 @@ interface ProductCarouselSectionProps {
   description?: string;
   products: any[];
   viewAllLink: string;
+  isFlashSale?: boolean;
+  saleEndTimestamp?: number | string;
   bgColor?: string;
 }
 
@@ -26,6 +28,8 @@ export function ProductCarouselSection({
   description,
   products,
   viewAllLink,
+  isFlashSale = false,
+  saleEndTimestamp,
   bgColor = "bg-background"
 }: ProductCarouselSectionProps) {
 
