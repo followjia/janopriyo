@@ -33,7 +33,7 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       {showText && (
         <span className={cn(
           orbitron.className,
-          "text-xl md:text-2xl uppercase tracking-[0.2em] text-primary transition-all group-hover:text-primary/90",
+          "text-xl md:text-2xl uppercase text-primary transition-all group-hover:text-primary/90",
           textClassName
         )}>
           Janopriyo
