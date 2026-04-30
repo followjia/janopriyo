@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Pinyon_Script } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 
-const pinyonScript = Pinyon_Script({
+const roboto = Roboto({
   subsets: ['latin'],
-  weight: '400'
+  weight: ['400', '700'],
 });
+
 
 interface LogoProps {
   className?: string;
@@ -31,8 +32,8 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       </div>
       {showText && (
         <span className={cn(
-          pinyonScript.className,
-          "text-3xl md:text-5xl text-primary transition-all drop-shadow-sm group-hover:text-primary/90",
+          roboto.className,
+          "text-2xl md:text-3xl font-bold uppercase text-primary transition-all drop-shadow-sm group-hover:text-primary/90 tracking-tight",
           textClassName
         )}>
           Janopriyo
