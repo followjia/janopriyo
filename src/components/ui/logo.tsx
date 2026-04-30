@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Roboto } from 'next/font/google';
+import { Orbitron } from 'next/font/google';
 
-const roboto = Roboto({
+const orbitron = Orbitron({
   subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: ['400', '700', '900'],
 });
 
 
@@ -32,8 +32,8 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       </div>
       {showText && (
         <span className={cn(
-          roboto.className,
-          "text-2xl md:text-3xl  uppercase text-primary  group-hover:text-primary/90",
+          orbitron.className,
+          "text-xl md:text-2xl uppercase tracking-[0.2em] text-primary transition-all group-hover:text-primary/90",
           textClassName
         )}>
           Janopriyo
