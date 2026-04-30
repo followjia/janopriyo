@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/storefront/ProductCard';
@@ -29,9 +30,38 @@ export function ProductCarouselSection({
   saleEndTimestamp,
   bgColor = "bg-background"
 }: ProductCarouselSectionProps) {
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!products || products.length === 0) return null;
+
+  // Render a simple grid or placeholder during SSR to prevent layout shift and fix hydration issues
+  if (!mounted) {
+    return (
+      <section className={`py-12 ${bgColor} overflow-hidden`}>
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-6">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-black tracking-tighter sm:text-4xl">{title}</h2>
+              {description && <p className="text-muted-foreground max-w-[600px]">{description}</p>}
+            </div>
+            <Button variant="outline" className="rounded-full font-bold">
+               View All <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+             {/* Simple static layout for SSR/initial mount */}
+             {products.slice(0, 4).map((product) => (
+               <ProductCard key={product._id} product={product} />
+             ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={`py-12 ${bgColor} overflow-hidden`}>
@@ -59,7 +89,7 @@ export function ProductCarouselSection({
         {/* Swiper Carousel */}
         <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
           <Swiper
-            modules={[Autoplay]}
+            modules={[Autoplay, Navigation, Pagination]}
             spaceBetween={16}
             slidesPerView={1.2}
             grabCursor={true}
