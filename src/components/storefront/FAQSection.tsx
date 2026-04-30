@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { HelpCircle } from "lucide-react";
+import Link from "next/link";
 
 interface FAQItem {
     question: string;
@@ -31,15 +32,17 @@ export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
                             Everything you need to know about shopping with Janopriyo Shop. Can't find the answer? Contact our support team.
                         </p>
                         <div className="pt-4">
-                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-white border shadow-sm w-fit">
-                                <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                                    <HelpCircle className="h-5 w-5" />
+                            <Link href="/contact" className="block w-fit">
+                                <div className="flex items-center gap-3 p-4 rounded-2xl bg-white border shadow-sm w-fit hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group">
+                                    <div className="bg-primary/10 p-2 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <HelpCircle className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-muted-foreground uppercase">Need more help?</p>
+                                        <p className="text-sm font-black group-hover:text-primary transition-colors">Contact Support</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-muted-foreground uppercase">Need more help?</p>
-                                    <p className="text-sm font-black">+8801234567890</p>
-                                </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
 

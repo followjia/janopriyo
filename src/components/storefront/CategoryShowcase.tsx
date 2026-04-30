@@ -67,8 +67,8 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
           <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
             <div className="flex -ml-4">
               {categories.map((category) => (
-                <div 
-                  key={category._id} 
+                <div
+                  key={category._id}
                   className="flex-[0_0_50%] min-w-0 pl-4 sm:flex-[0_0_33.33%] md:flex-[0_0_25%] lg:flex-[0_0_16.66%] xl:flex-[0_0_14.28%]"
                 >
                   <Link
@@ -103,11 +103,10 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
               <button
                 key={index}
                 onClick={() => scrollTo(index)}
-                className={`transition-all duration-300 cursor-pointer rounded-full ${
-                  index === selectedIndex 
-                  ? "w-8 bg-primary h-1.5" 
-                  : "w-2 bg-muted-foreground/30 h-1.5 hover:bg-muted-foreground/50"
-                }`}
+                className={`transition-all duration-300 cursor-pointer rounded-full ${index === selectedIndex
+                    ? "w-8 bg-primary h-1.5"
+                    : "w-2 bg-muted-foreground/30 h-1.5 hover:bg-muted-foreground/50"
+                  }`}
                 aria-label={`Go to slide group ${index + 1}`}
               />
             ))}

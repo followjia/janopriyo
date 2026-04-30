@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { Calendar, ArrowRight, BookOpen } from 'lucide-react';
-import { buttonVariants } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -29,14 +28,21 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
     <section className="py-12 bg-muted/20">
       <div className="container mx-auto px-4 ">
         {/* Section Header */}
-        <div className="text-center mb-12 space-y-4">
-
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-            Latest from our <span className="text-primary italic">Blog</span>
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Discover tips, news, and trends from the Janopriyo Shop community.
-          </p>
+        <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+              Latest from our <span className="text-primary italic">Blog</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl">
+              Discover tips, news, and trends from the Janopriyo Shop community.
+            </p>
+          </div>
+          <Button asChild variant="default" className="rounded-full font-bold group">
+            <Link href="/blog">
+              View All
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
         </div>
 
         {/* Single Blog — Split Layout */}
@@ -96,8 +102,6 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
             </div>
           </div>
         </Link>
-
-
       </div>
     </section>
   );

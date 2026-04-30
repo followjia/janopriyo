@@ -222,7 +222,11 @@ export default function Navbar() {
                           <React.Fragment key={item.href}>
                             <Link
                               href={item.href}
-                              className={`block hover:text-primary transition-colors ${isActive ? 'text-primary font-bold' : ''}`}
+                              className={`block px-4 py-2 rounded-xl transition-all ${
+                                isActive 
+                                ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' 
+                                : 'hover:text-primary font-medium'
+                              }`}
                               onClick={() => setOpen(false)}
                             >
                               {item.label}
@@ -341,15 +345,21 @@ export default function Navbar() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem render={<Link href={dashboardHref} />} nativeButton={false}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                      <DropdownMenuItem asChild>
+                        <Link href={dashboardHref}>
+                          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem render={<Link href="/profile" />} nativeButton={false}>
-                        <User className="mr-2 h-4 w-4" /> Profile
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                          <User className="mr-2 h-4 w-4" /> Profile
+                        </Link>
                       </DropdownMenuItem>
                       {isAdmin && (
-                        <DropdownMenuItem render={<Link href="/admin/settings" />} nativeButton={false}>
-                          <Settings className="mr-2 h-4 w-4" /> Admin Settings
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/settings">
+                            <Settings className="mr-2 h-4 w-4" /> Admin Settings
+                          </Link>
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuGroup>
@@ -383,20 +393,17 @@ export default function Navbar() {
 
               return (
                 <React.Fragment key={item.href}>
-                  <li className="h-full flex items-center relative">
+                  <li className="flex items-center">
                     <Link
                       href={item.href}
-                      className={`text-[12px] font-bold uppercase tracking-[0.2em] transition-all hover:text-primary px-1 ${isActive ? 'text-primary' : ''}`}
+                      className={`text-[12px] font-bold uppercase tracking-[0.25em] transition-all px-4 py-1.5 rounded-full ${
+                        isActive 
+                        ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                        : 'text-foreground/70 hover:text-primary'
+                      }`}
                     >
                       {item.label}
                     </Link>
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-underline"
-                        className="absolute -bottom-[1px] left-0 right-0 h-0.5 bg-primary"
-                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                      />
-                    )}
                   </li>
                   {/* Insert CategoryNav after Home (index 0) */}
                   {index === 0 && (

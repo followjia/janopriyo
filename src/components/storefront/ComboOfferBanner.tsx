@@ -91,7 +91,6 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
 
         <div className="container px-4 mx-auto relative z-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-
             {/* Left — Offer text */}
             <div className="flex items-center gap-5 flex-1">
               <div className="h-16 w-16 rounded-2xl bg-black/10 border border-black/10 flex items-center justify-center shrink-0">
@@ -114,6 +113,15 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
                   *Stackable with your loyalty tokens for extra savings
                 </p>
               </div>
+            </div>
+
+            {/* Middle — Shop Button */}
+            <div className="flex-shrink-0">
+              <Button asChild className="rounded-full px-8 h-12 bg-black hover:bg-black/90 text-white font-black shadow-lg">
+                <Link href="/shop">
+                  SHOP NOW
+                </Link>
+              </Button>
             </div>
 
             {/* Right — Countdown */}

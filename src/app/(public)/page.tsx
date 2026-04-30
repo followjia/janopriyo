@@ -135,7 +135,7 @@ export default async function Home() {
           title="Featured Collections"
           description="Explore our best-selling and most popular products hand-picked just for you."
           products={data.featuredProducts}
-          viewAllLink="/shop"
+          viewAllLink="/shop?filter=featured"
           bgColor="bg-background"
         />
       )}
@@ -163,7 +163,7 @@ export default async function Home() {
           title="Trending Now"
           description="The most popular items according to our community ratings and reviews."
           products={data.trending}
-          viewAllLink="/shop"
+          viewAllLink="/shop?filter=trending"
           bgColor="bg-muted/20"
         />
       )}

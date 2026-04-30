@@ -56,6 +56,9 @@ interface ShopProduct {
   createdAt: string;
   isPublished: boolean;
   isNewArrival?: boolean;
+  isFeatured?: boolean;
+  ratings?: number;
+  numReviews?: number;
   images: string[];
   stock: number;
   categories?: ShopProductCategoryRef[];
@@ -83,6 +86,9 @@ function ShopContent() {
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const [showOnlyNew, setShowOnlyNew] = useState(initialFilter === 'new');
+  const [showOnlySale, setShowOnlySale] = useState(initialFilter === 'sale');
+  const [showOnlyFeatured, setShowOnlyFeatured] = useState(initialFilter === 'featured');
+  const [showOnlyTrending, setShowOnlyTrending] = useState(initialFilter === 'trending');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const itemsPerPage = 20;
   const skipClampRef = useRef(false);
@@ -103,7 +109,7 @@ function ShopContent() {
     skipClampRef.current = true;
     setPageAndUrl(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategories, priceRange, sortBy, searchTerm, showOnlyNew]);
+  }, [selectedCategories, priceRange, sortBy, searchTerm, showOnlyNew, showOnlySale, showOnlyFeatured, showOnlyTrending]);
 
   useEffect(() => {
     async function fetchData() {
@@ -144,14 +150,21 @@ function ShopContent() {
       const price = p.salePrice || p.price;
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
       const matchesNewArrival = !showOnlyNew || p.isNewArrival === true;
+      const matchesSale = !showOnlySale || (p.salePrice !== undefined && p.salePrice !== null && p.salePrice < p.price);
+      const matchesFeatured = !showOnlyFeatured || p.isFeatured === true;
+      // Trending is a bit different, we'll consider it matched if it has decent ratings/reviews or if the filter is off
+      const matchesTrending = !showOnlyTrending || ((p.ratings || 0) >= 4 || (p.numReviews || 0) > 0);
 
-      return matchesSearch && matchesCategory && matchesPrice && matchesNewArrival;
+      return matchesSearch && matchesCategory && matchesPrice && matchesNewArrival && matchesSale && matchesFeatured && matchesTrending;
     })
     .sort((a, b) => {
       const priceA = a.salePrice || a.price;
       const priceB = b.salePrice || b.price;
       if (sortBy === 'price-asc') return priceA - priceB;
       if (sortBy === 'price-desc') return priceB - priceA;
+      if (showOnlyTrending) {
+        return ((b.ratings || 0) * (b.numReviews || 0)) - ((a.ratings || 0) * (a.numReviews || 0));
+      }
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -186,6 +199,9 @@ function ShopContent() {
     setPriceRange([0, 50000]);
     setSearchTerm('');
     setShowOnlyNew(false);
+    setShowOnlySale(false);
+    setShowOnlyFeatured(false);
+    setShowOnlyTrending(false);
   };
 
   const Sidebar = () => (
@@ -356,6 +372,21 @@ function ShopContent() {
               {showOnlyNew && (
                 <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
                   New Arrivals <X className="h-3 w-3 cursor-pointer" onClick={() => setShowOnlyNew(false)} />
+                </Badge>
+              )}
+              {showOnlySale && (
+                <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
+                  Sale Items <X className="h-3 w-3 cursor-pointer" onClick={() => setShowOnlySale(false)} />
+                </Badge>
+              )}
+              {showOnlyFeatured && (
+                <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
+                  Featured <X className="h-3 w-3 cursor-pointer" onClick={() => setShowOnlyFeatured(false)} />
+                </Badge>
+              )}
+              {showOnlyTrending && (
+                <Badge variant="secondary" className="gap-1 rounded-full px-3 py-1">
+                  Trending <X className="h-3 w-3 cursor-pointer" onClick={() => setShowOnlyTrending(false)} />
                 </Badge>
               )}
               <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={clearFilters}>

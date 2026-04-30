@@ -65,14 +65,11 @@ export function ProductCarouselSection({
 
           </div>
 
-          <Button
-            variant="default"
-            className="rounded-full font-bold group bg-primary text-primary-foreground hover:bg-primary/90"
-            render={<Link href={viewAllLink} />}
-            nativeButton={false}
-          >
-            View All
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          <Button asChild variant="default" className="rounded-full font-bold group">
+            <Link href={viewAllLink}>
+              View All
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
         </div>
 

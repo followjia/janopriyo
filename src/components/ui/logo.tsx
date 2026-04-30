@@ -6,7 +6,7 @@ import { Orbitron } from 'next/font/google';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
-  weight: ['400', '700', '900'],
+  weight: ['400', '700'],
 });
 
 
@@ -36,7 +36,7 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       {showText && (
         <span className={cn(
           orbitron.className,
-          "text-xl md:text-2xl uppercase text-primary transition-all group-hover:text-primary/90",
+          "text-xl md:text-2xl uppercase text-primary transition-all group-hover:text-primary/90 font-bold",
           textClassName
         )}>
           Janopriyo
