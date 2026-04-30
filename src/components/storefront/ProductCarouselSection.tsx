@@ -97,33 +97,34 @@ export function ProductCarouselSection({
               modules={[Autoplay, FreeMode]}
 
               loop={true}
-              speed={3000}
+              speed={800}
 
               autoplay={{
-                delay: 1,
+                delay: 2500,
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true,
               }}
 
-              // ✅ FIXED VERSION
               freeMode={{
                 enabled: true,
-                momentum: false
+                momentum: true,
+                sticky: false
               }}
 
               spaceBetween={20}
               slidesPerView={1.2}
+              slidesPerGroup={1}
               grabCursor={true}
 
               loopAdditionalSlides={safeProducts.length}
 
               breakpoints={{
-                480: { slidesPerView: 2 },
-                768: { slidesPerView: 3 },
-                1024: { slidesPerView: 4 }
+                480: { slidesPerView: 2, slidesPerGroup: 1 },
+                768: { slidesPerView: 3, slidesPerGroup: 1 },
+                1024: { slidesPerView: 4, slidesPerGroup: 1 }
               }}
 
-              className="pb-4 smooth-swiper"
+              className="pb-4"
             >
               {safeProducts.map((product, index) => (
                 <SwiperSlide key={product._id + index}>
@@ -135,13 +136,6 @@ export function ProductCarouselSection({
         </div>
 
       </div>
-
-      {/* ✅ Ultra smooth linear animation */}
-      <style jsx global>{`
-        .smooth-swiper .swiper-wrapper {
-          transition-timing-function: linear !important;
-        }
-      `}</style>
     </section>
   );
 }
