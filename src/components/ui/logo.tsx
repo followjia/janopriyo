@@ -33,7 +33,7 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       {showText && (
         <span className={cn(
           roboto.className,
-          "text-2xl md:text-3xl font-bold uppercase text-primary transition-all drop-shadow-sm group-hover:text-primary/90 tracking-tight",
+          "text-2xl md:text-3xl  uppercase text-primary  group-hover:text-primary/90",
           textClassName
         )}>
           Janopriyo
