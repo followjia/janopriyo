@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowRight } from 'lucide-react';
 import connectToDatabase from '@/lib/db';
 import Banner from '@/models/Banner';

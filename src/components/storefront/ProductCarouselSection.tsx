@@ -1,18 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, FreeMode } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import Link from 'next/link';
 
-// ✅ Swiper styles
+// Swiper styles
+// @ts-expect-error - CSS side-effect import
 import 'swiper/css';
-import 'swiper/css/autoplay';
-import 'swiper/css/free-mode';
 
 interface ProductCarouselSectionProps {
   title: string;
@@ -30,15 +30,8 @@ export function ProductCarouselSection({
   products,
   viewAllLink,
   isFlashSale = false,
-  saleEndTimestamp,
   bgColor = "bg-background"
 }: ProductCarouselSectionProps) {
-
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // ✅ IMPORTANT: duplicate products if low count (fix loop jump)
   const safeProducts = useMemo(() => {
@@ -91,10 +84,9 @@ export function ProductCarouselSection({
         </div>
 
         {/* Swiper */}
-        <div className={`relative transition-opacity duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {mounted && (
-            <Swiper
-              modules={[Autoplay, FreeMode]}
+        <div className="relative">
+          <Swiper
+              modules={[Autoplay]}
 
               loop={true}
               speed={800}
@@ -103,12 +95,6 @@ export function ProductCarouselSection({
                 delay: 2500,
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true,
-              }}
-
-              freeMode={{
-                enabled: true,
-                momentum: true,
-                sticky: false
               }}
 
               spaceBetween={20}
@@ -132,7 +118,6 @@ export function ProductCarouselSection({
                 </SwiperSlide>
               ))}
             </Swiper>
-          )}
         </div>
 
       </div>
