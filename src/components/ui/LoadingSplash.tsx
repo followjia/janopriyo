@@ -39,11 +39,11 @@ export default function LoadingSplash() {
           className="relative"
         >
           {/* Animated Glow Background */}
-          <div className="absolute -inset-12 bg-primary/10 blur-[60px] rounded-full animate-pulse" />
+          <div className="absolute -inset-8 bg-primary/5 blur-[40px] rounded-full animate-pulse" />
           
           <Logo 
             showText={false} 
-            imageClassName="size-28 md:size-36 drop-shadow-[0_0_30px_rgba(0,209,178,0.3)]" 
+            imageClassName="size-28 md:size-36 drop-shadow-[0_0_15px_rgba(0,209,178,0.2)]" 
             className="pointer-events-none relative z-10"
           />
         </motion.div>

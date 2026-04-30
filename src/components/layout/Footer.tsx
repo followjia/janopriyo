@@ -49,7 +49,7 @@ export default async function Footer() {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
-            <Logo textClassName="text-2xl" imageClassName="size-8" />
+            <Logo textClassName="text-xl md:text-2xl" />
             <p className="text-sm text-muted-foreground w-4/5">
               Your ultimate destination for quality products across multiple categories including groceries, electronics, and fashion.
             </p>
