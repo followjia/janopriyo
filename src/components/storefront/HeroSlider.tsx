@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -109,10 +110,16 @@ export function HeroSlider({ banners }: HeroSliderProps) {
             return (
               <div key={banner._id || index} className="relative flex-[0_0_100%] min-w-0 h-full overflow-hidden">
                 {/* Ken Burns zooming background */}
-                <div
-                  className={`absolute inset-0 bg-cover bg-top transition-transform duration-[8000ms] ease-linear ${isActive ? 'scale-110' : 'scale-100'}`}
-                  style={{ backgroundImage: `url(${banner.image || '/placeholder-banner.jpg'})` }}
-                />
+                <div className="absolute inset-0 overflow-hidden">
+                  <Image
+                    src={banner.image || '/placeholder-banner.jpg'}
+                    alt={banner.title || 'Hero Banner'}
+                    fill
+                    className={`object-cover object-top transition-transform duration-[8000ms] ease-linear ${isActive ? 'scale-110' : 'scale-100'}`}
+                    priority={index === 0}
+                    sizes="100vw"
+                  />
+                </div>
 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />

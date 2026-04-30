@@ -30,7 +30,7 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-12 gap-6">
           <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+            <h2 className="text-2xl md:text-4xl font-black tracking-tighter">
               Latest from our <span className="text-primary italic">Blog</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl">

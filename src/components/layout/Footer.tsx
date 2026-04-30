@@ -48,14 +48,14 @@ export default async function Footer() {
     <footer className="border-t bg-background pt-12 mt-10">
       <div className="container mx-auto px-4 md:px-0">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center text-center md:items-start md:text-left gap-4">
             <Logo textClassName="text-xl md:text-2xl" />
-            <p className="text-sm text-muted-foreground w-4/5">
+            <p className="text-sm text-muted-foreground w-full md:w-4/5">
               Your ultimate destination for quality products across multiple categories including groceries, electronics, and fashion.
             </p>
           </div>
-          <div>
-            <h4 className="mb-4 text-sm font-semibold">Categories</h4>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Categories</h4>
             <ul className="grid gap-2 text-sm text-muted-foreground">
               <li>
                 <Link href="/category/grocery" className="hover:text-primary transition-colors">Grocery</Link>
@@ -71,8 +71,8 @@ export default async function Footer() {
               </li>
             </ul>
           </div>
-          <div>
-            <h4 className="mb-4 text-sm font-semibold">Information</h4>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Information</h4>
             <ul className="grid gap-2 text-sm text-muted-foreground">
               <li>
                 <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
@@ -88,18 +88,18 @@ export default async function Footer() {
               </li>
             </ul>
           </div>
-          <div>
-            <h4 className="mb-4 text-sm font-semibold">Contact</h4>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Contact</h4>
             <ul className="grid gap-3 text-sm text-muted-foreground">
-              <li className="flex items-start gap-3">
+              <li className="flex items-start justify-center md:justify-start gap-3">
                 <MapPin size={16} className="text-primary mt-0.5 shrink-0" />
                 <span>{settings?.contact?.address || '123 Janopriyo Avenue'}</span>
               </li>
-              <li className="flex items-center gap-3">
+              <li className="flex items-center justify-center md:justify-start gap-3">
                 <Phone size={16} className="text-primary shrink-0" />
                 <span>{settings?.contact?.phone || '+880 1234-567890'}</span>
               </li>
-              <li className="flex items-center gap-3">
+              <li className="flex items-center justify-center md:justify-start gap-3">
                 <Mail size={16} className="text-primary shrink-0" />
                 <span>{settings?.contact?.email || 'support@janopriyoshop.com'}</span>
               </li>

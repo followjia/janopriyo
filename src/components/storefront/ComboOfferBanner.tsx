@@ -93,7 +93,7 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             {/* Left — Offer text */}
             <div className="flex items-center gap-5 flex-1">
-              <div className="h-16 w-16 rounded-2xl bg-black/10 border border-black/10 flex items-center justify-center shrink-0">
+              <div className="hidden sm:flex h-16 w-16 rounded-2xl bg-black/10 border border-black/10 items-center justify-center shrink-0">
                 <Ticket className="h-8 w-8 text-black" />
               </div>
               <div className="space-y-1">

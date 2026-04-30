@@ -83,7 +83,7 @@ export function LoyaltyBanner({ settings }: LoyaltyBannerProps) {
                   SHOP & ACTIVATE NOW
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="rounded-full px-8 h-12 border-white/20 hover:bg-white/10 font-bold">
+              <Button asChild variant="outline" className="rounded-full px-8 text-white h-12 border-white/20 hover:bg-white/10 font-bold">
                 <Link href="/register">
                   CREATE ACCOUNT
                 </Link>

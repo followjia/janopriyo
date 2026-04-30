@@ -8,20 +8,57 @@ import Blog from '@/models/Blog';
 import FAQ from '@/models/FAQ';
 import GlobalSettings from '@/models/GlobalSettings';
 import Coupon from '@/models/Coupon';
+import dynamic from 'next/dynamic';
 import { HeroSlider } from '@/components/storefront/HeroSlider';
-import { CategoryShowcase } from '@/components/storefront/CategoryShowcase';
-import { ProductCarouselSection } from '@/components/storefront/ProductCarouselSection';
-import { BlogRecent } from '@/components/storefront/BlogRecent';
-import { FAQSection } from '@/components/storefront/FAQSection';
-import { Testimonials } from '@/components/storefront/Testimonials';
-import { FeaturesSection } from '@/components/storefront/FeaturesSection';
-import { LoyaltyBanner } from '@/components/storefront/LoyaltyBanner';
-import { ComboOfferBanner } from '@/components/storefront/ComboOfferBanner';
 import { FreeDeliveryBanner } from '@/components/storefront/FreeDeliveryBanner';
-import { NewsletterV2 } from '@/components/storefront/NewsletterV2';
-import { ProductCard } from '@/components/storefront/ProductCard';
+import { 
+  SectionSkeleton, 
+  CategoryShowcaseSkeleton, 
+  BannerSkeleton,
+  BlogRecentSkeleton,
+  FeaturesSectionSkeleton,
+  FAQSectionSkeleton,
+  TestimonialsSkeleton
+} from '@/components/storefront/Skeletons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+// Lazy load components below the fold
+const CategoryShowcase = dynamic(() => import('@/components/storefront/CategoryShowcase').then(mod => mod.CategoryShowcase), {
+  loading: () => <CategoryShowcaseSkeleton />
+});
+
+const ProductCarouselSection = dynamic(() => import('@/components/storefront/ProductCarouselSection').then(mod => mod.ProductCarouselSection), {
+  loading: () => <SectionSkeleton />
+});
+
+const BlogRecent = dynamic(() => import('@/components/storefront/BlogRecent').then(mod => mod.BlogRecent), {
+  loading: () => <BlogRecentSkeleton />
+});
+
+const FAQSection = dynamic(() => import('@/components/storefront/FAQSection').then(mod => mod.FAQSection), {
+  loading: () => <FAQSectionSkeleton />
+});
+
+const Testimonials = dynamic(() => import('@/components/storefront/Testimonials').then(mod => mod.Testimonials), {
+  loading: () => <TestimonialsSkeleton />
+});
+
+const FeaturesSection = dynamic(() => import('@/components/storefront/FeaturesSection').then(mod => mod.FeaturesSection), {
+  loading: () => <FeaturesSectionSkeleton />
+});
+
+const LoyaltyBanner = dynamic(() => import('@/components/storefront/LoyaltyBanner').then(mod => mod.LoyaltyBanner), {
+  loading: () => <BannerSkeleton />
+});
+
+const ComboOfferBanner = dynamic(() => import('@/components/storefront/ComboOfferBanner').then(mod => mod.ComboOfferBanner), {
+  loading: () => <BannerSkeleton />
+});
+
+const NewsletterV2 = dynamic(() => import('@/components/storefront/NewsletterV2').then(mod => mod.NewsletterV2), {
+  loading: () => <BannerSkeleton />
+});
 
 async function getHomeData() {
   try {
@@ -121,13 +158,8 @@ export default async function Home() {
       {/* 1. Hero Section */}
       <HeroSlider banners={data.banners} />
 
-
-
-
-
       {/* 4. Categories Showcase */}
       <CategoryShowcase categories={data.categories} />
-
 
       {/* 8. Featured Products */}
       {data.featuredProducts.length > 0 && (

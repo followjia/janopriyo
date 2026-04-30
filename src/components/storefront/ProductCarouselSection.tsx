@@ -46,10 +46,10 @@ export function ProductCarouselSection({
       <div className="container mx-auto px-4 md:px-0">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-6">
+        <div className="flex flex-row items-center justify-between mb-8 md:mb-10 gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-black tracking-tighter sm:text-4xl text-foreground">
+              <h2 className="text-2xl font-black tracking-tighter md:text-4xl text-foreground">
                 {title}
               </h2>
               {isFlashSale && (
@@ -80,7 +80,7 @@ export function ProductCarouselSection({
               {products.map((product) => (
                 <div
                   key={product._id}
-                  className="flex-[0_0_80%] min-w-0 pl-4 sm:flex-[0_0_45%] md:flex-[0_0_33.33%] lg:flex-[0_0_25%]"
+                  className="flex-[0_0_42%] min-w-0 pl-4 md:flex-[0_0_33.33%] lg:flex-[0_0_25%]"
                 >
                   <ProductCard product={product} isFlashSale={isFlashSale} />
                 </div>

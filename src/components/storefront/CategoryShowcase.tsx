@@ -54,12 +54,10 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
     <section className="bg-muted/30 py-12 overflow-hidden">
       <div className="container px-4 mx-auto">
         <div className="flex flex-col items-center justify-center text-center space-y-4 mb-10">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-foreground">
+          <h2 className="text-2xl font-bold tracking-tighter md:text-4xl text-foreground">
             Browse by Category
           </h2>
-          <p className="max-w-[700px] text-muted-foreground md:text-lg">
-            Find exactly what you&apos;re looking for by exploring our curated collections.
-          </p>
+
         </div>
 
         {/* Embla Carousel Viewport */}
@@ -69,7 +67,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
               {categories.map((category) => (
                 <div
                   key={category._id}
-                  className="flex-[0_0_50%] min-w-0 pl-4 sm:flex-[0_0_33.33%] md:flex-[0_0_25%] lg:flex-[0_0_16.66%] xl:flex-[0_0_14.28%]"
+                  className="flex-[0_0_33.33%] min-w-0 pl-4 md:flex-[0_0_25%] lg:flex-[0_0_16.66%] xl:flex-[0_0_14.28%]"
                 >
                   <Link
                     href={`/shop?category=${encodeURIComponent(category.slug)}`}
@@ -104,8 +102,8 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
                 key={index}
                 onClick={() => scrollTo(index)}
                 className={`transition-all duration-300 cursor-pointer rounded-full ${index === selectedIndex
-                    ? "w-8 bg-primary h-1.5"
-                    : "w-2 bg-muted-foreground/30 h-1.5 hover:bg-muted-foreground/50"
+                  ? "w-8 bg-primary h-1.5"
+                  : "w-2 bg-muted-foreground/30 h-1.5 hover:bg-muted-foreground/50"
                   }`}
                 aria-label={`Go to slide group ${index + 1}`}
               />

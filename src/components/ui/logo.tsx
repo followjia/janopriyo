@@ -22,7 +22,7 @@ interface LogoProps {
 export function Logo({ className, imageClassName, textClassName, showText = true, onClick, sizes }: LogoProps) {
   return (
     <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
-      <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 size-10 md:size-12", imageClassName)}>
+      <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 size-8 md:size-12", imageClassName)}>
         <Image
           src="/logo.png"
           alt="Janopriyo Logo"

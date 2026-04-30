@@ -179,9 +179,9 @@ export default function Navbar() {
       {/* Sticky on mobile, static on desktop — scrolls away on desktop so the  */}
       {/* bottom nav can then stick to the top of the viewport.                 */}
       <header className="sticky top-0 z-50 md:relative w-full bg-background border-b md:border-b-0">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2 md:px-4">
           {/* Middle Main Row: Search | Logo | Icons */}
-          <div className="flex h-20 items-center justify-between px-4 md:px-6 border-b border-muted/30">
+          <div className="flex h-14 md:h-20 items-center justify-between px-1 md:px-6 border-b border-muted/30">
 
             {/* Desktop Search (Left) */}
             <div className="hidden md:flex flex-1 items-center max-w-[280px]">
@@ -206,7 +206,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu Trigger */}
-            <div className="flex md:hidden items-center mr-4">
+            <div className="flex md:hidden items-center">
               <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger className="inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
                   <Menu className="h-5 w-5" />
@@ -261,7 +261,7 @@ export default function Navbar() {
 
             {/* Logo (Centered in desktop, Left-ish in mobile) */}
             <div className="flex items-center justify-center flex-1 md:flex-initial">
-              <Logo textClassName="text-2xl md:text-3xl" />
+              <Logo textClassName="text-lg md:text-3xl" />
             </div>
 
             {/* Icons/Action Row (Right) */}
@@ -369,7 +369,7 @@ export default function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link href="/login" className="hidden sm:inline-flex">
+                <Link href="/login" className="inline-flex">
                   <Button variant="ghost" size="icon" className="h-10 w-10 hover:text-primary transition-colors">
                     <User className="h-5 w-5" />
                   </Button>
