@@ -11,7 +11,6 @@ import { ProductCard } from '@/components/storefront/ProductCard';
 import Link from 'next/link';
 
 // Swiper styles
-// @ts-expect-error - CSS side-effect import
 import 'swiper/css';
 
 interface ProductCarouselSectionProps {
