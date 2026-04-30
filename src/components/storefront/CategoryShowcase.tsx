@@ -63,7 +63,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
         </div>
 
         {/* Embla Carousel Viewport */}
-        <div className="relative group">
+        <div className="relative">
           <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
             <div className="flex -ml-4">
               {categories.map((category) => (
