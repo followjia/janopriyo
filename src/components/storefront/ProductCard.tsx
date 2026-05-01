@@ -222,7 +222,7 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
       )}
 
       <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2">
+        <div className="mb-2 h-10">
             <Link 
                 href={`/product/${product.slug}`}
                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-2"
@@ -232,13 +232,19 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
         </div>
 
         <div className="mt-auto flex items-center justify-between gap-2">
-          <div className="flex flex-col">
-            <span className={(product.salePrice !== undefined && product.salePrice !== null) ? 'text-xs line-through text-muted-foreground' : 'font-bold text-lg'}>
-              ৳{product.price ? Math.round(product.price) : '0'}
-            </span>
-            {(product.salePrice !== undefined && product.salePrice !== null) && (
-              <span className="font-bold text-lg text-primary">
-                ৳{Math.round(product.salePrice)}
+          <div className="flex flex-col justify-end min-h-[48px]">
+            {product.salePrice !== undefined && product.salePrice !== null ? (
+              <>
+                <span className="text-xs line-through text-muted-foreground leading-none mb-1">
+                  ৳{product.price ? Math.round(product.price) : '0'}
+                </span>
+                <span className="font-bold text-lg text-primary leading-none">
+                  ৳{Math.round(product.salePrice)}
+                </span>
+              </>
+            ) : (
+              <span className="font-bold text-lg text-foreground leading-none">
+                ৳{product.price ? Math.round(product.price) : '0'}
               </span>
             )}
           </div>

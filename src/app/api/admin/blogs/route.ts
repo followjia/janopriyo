@@ -4,7 +4,7 @@ import Blog from '@/models/Blog';
 import { auth } from '@/auth';
 
 // GET all blogs for admin
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || !session.user || (session.user as any).role !== 'admin') {
@@ -12,8 +12,26 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const blogs = await Blog.find({}).sort({ createdAt: -1 });
-    return NextResponse.json(blogs);
+
+    const searchParams = req.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '10'));
+    const skip = (page - 1) * limit;
+
+    const [blogs, total] = await Promise.all([
+      Blog.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Blog.countDocuments({})
+    ]);
+
+    return NextResponse.json({
+      blogs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error: any) {
     console.error('[Admin Blog List GET] error:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

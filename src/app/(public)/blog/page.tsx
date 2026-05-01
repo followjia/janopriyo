@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { 
     Calendar, 
     ArrowRight, 
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { BlogFeaturedSkeleton, BlogCardSkeleton } from '@/components/storefront/Skeletons';
+import { Pagination } from '@/components/ui/pagination';
 
 interface BlogListItem {
   _id: string;
@@ -22,18 +24,26 @@ interface BlogListItem {
   createdAt: string;
 }
 
-export default function BlogListingPage() {
+function BlogListingContent() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const limit = 12;
 
   useEffect(() => {
-    async function fetchBlogs() {
+    async function fetchBlogs(page = currentPage) {
+      setLoading(true);
       try {
-        const res = await fetch('/api/blogs');
+        const res = await fetch(`/api/blogs?page=${page}&limit=${limit}`);
         if (res.ok) {
-          const data = (await res.json()) as BlogListItem[];
-          setBlogs(Array.isArray(data) ? data : []);
+          const data = await res.json();
+          setBlogs(Array.isArray(data.blogs) ? data.blogs : []);
+          setPagination(data.pagination || { total: 0, totalPages: 1 });
         }
       } catch {
         console.error('Failed to fetch blogs');
@@ -42,7 +52,7 @@ export default function BlogListingPage() {
       }
     }
     fetchBlogs();
-  }, []);
+  }, [currentPage]);
 
   const filteredBlogs = blogs.filter((blog) => {
     const q = search.toLowerCase().trim();
@@ -168,12 +178,16 @@ export default function BlogListingPage() {
                     <Calendar className="h-3.5 w-3.5" />
                     {new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </div>
-                  <h3 className="text-xl font-black leading-tight mb-4 group-hover:text-primary transition-colors">
-                    {blog.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm line-clamp-3 mb-6 flex-1 leading-relaxed">
-                    {blog.metaDescription}
-                  </p>
+                  <div className="h-14 mb-4">
+                    <h3 className="text-xl font-black leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                      {blog.title}
+                    </h3>
+                  </div>
+                  <div className="h-[4.5rem] mb-6">
+                    <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed">
+                      {blog.metaDescription}
+                    </p>
+                  </div>
                   <div className="pt-4 border-t border-border/50 flex items-center justify-between">
                     <span className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
                       Read More <ArrowRight className="h-3 w-3" />
@@ -184,7 +198,39 @@ export default function BlogListingPage() {
             ))}
           </div>
         )}
+
+        {!loading && pagination.totalPages > 1 && (
+          <div className="mt-12 pt-8 border-t">
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('page', page.toString());
+                router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function BlogListingPage() {
+  return (
+    <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-b from-primary/[0.03] via-background to-background">
+            <div className="container mx-auto px-4 py-16 md:py-20 max-w-7xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-12">
+                    {[...Array(6)].map((_, i) => <BlogCardSkeleton key={i} />)}
+                </div>
+            </div>
+        </div>
+    }>
+        <BlogListingContent />
+    </Suspense>
   );
 }

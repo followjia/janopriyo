@@ -36,7 +36,8 @@ export default function WishlistPage() {
           const res = await fetch(url, { signal: controller.signal });
           if (res.ok) {
             const data = await res.json();
-            if (isMounted) setProducts(data);
+            const productsArray = data.products || data;
+            if (isMounted) setProducts(Array.isArray(productsArray) ? productsArray : []);
           } else {
             throw new Error(`Failed to fetch: ${res.status}`);
           }

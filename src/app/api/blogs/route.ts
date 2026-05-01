@@ -1,17 +1,35 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
+
+    const searchParams = req.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '12'));
+    const skip = (page - 1) * limit;
     
     // Show only published blogs publicly, newest first
-    const blogs = await Blog.find({ isPublished: true })
-      .sort({ createdAt: -1 })
-      .select('title slug metaDescription thumbnail createdAt');
+    const [blogs, total] = await Promise.all([
+      Blog.find({ isPublished: true })
+        .sort({ createdAt: -1 })
+        .select('title slug metaDescription thumbnail createdAt')
+        .skip(skip)
+        .limit(limit),
+      Blog.countDocuments({ isPublished: true })
+    ]);
 
-    return NextResponse.json(blogs);
+    return NextResponse.json({
+      blogs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error: unknown) {
     console.error('Error fetching blogs collection:', error);
     if (error instanceof Error && error.stack) console.error(error.stack);

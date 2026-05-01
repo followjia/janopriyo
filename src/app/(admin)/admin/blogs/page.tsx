@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
     Plus, 
     Search, 
@@ -26,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
+import { Pagination } from '@/components/ui/pagination';
 
 interface BlogListItem {
   _id: string;
@@ -36,19 +38,25 @@ interface BlogListItem {
   isPublished: boolean;
 }
 
-export default function ManageBlogsPage() {
+function BlogsContent() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const limit = 10;
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (page = currentPage) => {
     try {
-      const res = await fetch('/api/admin/blogs');
+      setLoading(true);
+      const res = await fetch(`/api/admin/blogs?page=${page}&limit=${limit}`);
       const data = await res.json();
       if (res.ok) {
-        setBlogs(data);
+        setBlogs(data.blogs || []);
+        setPagination(data.pagination || { total: 0, totalPages: 1 });
       } else {
         toast.error(data.message || 'Failed to fetch blogs');
       }
@@ -94,24 +102,6 @@ export default function ManageBlogsPage() {
     (blog.title?.toLowerCase() ?? '').includes(searchQuery.toLowerCase())
   );
 
-  const handleSeedDemoData = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch('/api/admin/seed-demo', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message || 'Failed to seed demo data');
-        return;
-      }
-      toast.success(`Seeded ${data.blogsInserted} blogs and ${data.productsInserted} products.`);
-      fetchBlogs();
-    } catch {
-      toast.error('Failed to seed demo data');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   return (
     <div className="space-y-6 pt-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -125,14 +115,6 @@ export default function ManageBlogsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={handleSeedDemoData} disabled={seeding}>
-            {seeding ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <DatabaseZap className="mr-2 h-4 w-4" />
-            )}
-            Seed Demo Data
-          </Button>
           <Link href="/admin/blogs/new">
             <Button className="font-bold">
               <Plus className="mr-2 h-4 w-4" /> Create Blog
@@ -202,7 +184,13 @@ export default function ManageBlogsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-bold text-sm max-w-[300px] truncate">{blog.title}</div>
+                    <Link 
+                      href={`/blog/${blog.slug}`} 
+                      target="_blank" 
+                      className="font-bold text-sm max-w-[300px] truncate hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4 block"
+                    >
+                      {blog.title}
+                    </Link>
                     <div className="text-[10px] text-muted-foreground font-mono truncate max-w-[300px]">/{blog.slug}</div>
                   </TableCell>
                   <TableCell>
@@ -240,6 +228,34 @@ export default function ManageBlogsPage() {
           </TableBody>
         </Table>
       </div>
+      
+      {!loading && pagination.totalPages > 1 && (
+        <div className="py-4">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchBlogs(page);
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('page', page.toString());
+              router.push(`?${params.toString()}`);
+            }}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+export default function BlogsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col gap-4 pt-6">
+        <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+        <div className="h-64 bg-muted animate-pulse rounded" />
+      </div>
+    }>
+      <BlogsContent />
+    </Suspense>
   );
 }

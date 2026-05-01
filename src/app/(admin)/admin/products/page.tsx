@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,8 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { Pagination } from '@/components/ui/pagination';
 
 interface AdminProduct {
   _id: string;
@@ -27,24 +28,30 @@ interface AdminProduct {
   stock: number;
   isPublished: boolean;
   images?: string[];
+  slug: string;
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [search, setSearch] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const limit = 10;
 
-  const fetchProducts = async (signal?: AbortSignal) => {
+  const fetchProducts = async (signal?: AbortSignal, page = currentPage) => {
     try {
-      const response = await fetch('/api/products', { signal });
+      setLoading(true);
+      const response = await fetch(`/api/products?page=${page}&limit=${limit}`, { signal });
       if (!response.ok) {
         toast.error(`Failed to fetch products: ${response.status} ${response.statusText}`);
         return;
       }
       const data = await response.json();
-      setProducts(Array.isArray(data) ? data : []);
+      setProducts(Array.isArray(data.products) ? data.products : []);
+      setPagination(data.pagination || { total: 0, totalPages: 1 });
     } catch {
       toast.error('Failed to fetch products');
     } finally {
@@ -99,37 +106,11 @@ export default function ProductsPage() {
     return nameLower.includes(searchLower) || skuLower.includes(searchLower);
   });
 
-  const handleSeedDemoData = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch('/api/admin/seed-demo', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message || 'Failed to seed demo data');
-        return;
-      }
-      toast.success(`Seeded ${data.blogsInserted} blogs and ${data.productsInserted} products.`);
-      fetchProducts();
-    } catch {
-      toast.error('Failed to seed demo data');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-4 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Products</h1>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={handleSeedDemoData} disabled={seeding}>
-            {seeding ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <DatabaseZap className="mr-2 h-4 w-4" />
-            )}
-            Seed Demo Data
-          </Button>
           <Link href="/admin/products/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Add Product
@@ -195,7 +176,13 @@ export default function ProductsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium max-w-[250px] truncate">
-                    {product.name}
+                    <Link 
+                      href={`/product/${product.slug}`} 
+                      target="_blank"
+                      className="hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4"
+                    >
+                      {product.name}
+                    </Link>
                   </TableCell>
                   <TableCell>{product.sku}</TableCell>
                   <TableCell>
@@ -245,6 +232,34 @@ export default function ProductsPage() {
           </TableBody>
         </Table>
       </div>
+      
+      {!loading && pagination.totalPages > 1 && (
+        <div className="py-4">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchProducts(undefined, page);
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('page', page.toString());
+              router.push(`?${params.toString()}`);
+            }}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col gap-4 pt-6">
+        <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+        <div className="h-64 bg-muted animate-pulse rounded" />
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

@@ -127,9 +127,10 @@ function ShopContent() {
         // Fetch products
         const prodRes = await fetch('/api/products?limit=1000');
         if (prodRes.ok) {
-          const prodData = await prodRes.json();
-          if (Array.isArray(prodData)) {
-            setProducts(prodData.filter((p: ShopProduct) => p.isPublished));
+          const data = await prodRes.json();
+          const productsArray = data.products || data; // Fallback for safety
+          if (Array.isArray(productsArray)) {
+            setProducts(productsArray.filter((p: ShopProduct) => p.isPublished));
           }
         }
       } catch {

@@ -22,13 +22,24 @@ export async function GET(req: NextRequest) {
       query._id = { $in: ids.split(',') };
     }
 
-    const products = await Product.find(query)
-      .populate('categories')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('categories')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments(query)
+    ]);
 
-    return NextResponse.json(products);
+    return NextResponse.json({
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
