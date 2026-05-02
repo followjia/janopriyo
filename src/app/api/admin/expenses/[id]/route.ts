@@ -6,15 +6,16 @@ import Expense from '@/models/Expense';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session || (session.user as any)?.role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ message: 'Invalid expense ID' }, { status: 400 });
     }
 
@@ -32,7 +33,7 @@ export async function PUT(
     await connectToDatabase();
     
     const expense = await Expense.findByIdAndUpdate(
-      params.id, 
+      id, 
       updateData, 
       { new: true, runValidators: true }
     );
@@ -50,20 +51,21 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session || (session.user as any)?.role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ message: 'Invalid expense ID' }, { status: 400 });
     }
 
     await connectToDatabase();
-    const expense = await Expense.findByIdAndDelete(params.id);
+    const expense = await Expense.findByIdAndDelete(id);
     if (!expense) {
       return NextResponse.json({ message: 'Expense not found' }, { status: 404 });
     }
