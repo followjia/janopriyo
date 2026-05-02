@@ -221,7 +221,7 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
         </div>
       )}
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col px-1 md:px-4 py-4 ">
         <div className="mb-2 h-12 md:h-10">
           <Link
             href={`/product/${product.slug}`}
