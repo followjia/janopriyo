@@ -14,8 +14,30 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+function DropdownMenuTrigger({
+  asChild = false,
+  ...props
+}: MenuPrimitive.Trigger.Props & { asChild?: boolean }) {
+  const { children, ...rest } = props
+
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <MenuPrimitive.Trigger
+        data-slot="dropdown-menu-trigger"
+        {...rest}
+        render={(triggerProps) =>
+          React.cloneElement(children as React.ReactElement, triggerProps)
+        }
+      />
+    )
+  }
+
+  return (
+    <MenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      {...props}
+    />
+  )
 }
 
 function DropdownMenuContent({
@@ -86,9 +108,8 @@ function DropdownMenuItem({
   variant?: "default" | "destructive"
   asChild?: boolean
 }) {
-  const Comp = asChild ? Slot : MenuPrimitive.Item
   return (
-    <Comp
+    <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
@@ -97,6 +118,7 @@ function DropdownMenuItem({
         className
       )}
       {...props}
+      render={asChild ? (props.children as any) : undefined}
     />
   )
 }

@@ -84,6 +84,10 @@ const data = {
           title: "All Orders",
           url: "/admin/orders",
         },
+        {
+          title: "Expenses",
+          url: "/admin/expenses",
+        },
       ],
     },
     {

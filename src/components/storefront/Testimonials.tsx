@@ -39,7 +39,7 @@ const reviews = [
 
 export function Testimonials() {
   return (
-    <section className="py-12 overflow-hidden">
+    <section className="py-12 md:py-20 overflow-hidden">
       <div className="container mx-auto px-4 md:px-0">
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-8 mb-16">
           <div className="space-y-4 text-center md:text-left max-w-xl">
@@ -110,10 +110,7 @@ export function Testimonials() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <div className="flex justify-end gap-3 mt-10">
-            <CarouselPrevious className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
-            <CarouselNext className="static translate-y-0 h-12 w-12 rounded-full border-2 border-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5" />
-          </div>
+
         </Carousel>
       </div>
     </section>

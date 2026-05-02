@@ -11,9 +11,9 @@ import Coupon from '@/models/Coupon';
 import dynamic from 'next/dynamic';
 import { HeroSlider } from '@/components/storefront/HeroSlider';
 import { FreeDeliveryBanner } from '@/components/storefront/FreeDeliveryBanner';
-import { 
-  SectionSkeleton, 
-  CategoryShowcaseSkeleton, 
+import {
+  SectionSkeleton,
+  CategoryShowcaseSkeleton,
   BannerSkeleton,
   BlogRecentSkeleton,
   FeaturesSectionSkeleton,
@@ -223,13 +223,13 @@ export default async function Home() {
       {/* 8. Testimonials Section */}
       <Testimonials />
 
-
+      {/* 11. Newsletter V2 Integration */}
+      <NewsletterV2 />
 
       {/* 10. FAQ Accordion Section */}
       <FAQSection faqs={data.faqs} />
 
-      {/* 11. Newsletter V2 Integration */}
-      <NewsletterV2 />
+
     </div>
   );
 }

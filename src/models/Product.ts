@@ -7,6 +7,7 @@ export interface IProduct extends Document {
   description: string;
   price: number;
   salePrice?: number;
+  purchasePrice?: number;
   discountRate?: number;
   sku: string;
   stock: number;
@@ -22,6 +23,7 @@ export interface IProduct extends Document {
     size?: string;
     price: number;
     salePrice?: number;
+    purchasePrice?: number;
     discountRate?: number;
     stock: number;
     sku?: string;
@@ -47,6 +49,10 @@ const ProductSchema: Schema<IProduct> = new Schema(
       type: Number,
       min: [0, 'Sale price cannot be negative'],
     },
+    purchasePrice: { 
+      type: Number,
+      min: [0, 'Purchase price cannot be negative'],
+    },
     discountRate: { type: Number },
     sku: { type: String, required: true, unique: true },
     stock: { type: Number, required: true, default: 0, min: [0, 'Stock cannot be negative'] },
@@ -65,6 +71,7 @@ const ProductSchema: Schema<IProduct> = new Schema(
         size: { type: String },
         price: { type: Number, required: true, min: [0, 'Price cannot be negative'] },
         salePrice: { type: Number, min: [0, 'Sale price cannot be negative'] },
+        purchasePrice: { type: Number, min: [0, 'Purchase price cannot be negative'] },
         discountRate: { type: Number },
         stock: { type: Number, required: true, default: 0, min: [0, 'Stock cannot be negative'] },
         sku: { type: String },

@@ -151,7 +151,7 @@ export async function PUT(
     const updatedProduct = await Product.findOneAndUpdate(
       query,
       { $set: safeUpdate },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updatedProduct) {

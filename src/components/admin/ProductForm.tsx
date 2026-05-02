@@ -42,6 +42,7 @@ const productSchema = z.object({
   slug: z.string().min(3, 'Slug is required'),
   description: z.string().min(10, 'Description is required'),
   price: z.union([z.coerce.number().positive('Price must be greater than zero'), z.literal('')]),
+  purchasePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
   discountRate: z.union([z.coerce.number().min(0).max(100), z.literal('')]).optional(),
   salePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
   sku: z.string().min(3, 'SKU is required'),
@@ -59,6 +60,7 @@ const productSchema = z.object({
     color: z.string().optional(),
     size: z.string().optional(),
     price: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
+    purchasePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
     discountRate: z.union([z.coerce.number().min(0).max(100), z.literal('')]).optional(),
     salePrice: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
     stock: z.union([z.coerce.number().min(0), z.literal('')]).optional(),
@@ -88,6 +90,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     slug: initialData?.slug || '',
     description: initialData?.description || '',
     price: initialData?.price ?? '',
+    purchasePrice: initialData?.purchasePrice ?? '',
     discountRate: calculateDiscount(initialData?.price, initialData?.salePrice) || '',
     salePrice: initialData?.salePrice ?? '',
     sku: initialData?.sku || '',
@@ -101,6 +104,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     variants: initialData?.variants?.map((v: any) => ({
       ...v,
       price: v.price ?? '',
+      purchasePrice: v.purchasePrice ?? '',
       stock: v.stock ?? '',
       discountRate: calculateDiscount(v.price, v.salePrice) || '',
       salePrice: v.salePrice ?? '',
@@ -157,12 +161,14 @@ export function ProductForm({ initialData }: ProductFormProps) {
     const cleanValues = {
       ...values,
       price: values.price === '' ? 0 : Number(values.price),
+      purchasePrice: values.purchasePrice === '' ? undefined : Number(values.purchasePrice),
       salePrice: values.salePrice === '' ? undefined : Number(values.salePrice),
       discountRate: values.discountRate === '' || isNaN(Number(values.discountRate)) ? undefined : Number(values.discountRate),
       stock: values.stock === '' ? 0 : Number(values.stock),
       variants: (values.variants || []).map(v => ({
         ...v,
         price: v.price === '' ? 0 : Number(v.price),
+        purchasePrice: v.purchasePrice === '' ? undefined : Number(v.purchasePrice),
         salePrice: v.salePrice === '' ? undefined : Number(v.salePrice),
         discountRate: v.discountRate === '' || isNaN(Number(v.discountRate)) ? undefined : Number(v.discountRate),
         stock: v.stock === '' ? 0 : Number(v.stock),
@@ -436,6 +442,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                           <th className="px-4 py-3 text-left">Color</th>
                           <th className="px-4 py-3 text-left">Size</th>
                           <th className="px-4 py-3 text-left w-[100px]">Price</th>
+                          <th className="px-4 py-3 text-left w-[100px]">Purchase</th>
                           <th className="px-4 py-3 text-left w-[80px]">Disc (%)</th>
                           <th className="px-4 py-3 text-left w-[100px]">Sale</th>
                           <th className="px-4 py-3 text-left w-[80px]">Stock</th>
@@ -499,6 +506,17 @@ export function ProductForm({ initialData }: ProductFormProps) {
                                   if (disc > 0 && val !== '') {
                                       form.setValue(`variants.${index}.salePrice`, Math.round(val * (1 - disc / 100)));
                                   }
+                                }}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input 
+                                type="number" 
+                                value={form.watch(`variants.${index}.purchasePrice`) ?? ''}
+                                className="h-9 border-muted-foreground/20"
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                                  form.setValue(`variants.${index}.purchasePrice`, val);
                                 }}
                               />
                             </td>
@@ -576,7 +594,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="price"
@@ -599,6 +617,28 @@ export function ProductForm({ initialData }: ProductFormProps) {
                                 const newSale = prc * (1 - discount / 100);
                                 form.setValue('salePrice', Math.round(newSale));
                               }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="purchasePrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Purchase Price (Tk)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0.00" 
+                            {...field} 
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                              field.onChange(value);
                             }}
                           />
                         </FormControl>

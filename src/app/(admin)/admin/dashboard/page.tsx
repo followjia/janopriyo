@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
+import { CartesianGrid, Area, AreaChart, XAxis, ResponsiveContainer, Tooltip, ReferenceLine } from "recharts";
 import { 
   Card, 
   CardContent, 
@@ -19,27 +20,36 @@ import {
   ArrowRight,
   Loader2,
   TrendingUp,
-  LineChart as LineChartIcon
+  LineChart as LineChartIcon,
+  Filter,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Receipt,
+  Star,
+  UserPlus,
+  Target,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { CartesianGrid, Line, LineChart, XAxis, ResponsiveContainer } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { format, subDays, parseISO, isAfter, startOfToday } from 'date-fns';
 
 const chartConfig = {
   revenue: {
     label: "Revenue",
-    color: "hsl(var(--primary))",
+    color: "var(--primary)",
   },
-  orders: {
-    label: "Orders",
-    color: "hsl(var(--chart-2))",
+  profit: {
+    label: "Gross Profit",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -49,12 +59,60 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [activeChart, setActiveChart] = useState<keyof typeof chartConfig>("revenue");
+  
+  // Date filter state
+  const [dateRange, setDateRange] = useState({
+    from: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+    to: format(new Date(), 'yyyy-MM-dd'),
+  });
+
+  const [debouncedDateRange, setDebouncedDateRange] = useState(dateRange);
+
+  // Debounce date range changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDateRange(dateRange);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [dateRange]);
+
+  const handleDateChange = (key: 'from' | 'to', value: string) => {
+    const newDate = parseISO(value);
+    const today = startOfToday();
+    
+    // Block future dates
+    if (isAfter(newDate, today)) {
+      setDateRange(prev => ({ ...prev, [key]: format(today, 'yyyy-MM-dd') }));
+      return;
+    }
+
+    setDateRange(prev => {
+      const nextRange = { ...prev, [key]: value };
+      const fromDate = parseISO(nextRange.from);
+      const toDate = parseISO(nextRange.to);
+
+      // Ensure from <= to
+      if (isAfter(fromDate, toDate)) {
+        if (key === 'from') {
+          return { ...nextRange, to: value };
+        } else {
+          return { ...nextRange, from: value };
+        }
+      }
+      return nextRange;
+    });
+  };
 
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/dashboard/stats');
+      const query = new URLSearchParams({
+        from: debouncedDateRange.from,
+        to: debouncedDateRange.to,
+      }).toString();
+      
+      const response = await fetch(`/api/admin/dashboard/stats?${query}`);
       if (response.ok) {
         const stats = await response.json();
         setData(stats);
@@ -73,17 +131,43 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [debouncedDateRange]);
 
   const total = useMemo(() => {
-    if (!data?.chartData) return { revenue: 0, orders: 0 };
+    if (!data?.chartData) return { revenue: 0, profit: 0 };
     return {
       revenue: data.chartData.reduce((acc: number, curr: any) => acc + curr.revenue, 0),
-      orders: data.chartData.reduce((acc: number, curr: any) => acc + curr.orders, 0),
+      profit: data.chartData.reduce((acc: number, curr: any) => acc + curr.profit, 0),
     };
   }, [data]);
 
-  if (loading) {
+  const processedChartData = useMemo(() => {
+    if (!data?.chartData) return [];
+    
+    const start = parseISO(dateRange.from);
+    const end = parseISO(dateRange.to);
+    const result = [];
+    
+    const dataMap = new Map(data.chartData.map((item: any) => [item.date, item]));
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = format(d, 'yyyy-MM-dd');
+      const existing = dataMap.get(dateStr);
+      if (existing) {
+        result.push(existing);
+      } else {
+        result.push({
+          date: dateStr,
+          revenue: 0,
+          profit: 0,
+          orders: 0
+        });
+      }
+    }
+    return result;
+  }, [data, dateRange]);
+
+  if (loading && !data) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -104,73 +188,106 @@ export default function AdminDashboard() {
     );
   }
 
-  const { stats, recentOrders, lowStockProducts, chartData } = data || {};
+  const { stats, recentOrders, lowStockProducts, topSellingProducts, topCustomers, chartData } = data || {};
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>Last updated: {lastUpdated || 'Never'}</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+          <p className="text-muted-foreground text-sm">Advanced business intelligence and sales analytics.</p>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-md border">
+            <div className="flex items-center gap-1 px-2">
+              <Filter className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Range</span>
+            </div>
+            <Input 
+              type="date" 
+              className="h-8 w-36 border-none bg-transparent focus-visible:ring-0 cursor-pointer" 
+              value={dateRange.from}
+              onChange={(e) => handleDateChange('from', e.target.value)}
+              max={format(new Date(), 'yyyy-MM-dd')}
+            />
+            <span className="text-muted-foreground text-xs">to</span>
+            <Input 
+              type="date" 
+              className="h-8 w-36 border-none bg-transparent focus-visible:ring-0 cursor-pointer" 
+              value={dateRange.to}
+              onChange={(e) => handleDateChange('to', e.target.value)}
+              max={format(new Date(), 'yyyy-MM-dd')}
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchStats} className="h-10">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-primary/5 border-primary/20">
+        {/* Revenue Card */}
+        <Card className="bg-primary/5 border-primary/20 relative overflow-hidden group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">৳{stats?.totalRevenue?.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Lifetime earnings</p>
+            <div className="text-2xl font-bold">৳{(stats?.totalRevenue || 0).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Income after discounts</p>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Net Profit Card */}
+        <Card className="bg-blue-500/5 border-blue-500/20 relative overflow-hidden group border-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-bold text-blue-700">Net Profit</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{stats?.salesCount}</div>
-            <p className="text-xs text-muted-foreground">Delivered orders</p>
+            <div className="text-2xl font-black text-blue-700">৳{(stats?.netProfit || 0).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground font-medium">Earnings after all costs</p>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* ROAS Card (NEW) */}
+        <Card className="bg-purple-500/5 border-purple-500/20 relative overflow-hidden group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Ad ROI (ROAS)</CardTitle>
+            <Target className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{stats?.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
+            <div className="text-2xl font-bold text-purple-700">{stats?.roas ? `${stats.roas}x` : '—'}</div>
+            <p className="text-xs text-muted-foreground">Revenue per ৳1 Ad Spend</p>
           </CardContent>
         </Card>
-        <Card className="bg-orange-500/5 border-orange-500/20">
+
+        {/* Forecast Card (NEW) */}
+        <Card className="bg-orange-500/5 border-orange-500/20 relative overflow-hidden group border-dashed">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <CardTitle className="text-sm font-medium">Sales Forecast</CardTitle>
+            <LineChartIcon className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats?.pendingOrdersCount}</div>
-            <p className="text-xs text-muted-foreground">Need fulfillment</p>
+            <div className="text-2xl font-bold text-orange-700">৳{Math.round(stats?.projectedMonthlyRevenue || 0).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Projected next 30 days</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 grid-cols-1">
         {/* Interactive Chart */}
-        <Card className="col-span-4 lg:col-span-4">
+        <Card className="col-span-full">
           <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
             <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-              <CardTitle>Sales & Analytics</CardTitle>
+              <CardTitle>Performance Trends</CardTitle>
               <CardDescription>
-                Showing performance for the last 6 months
+                Comparison between Revenue and Gross Profit
               </CardDescription>
             </div>
             <div className="flex">
-              {(["revenue", "orders"] as const).map((key) => (
+              {(["revenue", "profit"] as const).map((key) => (
                 <button
                   key={key}
                   data-active={activeChart === key}
@@ -181,170 +298,248 @@ export default function AdminDashboard() {
                     {chartConfig[key].label}
                   </span>
                   <span className="text-lg leading-none font-bold sm:text-2xl">
-                    {key === "revenue" ? "৳" : ""}{total[key].toLocaleString()}
+                    ৳{total[key].toLocaleString()}
                   </span>
                 </button>
               ))}
             </div>
           </CardHeader>
-          <CardContent className="px-2 sm:p-6">
+          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
             <ChartContainer
               config={chartConfig}
-              className="aspect-auto h-[300px] w-full"
+              className="aspect-auto h-[350px] w-full"
             >
-              <LineChart
-                data={chartData}
-                margin={{
-                  left: 12,
-                  right: 12,
-                  top: 12,
-                  bottom: 12
-                }}
-              >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+              <AreaChart data={processedChartData} margin={{ left: 12, right: 12, top: 20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                  <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-profit)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-profit)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  tickMargin={12}
                   minTickGap={32}
-                  tickFormatter={(value) => {
-                    const date = new Date(value)
-                    return date.toLocaleDateString("en-US", {
-                      month: "short",
-                    })
-                  }}
+                  tickFormatter={(value) => format(new Date(value), 'dd MMM')}
                 />
                 <ChartTooltip
+                  cursor={false}
                   content={
                     <ChartTooltipContent
-                      className="w-[150px]"
-                      labelFormatter={(value) => {
-                        return new Date(value).toLocaleDateString("en-US", {
-                          month: "long",
-                          year: "numeric",
-                        })
-                      }}
+                      className="w-[180px]"
+                      labelFormatter={(value) => format(new Date(value), 'dd MMMM yyyy')}
+                      indicator="dot"
                     />
                   }
                 />
-                <Line
-                  dataKey={activeChart}
-                  type="monotone"
-                  stroke={activeChart === "revenue" ? "hsl(var(--primary))" : "hsl(var(--chart-2))"}
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: activeChart === "revenue" ? "hsl(var(--primary))" : "hsl(var(--chart-2))" }}
-                  activeDot={{ r: 6 }}
+                {/* Reference Line for Average */}
+                <ReferenceLine 
+                  y={total[activeChart] / (processedChartData?.length || 1)} 
+                  label={{ value: 'Avg', position: 'insideRight', fill: activeChart === "revenue" ? 'var(--primary)' : 'var(--chart-2)', fontSize: 10 }}
+                  stroke={activeChart === "revenue" ? "var(--primary)" : "var(--chart-2)"} 
+                  strokeDasharray="3 3" 
+                  strokeOpacity={0.5}
                 />
-              </LineChart>
+                <Area
+                  dataKey="revenue"
+                  type="natural"
+                  fill="url(#fillRevenue)"
+                  stroke="var(--color-revenue)"
+                  strokeWidth={2}
+                  hide={activeChart !== "revenue"}
+                />
+                <Area
+                  dataKey="profit"
+                  type="natural"
+                  fill="url(#fillProfit)"
+                  stroke="var(--color-profit)"
+                  strokeWidth={2}
+                  hide={activeChart !== "profit"}
+                />
+              </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Loyalty & Low Stock */}
-        <div className="col-span-3 space-y-4">
-          <Card className="bg-primary text-primary-foreground">
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+        {/* Customer Insights & New vs Returning (NEW/UPDATED) */}
+        <div className="space-y-4">
+          <Card className="bg-muted/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Loyalty Program
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                Customer Insights
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-around py-2 border-b">
+                <div className="text-center">
+                  <p className="text-[10px] uppercase text-muted-foreground font-bold">New</p>
+                  <p className="text-xl font-black">{stats?.newUsersCount}</p>
+                </div>
+                <div className="h-8 w-px bg-border"></div>
+                <div className="text-center">
+                  <p className="text-[10px] uppercase text-muted-foreground font-bold">Returning</p>
+                  <p className="text-xl font-black">{stats?.returningUsersCount}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Top Spenders</p>
+                {topCustomers && topCustomers.length > 0 ? (
+                  topCustomers.map((customer: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="font-medium truncate max-w-[120px]">{customer.name}</span>
+                      <span className="font-bold text-primary">৳{Math.round(customer.totalSpend || 0).toLocaleString()}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-muted-foreground italic py-2 text-center">No customers yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-primary text-primary-foreground shadow-lg">
+            <CardContent className="pt-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs opacity-70">Active Members</p>
+                  <p className="text-xs opacity-70">Loyalty Members</p>
                   <p className="text-xl font-bold">{stats?.activeSubscribers}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs opacity-70">Circulating Tokens</p>
-                  <div className="flex items-center gap-1">
-                    <Wallet className="h-4 w-4" />
-                    <p className="text-xl font-bold">৳{stats?.totalWalletTokens}</p>
-                  </div>
+                  <p className="text-xs opacity-70">Pending Orders</p>
+                  <p className="text-xl font-bold">{stats?.pendingOrdersCount}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
+          <Card className="border-destructive/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-4 w-4" />
                 Low Stock Alerts
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-0">
+              <div className="space-y-3">
                 {lowStockProducts?.map((product: any) => (
-                  <div key={product._id} className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">৳{product.price}</p>
+                  <div key={product._id} className="flex items-center justify-between group">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold group-hover:text-primary transition-colors">{product.name}</p>
+                      <p className="text-[10px] text-muted-foreground">Unit Price: ৳{product.price}</p>
                     </div>
-                    <Badge variant="destructive" className="h-5">
+                    <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">
                       {product.stock} Left
                     </Badge>
                   </div>
                 ))}
                 {(lowStockProducts?.length ?? 0) === 0 && (
-                  <p className="text-center py-4 text-sm text-muted-foreground">
-                    All products are well stocked!
-                  </p>
-                )}
-                {(lowStockProducts?.length ?? 0) > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-2" asChild>
-                    <Link href="/admin/products" className="text-xs">
-                      Manage Stock <ArrowRight className="ml-2 h-3 w-3" />
-                    </Link>
-                  </Button>
+                  <p className="text-center py-4 text-xs text-muted-foreground italic">Inventory levels are healthy!</p>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Recent Orders Bottom Row */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>You have {stats?.pendingOrdersCount} pending orders to review.</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/admin/orders">View All</Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recentOrders?.map((order: any) => (
-              <div key={order._id} className="flex items-center justify-between border p-4 rounded-lg">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">#{order.slug}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {order.user?.name || 'Guest'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </p>
+        {/* Top Selling Products (NEW) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              Top Products
+            </CardTitle>
+            <CardDescription>Best performers by revenue</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {topSellingProducts?.map((product: any, i: number) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted font-bold text-xs">
+                  {i + 1}
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-sm font-bold text-primary">৳{order.totalAmount}</div>
-                  <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'} className="capitalize text-[10px]">
-                    {order.status}
-                  </Badge>
+                <div className="flex-1 space-y-0.5">
+                  <p className="text-sm font-bold leading-none truncate max-w-[150px]">{product._id}</p>
+                  <p className="text-xs text-muted-foreground">{product.quantity} units sold</p>
                 </div>
+                <div className="text-sm font-black">৳{Math.round(product.revenue).toLocaleString()}</div>
               </div>
             ))}
-          </div>
-          {recentOrders?.length === 0 && (
-            <p className="text-center py-10 text-muted-foreground italic">No recent orders yet.</p>
-          )}
-        </CardContent>
-      </Card>
+            {(!topSellingProducts || topSellingProducts.length === 0) && (
+              <div className="text-center py-10 text-muted-foreground text-sm">No sales data available</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Transactions */}
+        <Card className="shadow-md">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">Recent Transactions</CardTitle>
+                <CardDescription>Latest orders across the shop</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin/orders">Manage All Orders</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 max-h-[400px] overflow-y-auto">
+            <div className="divide-y">
+              {recentOrders?.map((order: any) => (
+                <div key={order._id} className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                      <ShoppingBag className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-bold leading-none">Order #{order.slug}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{order.user?.name || 'Guest Customer'}</span>
+                        <span>•</span>
+                        <span>{order?.createdAt ? format(parseISO(order.createdAt), 'dd MMM, p') : '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-sm font-black text-primary">৳{(order?.totalAmount || 0).toLocaleString()}</div>
+                    <Badge 
+                      variant={order.status === 'Delivered' ? 'default' : 'secondary'} 
+                      className={`text-[10px] uppercase font-bold tracking-tighter ${order.status === 'Delivered' ? 'bg-emerald-500' : ''}`}
+                    >
+                      {order.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

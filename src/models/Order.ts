@@ -5,6 +5,7 @@ export interface IOrderItem {
   name: string;
   quantity: number;
   price: number;
+  purchasePrice?: number;
   image?: string;
   color?: string;
   size?: string;
@@ -43,6 +44,7 @@ export interface IOrder extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 }
 
 const OrderSchema: Schema<IOrder> = new Schema(
@@ -54,6 +56,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
         name: { type: String, required: true },
         quantity: { type: Number, required: true, min: [1, 'Quantity must be at least 1'] },
         price: { type: Number, required: true, min: [0.01, 'Price must be at least 0.01'] },
+        purchasePrice: { type: Number, min: [0, 'Purchase price cannot be negative'] },
         image: { type: String },
         color: { type: String },
         size: { type: String },
@@ -94,6 +97,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
       trackingUrl: { type: String },
       courierStatus: { type: String },
     },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

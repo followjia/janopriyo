@@ -75,7 +75,7 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     if (status === 'loading') return;
 
     if (status === 'unauthenticated') {
@@ -85,20 +85,20 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
 
     // Toggle locally (optimistic update)
     dispatch(toggleWishlist(product._id));
-    
+
     // Determine the message based on the NEW state
     const willBeInWishlist = !isInWishlist;
     toast.success(willBeInWishlist ? 'Added to wishlist' : 'Removed from wishlist');
-    
+
     try {
       const res = await fetch('/api/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: product._id }),
       });
-      
+
       if (!res.ok) {
-         throw new Error('Failed to update wishlist server-side');
+        throw new Error('Failed to update wishlist server-side');
       }
     } catch (err) {
       console.error('API toggle error:', err);
@@ -130,14 +130,14 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
     }
   };
 
-  const discount = (product.salePrice !== undefined && product.salePrice !== null && product.price > 0) 
-    ? Math.max(0, Math.round(((product.price - product.salePrice) / product.price) * 100)) 
+  const discount = (product.salePrice !== undefined && product.salePrice !== null && product.price > 0)
+    ? Math.max(0, Math.round(((product.price - product.salePrice) / product.price) * 100))
     : 0;
 
   return (
-    <div 
-        className="group relative flex flex-col overflow-hidden rounded-lg border bg-background transition-all hover:shadow-xl"
-        data-aos="fade-up"
+    <div
+      className="group relative flex flex-col overflow-hidden rounded-lg border bg-background transition-all hover:shadow-xl"
+      data-aos="fade-up"
     >
       <Link href={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-muted">
         {product.images?.length > 0 ? (
@@ -151,47 +151,47 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
             No image
           </div>
         )}
-        
+
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-2">
-            {discount > 0 && (
-                <Badge variant="default" className="bg-primary text-primary-foreground font-bold">-{discount}%</Badge>
-            )}
-            {product.isFeatured && (
-                <Badge variant="default" className="bg-primary hover:bg-primary font-bold uppercase text-[10px]">Featured</Badge>
-            )}
-            {product.isNewArrival && (
-                <Badge variant="secondary" className="bg-emerald-500 hover:bg-emerald-600 text-white border-none font-bold uppercase text-[10px]">New Arrival</Badge>
-            )}
-            {product.stock === 0 && (
-                <Badge variant="secondary" className="font-bold uppercase text-[10px]">Out of Stock</Badge>
-            )}
-            {isFlashSale && (
-                <Badge variant="default" className="bg-primary text-primary-foreground animate-pulse font-bold uppercase text-[10px]">Flash Deal</Badge>
-            )}
+          {discount > 0 && (
+            <Badge variant="default" className="bg-primary text-primary-foreground font-bold">-{discount}%</Badge>
+          )}
+          {product.isFeatured && (
+            <Badge variant="default" className="bg-primary hover:bg-primary font-bold uppercase text-[10px]">Featured</Badge>
+          )}
+          {product.isNewArrival && (
+            <Badge variant="secondary" className="bg-emerald-500 hover:bg-emerald-600 text-white border-none font-bold uppercase text-[10px]">New Arrival</Badge>
+          )}
+          {product.stock === 0 && (
+            <Badge variant="secondary" className="font-bold uppercase text-[10px]">Out of Stock</Badge>
+          )}
+          {isFlashSale && (
+            <Badge variant="default" className="bg-primary text-primary-foreground animate-pulse font-bold uppercase text-[10px]">Flash Deal</Badge>
+          )}
         </div>
 
         {/* Hover Actions */}
         <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/5">
-            <Button 
-                size="icon" 
-                variant="secondary" 
-                className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
-                onClick={handleFavorite}
-                disabled={status === 'loading'}
-                aria-label={isInWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-            >
-                <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-destructive text-destructive' : ''}`} />
-            </Button>
-            <Button 
-                size="icon" 
-                variant="secondary" 
-                className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
-                onClick={handleQuickView}
-                aria-label={`View ${product.name} details`}
-            >
-                <Eye className="h-4 w-4" />
-            </Button>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
+            onClick={handleFavorite}
+            disabled={status === 'loading'}
+            aria-label={isInWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+          >
+            <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-destructive text-destructive' : ''}`} />
+          </Button>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
+            onClick={handleQuickView}
+            aria-label={`View ${product.name} details`}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
         </div>
       </Link>
 
@@ -222,16 +222,16 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
       )}
 
       <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 h-10">
-            <Link 
-                href={`/product/${product.slug}`}
-                className="text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-2"
-            >
-                {product.name}
-            </Link>
+        <div className="mb-2 h-12 md:h-10">
+          <Link
+            href={`/product/${product.slug}`}
+            className="md:text-sm text-xs  font-semibold text-foreground hover:text-primary transition-colors line-clamp-3 md:line-clamp-2"
+          >
+            {product.name}
+          </Link>
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-2">
+        <div className="mt-auto flex items-end justify-between gap-2">
           <div className="flex flex-col justify-end min-h-[48px]">
             {product.salePrice !== undefined && product.salePrice !== null ? (
               <>
@@ -248,9 +248,9 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
               </span>
             )}
           </div>
-          <Button 
-            size="sm" 
-            className="h-8 w-8 rounded-full p-0 flex items-center justify-center transition-all hover:scale-105"
+          <Button
+            size="sm"
+            className="h-8 w-8 rounded-full p-0 flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
             disabled={product.stock === 0}
             onClick={handleAddToCartClick}
             aria-label={`Add ${product.name} to cart`}

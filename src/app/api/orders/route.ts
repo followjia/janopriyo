@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
         product = await Product.findOneAndUpdate(
           variantQuery,
           { $inc: { "variants.$.stock": -item.quantity } },
-          { session, returnDocument: 'after' }
+          { session, new: true }
         );
       } else {
         // Fallback to main stock
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
             isPublished: true 
           },
           { $inc: { stock: -item.quantity } },
-          { session, returnDocument: 'after' }
+          { session, new: true }
         );
       }
 
@@ -141,6 +141,7 @@ export async function POST(req: NextRequest) {
 
       // 2b. Determine Price (Server-side source of truth)
       let itemPrice = product.salePrice ?? product.price;
+      let itemPurchasePrice = product.purchasePrice ?? 0;
       if (hasVariant) {
         const variant = product.variants?.find((v: any) => 
           (v.color || undefined) === (item.color || undefined) &&
@@ -148,6 +149,7 @@ export async function POST(req: NextRequest) {
         );
         if (variant) {
           itemPrice = (variant.salePrice ?? variant.price) ?? (product.salePrice ?? product.price);
+          itemPurchasePrice = variant.purchasePrice ?? product.purchasePrice ?? 0;
         }
       }
 
@@ -159,6 +161,7 @@ export async function POST(req: NextRequest) {
         name: product.name,
         quantity: item.quantity,
         price: itemPrice,
+        purchasePrice: itemPurchasePrice,
         image: item.image || product.images?.[0] || '',
         color: item.color,
         size: item.size,
@@ -341,17 +344,17 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
-    let query = {};
+    let query: any = { deletedAt: null };
     if (fetchAll && isAdmin) {
       // Admins can see all orders
-      query = {};
+      query = { deletedAt: null };
     } else {
       // Normal users (or admins without ?all=true) see their own orders
       const userId = (session.user as any).id;
       if (!userId) {
         return NextResponse.json({ message: 'User ID missing from session' }, { status: 400 });
       }
-      query = { user: userId };
+      query = { user: userId, deletedAt: null };
     }
 
     const orders = await Order.find(query)
