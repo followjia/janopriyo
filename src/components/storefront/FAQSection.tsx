@@ -31,10 +31,6 @@ export function FAQSection({ faqs }: { faqs: FAQItem[] }) {
                         <h2 className="text-2xl md:text-4xl font-black tracking-tighter">
                             Got Questions? We've Got <span className="text-primary italic">Answers</span>
                         </h2>
-                        <p className="text-muted-foreground max-w-2xl">
-                            Everything you need to know about our products, shipping, and more.
-                            Can't find what you're looking for? Our team is ready to help.
-                        </p>
                     </div>
 
                 </div>
