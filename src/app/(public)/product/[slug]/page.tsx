@@ -129,7 +129,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         <span className="text-foreground font-medium truncate">{product.name}</span>
       </div>
 
-      <div className="rounded-3xl border bg-card/40 p-4 md:p-8">
+      <div className="p-0 md:p-4">
         <ProductDetailsClient product={product} />
       </div>
 
