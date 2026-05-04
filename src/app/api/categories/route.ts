@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       isActive: isActive !== undefined ? isActive : true,
     });
 
-    revalidateTag('categories');
+    revalidateTag('categories', 'max');
     revalidatePath('/');
 
     return NextResponse.json(newCategory, { status: 201 });

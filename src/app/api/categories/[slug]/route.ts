@@ -69,7 +69,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    await revalidateTag('categories');
+    await revalidateTag('categories', 'max');
     revalidatePath('/');
 
     return NextResponse.json(updatedCategory);
@@ -122,7 +122,7 @@ export async function DELETE(
       });
 
       try {
-        await revalidateTag('categories');
+        await revalidateTag('categories', 'max');
     revalidatePath('/');
       } catch (e) {
         console.error('Revalidation error:', e);

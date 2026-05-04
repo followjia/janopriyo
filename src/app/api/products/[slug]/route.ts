@@ -127,7 +127,7 @@ export async function PUT(
             return NextResponse.json({ message: 'Product not found' }, { status: 404 });
           }
 
-          revalidateTag('products');
+          revalidateTag('products', 'max');
           revalidatePath('/');
           return NextResponse.json(updatedProduct);
         } catch (error: any) {
@@ -159,7 +159,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    revalidateTag('products');
+    revalidateTag('products', 'max');
 
     return NextResponse.json(updatedProduct);
   } catch (error) {
@@ -194,7 +194,7 @@ export async function DELETE(
     }
 
     try {
-      await revalidateTag('products');
+      await revalidateTag('products', 'max');
     } catch (revalidateError) {
       console.error('Failed to revalidate product tags:', revalidateError);
     }

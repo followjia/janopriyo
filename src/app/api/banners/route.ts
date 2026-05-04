@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       isActive: isActive !== undefined ? isActive : true,
     });
 
-    revalidateTag('banners');
+    revalidateTag('banners', 'max');
     revalidatePath('/');
 
     return NextResponse.json(newBanner, { status: 201 });
