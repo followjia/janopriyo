@@ -17,6 +17,7 @@ interface ProductCarouselSectionProps {
   isFlashSale?: boolean;
   saleEndTimestamp?: number | string;
   bgColor?: string;
+  cardStyle?: string;
 }
 
 export function ProductCarouselSection({
@@ -25,7 +26,8 @@ export function ProductCarouselSection({
   products,
   viewAllLink,
   isFlashSale = false,
-  bgColor = "bg-background"
+  bgColor = "bg-background",
+  cardStyle = 'v1'
 }: ProductCarouselSectionProps) {
 
   // Initialize Embla Carousel with Autoplay
@@ -82,7 +84,7 @@ export function ProductCarouselSection({
                   key={product._id}
                   className="flex-[0_0_42%] min-w-0 pl-4 md:flex-[0_0_33.33%] lg:flex-[0_0_25%]"
                 >
-                  <ProductCard product={product} isFlashSale={isFlashSale} />
+                  <ProductCard product={product} isFlashSale={isFlashSale} style={cardStyle} />
                 </div>
               ))}
             </div>

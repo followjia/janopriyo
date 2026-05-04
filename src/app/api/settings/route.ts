@@ -33,7 +33,18 @@ export async function GET() {
         steadfast: rawSettings.courierConfig?.steadfast?.apiKey ? { apiKey: "********************", secretKey: "********************" } : maskedSettings.courierConfig.steadfast,
         pathao: rawSettings.courierConfig?.pathao?.clientId ? { clientId: "********************", clientSecret: "********************", storeId: "********************" } : maskedSettings.courierConfig.pathao,
         redx: rawSettings.courierConfig?.redx?.apiKey ? { apiKey: "********************" } : maskedSettings.courierConfig.redx,
-      } : maskedSettings.courierConfig
+      } : maskedSettings.courierConfig,
+      paymentConfig: maskedSettings.paymentConfig ? {
+        ...maskedSettings.paymentConfig,
+        sslcommerz: rawSettings.paymentConfig?.sslcommerz?.storePassword ? { 
+          ...maskedSettings.paymentConfig.sslcommerz,
+          storePassword: "********************" 
+        } : maskedSettings.paymentConfig.sslcommerz
+      } : maskedSettings.paymentConfig,
+      aiConfig: maskedSettings.aiConfig ? {
+        ...maskedSettings.aiConfig,
+        openRouterApiKey: rawSettings.aiConfig?.openRouterApiKey ? "********************" : null
+      } : maskedSettings.aiConfig
     };
 
     return NextResponse.json(safeResult);
@@ -59,18 +70,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Invalid JSON request body' }, { status: 400 });
     }
 
-    // Whitelist allowed fields to prevent mass-assignment
+    // Whitelist allowed fields for standard admins
     const allowedFields = [
       'brandName', 'contact', 'socialLinks',
       'marqueeText', 'metaTitle', 'metaDescription',
-      'googleTagManagerId', 'searchConsoleMeta', 'facebookDomainVerification', 'metaPixelId',
-      'facebookAccessToken', 'facebookTestEventCode',
-      'courierConfig', 'subscriptionConfig'
+      'subscriptionConfig',
+      'freeDeliveryThreshold',
+      'deliveryChargeInsideDhaka',
+      'deliveryChargeOutsideDhaka'
     ];
+
+    // Restricted fields - ONLY for super_admin
+    const superAdminFields = [
+      'uiTemplates', 
+      'domain', 
+      'storeId', 
+      'paymentConfig', 
+      'googleAnalyticsId',
+      'aiConfig',
+      'courierConfig',
+      'googleTagManagerId',
+      'searchConsoleMeta',
+      'facebookDomainVerification',
+      'metaPixelId',
+      'facebookAccessToken',
+      'facebookTestEventCode'
+    ];
+    
+    const isSuperAdmin = (session.user as any).role === 'super_admin';
     const allowedBody: any = {};
 
     Object.keys(body).forEach((key) => {
       if (allowedFields.includes(key)) {
+        allowedBody[key] = body[key];
+      }
+      if (superAdminFields.includes(key) && isSuperAdmin) {
         allowedBody[key] = body[key];
       }
     });

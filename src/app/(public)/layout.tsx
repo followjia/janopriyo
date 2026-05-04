@@ -2,25 +2,32 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Marquee } from '@/components/layout/Marquee';
 import { getCachedSettings } from '@/lib/data-fetching';
+import { headers } from 'next/headers';
 
-async function getMarqueeText() {
-  try {
-    const settings = await getCachedSettings();
-    return settings?.marqueeText || 'Welcome to Janopriyo Shop! Free shipping on orders over $500.';
-  } catch (error) {
-    console.error('Error fetching marquee text:', error);
-    return 'Welcome to Janopriyo Shop!';
-  }
-}
- 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const marqueeText = await getMarqueeText();
+  const headersList = await headers();
+  const hostname = headersList.get('host') || 'localhost';
+  
+  let settings = null;
+  try {
+    settings = await getCachedSettings(hostname);
+  } catch (error) {
+    console.error('Failed to fetch settings:', error);
+  }
+
+  const marqueeText = settings?.marqueeText || 'Welcome to Janopriyo Shop! Free shipping on orders over $500.';
+  const ui = {
+    navbar: 'v1',
+    footer: 'v1',
+    ...settings?.uiTemplates
+  };
+
   return (
     <>
       <Marquee marqueeText={marqueeText} />
-      <Navbar />
+      <Navbar style={ui.navbar} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer style={ui.footer} />
     </>
   );
 }

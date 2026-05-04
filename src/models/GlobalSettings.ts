@@ -47,6 +47,33 @@ export interface IGlobalSettings extends Document {
     activationThreshold: number;
     rewardPercentage: number;
   };
+  domain: string; // The primary domain for this tenant (e.g., customer-shop.com)
+  storeId: string; // Unique identifier for the store
+  paymentConfig?: {
+    activeMethod: 'sslcommerz' | 'none';
+    sslcommerz?: {
+      storeId: string;
+      storePassword: string;
+      isSandbox: boolean;
+    };
+  };
+  googleAnalyticsId?: string; // GA4 Property ID
+  aiConfig?: {
+    openRouterApiKey?: string;
+    systemPrompt?: string;
+  };
+  uiTemplates: {
+    layout: string;
+    navbar: string;
+    hero: string;
+    categories: string;
+    productCard: string;
+    productDetail: string;
+    blogDetail: string;
+    shopListing: string;
+    blogListing: string;
+    footer: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,6 +128,33 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       activationThreshold: { type: Number, default: 5000 },
       rewardPercentage: { type: Number, default: 5 },
     },
+    domain: { type: String, required: false, unique: false }, // Will be set to required: true, unique: true after migration
+    storeId: { type: String, required: false, unique: false }, // Will be set to required: true, unique: true after migration
+    paymentConfig: {
+      activeMethod: { type: String, enum: ['sslcommerz', 'none'], default: 'none' },
+      sslcommerz: {
+        storeId: { type: String, get: decrypt, set: encrypt },
+        storePassword: { type: String, get: decrypt, set: encrypt },
+        isSandbox: { type: Boolean, default: true }
+      }
+    },
+    googleAnalyticsId: { type: String },
+    aiConfig: {
+      openRouterApiKey: { type: String, get: decrypt, set: encrypt },
+      systemPrompt: { type: String, default: 'You are a helpful e-commerce assistant.' }
+    },
+    uiTemplates: {
+      layout: { type: String, default: 'fashion' },
+      navbar: { type: String, default: 'v1' },
+      hero: { type: String, default: 'v1' },
+      categories: { type: String, default: 'v1' },
+      productCard: { type: String, default: 'v1' },
+      productDetail: { type: String, default: 'v1' },
+      blogDetail: { type: String, default: 'v1' },
+      shopListing: { type: String, default: 'v1' },
+      blogListing: { type: String, default: 'v1' },
+      footer: { type: String, default: 'v1' },
+    },
   },
   { 
     timestamps: true,
@@ -112,6 +166,14 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
           delete ret.courierConfig.steadfast;
           delete ret.courierConfig.pathao;
           delete ret.courierConfig.redx;
+        }
+        // Security: Remove sensitive Payment credentials
+        if (ret.paymentConfig) {
+          delete ret.paymentConfig.sslcommerz;
+        }
+        // Security: Remove sensitive AI API Key
+        if (ret.aiConfig) {
+          delete ret.aiConfig.openRouterApiKey;
         }
         // Security: Remove sensitive Facebook Access Token
         delete ret.facebookAccessToken;

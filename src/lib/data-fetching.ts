@@ -120,15 +120,29 @@ export const getCachedFAQs = unstable_cache(
 
 // --- SETTINGS ---
 
-export const getCachedSettings = unstable_cache(
-  async () => {
-    await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).lean();
-    return serialize(settings);
-  },
-  ['global-settings'],
-  { revalidate: 31536000, tags: [CACHE_TAGS.settings] }
-);
+/**
+ * Fetches global settings for the storefront.
+ * In a multi-tenant environment, this resolves settings based on the domain (hostname).
+ */
+export const getCachedSettings = (hostname: string = 'localhost') => {
+  return unstable_cache(
+    async () => {
+      await connectToDatabase();
+      
+      // Find settings for this specific domain
+      // If not found, fallback to the 'main' store or first record
+      let settings = await GlobalSettings.findOne({ domain: hostname }).lean();
+      
+      if (!settings) {
+        settings = await GlobalSettings.findOne({ storeId: 'main' }).lean() || await GlobalSettings.findOne().lean();
+      }
+
+      return serialize(settings);
+    },
+    ['settings-by-domain', hostname],
+    { tags: [CACHE_TAGS.settings], revalidate: 3600 }
+  )();
+};
 
 // --- COUPONS ---
 

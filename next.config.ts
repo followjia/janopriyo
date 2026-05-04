@@ -16,6 +16,21 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    qualities: [75, 100],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+        fs: false,
+        path: false,
+      };
+    }
+    return config;
   },
 };
 

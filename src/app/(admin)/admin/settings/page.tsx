@@ -40,21 +40,6 @@ const settingsSchema = z.object({
   marqueeText: z.string().nullish().transform(val => val ?? ''),
   metaTitle: z.string().nullish().transform(val => val ?? ''),
   metaDescription: z.string().nullish().transform(val => val ?? ''),
-  courierConfig: z.object({
-    activeProvider: z.enum(['steadfast', 'pathao', 'redx', 'none']).default('none'),
-    steadfast: z.object({
-      apiKey: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-      secretKey: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-    }).optional().nullable(),
-    pathao: z.object({
-      clientId: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-      clientSecret: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-      storeId: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-    }).optional().nullable(),
-    redx: z.object({
-      apiKey: z.string().nullish().or(z.literal('')).transform(v => v ?? ''),
-    }).optional().nullable(),
-  }).optional(),
   subscriptionConfig: z.object({
     activationThreshold: z.number().min(0, 'Threshold cannot be negative'),
     rewardPercentage: z.number().min(0, 'Percentage cannot be negative').max(100, 'Cannot exceed 100%'),
@@ -87,12 +72,6 @@ export default function SettingsPage() {
       marqueeText: '',
       metaTitle: '',
       metaDescription: '',
-      courierConfig: {
-        activeProvider: 'none',
-        steadfast: { apiKey: '', secretKey: '' },
-        pathao: { clientId: '', clientSecret: '', storeId: '' },
-        redx: { apiKey: '' },
-      },
       subscriptionConfig: {
         activationThreshold: 5000,
         rewardPercentage: 5,
@@ -140,21 +119,6 @@ export default function SettingsPage() {
                 subscriptionConfig: {
                   activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
                   rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
-                },
-                courierConfig: {
-                  activeProvider: result.data.courierConfig?.activeProvider || 'none',
-                  steadfast: {
-                    apiKey: result.data.courierConfig?.steadfast?.apiKey || '',
-                    secretKey: result.data.courierConfig?.steadfast?.secretKey || '',
-                  },
-                  pathao: {
-                    clientId: result.data.courierConfig?.pathao?.clientId || '',
-                    clientSecret: result.data.courierConfig?.pathao?.clientSecret || '',
-                    storeId: result.data.courierConfig?.pathao?.storeId || '',
-                  },
-                  redx: {
-                    apiKey: result.data.courierConfig?.redx?.apiKey || '',
-                  },
                 },
               };
               form.reset(sanitizedData);
@@ -226,11 +190,10 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[480px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
-              <TabsTrigger value="courier">Courier</TabsTrigger>
               <TabsTrigger value="loyalty">Loyalty</TabsTrigger>
             </TabsList>
 
@@ -458,212 +421,6 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="courier" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Courier & Shipping Integration</CardTitle>
-                  <CardDescription>Configure your preferred courier service for automated parcel booking.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="courierConfig.activeProvider"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Active Courier Provider</FormLabel>
-                        <div className="flex items-center gap-4">
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="none">None (Manual Handling)</option>
-                            <option value="steadfast">Steadfast Courier</option>
-                            <option value="pathao">Pathao Courier</option>
-                            <option value="redx">RedX</option>
-                          </select>
-                        </div>
-                        <FormDescription>Select which courier service to use for automated booking by default.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                    <h3 className="font-bold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      SteadFast Configuration
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.steadfast.apiKey"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>API Key</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Enter Steadfast API Key" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.steadfast.secretKey"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Secret Key</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Enter Steadfast Secret Key" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                    <h3 className="font-bold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      Pathao Courier
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.pathao.clientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Client ID</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Pathao Client ID" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.pathao.clientSecret"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Client Secret</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Pathao Client Secret" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.pathao.storeId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Store ID</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Pathao Store ID" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                    <h3 className="font-bold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-red-500" />
-                      RedX Configuration
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="courierConfig.redx.apiKey"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>RedX API Key</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="RedX API Key" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t">
-                    <h3 className="font-bold mb-4 flex items-center gap-2">
-                      <Truck className="h-5 w-5 text-primary" />
-                      Delivery Rules
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="freeDeliveryThreshold"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Free Delivery Threshold (TK)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="2000"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormDescription>Minimum order total to offer free delivery. Set to 0 to disable.</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="deliveryChargeInsideDhaka"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Inside Dhaka Charge (TK)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="60"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="deliveryChargeOutsideDhaka"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Outside Dhaka Charge (TK)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="120"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="bg-muted/50 border-t py-4">
-                  <p className="text-xs text-muted-foreground italic">
-                    * Note: Ensure you have obtained production API credentials from your courier merchant portal.
-                  </p>
-                </CardFooter>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="loyalty" className="space-y-4">
               <Card>

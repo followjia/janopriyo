@@ -60,6 +60,7 @@ const NewsletterV2 = dynamic(() => import('@/components/storefront/NewsletterV2'
   loading: () => <BannerSkeleton />
 });
 
+import { headers } from 'next/headers';
 import {
   getCachedBanners,
   getCachedCategories,
@@ -72,6 +73,9 @@ import {
 
 async function getHomeData() {
   try {
+    const headersList = await headers();
+    const hostname = headersList.get('host') || 'localhost';
+
     const [
       banners,
       categories,
@@ -92,7 +96,7 @@ async function getHomeData() {
       getCachedProducts({}, 10, { ratings: -1, numReviews: -1 }),
       getCachedBlogs(1),
       getCachedFAQs(),
-      getCachedSettings(),
+      getCachedSettings(hostname),
       getCachedActiveCoupon()
     ]);
 
@@ -125,11 +129,11 @@ async function getHomeData() {
 
 export default async function Home() {
   const data = await getHomeData();
-  const hasAnyProducts =
-    data.featuredProducts.length > 0 ||
-    data.newArrivals.length > 0 ||
-    data.flashSale.length > 0 ||
-    data.trending.length > 0;
+  const ui = data.settings?.uiTemplates || { 
+    hero: 'v1', 
+    categories: 'v1', 
+    productCard: 'v1' 
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -137,10 +141,10 @@ export default async function Home() {
       <FreeDeliveryBanner settings={data.settings} />
 
       {/* 1. Hero Section */}
-      <HeroSlider banners={data.banners} />
+      <HeroSlider banners={data.banners} style={ui.hero} />
 
       {/* 4. Categories Showcase */}
-      <CategoryShowcase categories={data.categories} />
+      <CategoryShowcase categories={data.categories} style={ui.categories} />
 
       {/* 8. Featured Products */}
       {data.featuredProducts.length > 0 && (
@@ -150,6 +154,7 @@ export default async function Home() {
           products={data.featuredProducts}
           viewAllLink="/shop?filter=featured"
           bgColor="bg-background"
+          cardStyle={ui.productCard}
         />
       )}
 
@@ -164,6 +169,7 @@ export default async function Home() {
           viewAllLink="/shop?filter=sale"
           isFlashSale={true}
           bgColor="bg-primary/5"
+          cardStyle={ui.productCard}
         />
       )}
 
@@ -178,9 +184,9 @@ export default async function Home() {
           products={data.trending}
           viewAllLink="/shop?filter=trending"
           bgColor="bg-muted/20"
+          cardStyle={ui.productCard}
         />
       )}
-
 
       {/* 9. Recent Blogs section */}
       <BlogRecent blogs={data.blogs} />
@@ -193,10 +199,9 @@ export default async function Home() {
           products={data.newArrivals}
           viewAllLink="/shop?filter=new"
           bgColor="bg-background"
+          cardStyle={ui.productCard}
         />
       )}
-
-
 
       {/* 2. Our Features (Trust Badges) */}
       <FeaturesSection />
@@ -209,7 +214,6 @@ export default async function Home() {
 
       {/* 10. FAQ Accordion Section */}
       <FAQSection faqs={data.faqs} />
-
 
     </div>
   );

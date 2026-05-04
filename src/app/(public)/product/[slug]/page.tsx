@@ -6,14 +6,14 @@ import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
-import ProductDetailsClient from './ProductDetailsClient';
+import { ProductDetailsSelector } from '@/components/templates/ServerRegistry';
 import { ProductCard } from '@/components/storefront/ProductCard';
+import { getCachedProductBySlug, getCachedSettings } from '@/lib/data-fetching';
+import { notFound } from 'next/navigation';
 
 const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 };
-
-import { getCachedProductBySlug } from '@/lib/data-fetching';
 
 const getProduct = async (slug: string) => {
   return getCachedProductBySlug(slug);
@@ -46,21 +46,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+import { headers } from 'next/headers';
 import Script from 'next/script';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const headersList = await headers();
+  const hostname = headersList.get('host') || 'localhost';
+
+  const [product, settings] = await Promise.all([
+    getProduct(slug),
+    getCachedSettings(hostname)
+  ]);
 
   if (!product) {
-    return (
-      <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold">Product not found</h1>
-        <Button variant="link" className="mt-4" render={<Link href="/shop" />} nativeButton={false}>
-          Back to Shop
-        </Button>
-      </div>
-    );
+    notFound();
   }
 
   let related = [];
@@ -117,7 +117,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
       </div>
 
       <div className="p-0 md:p-4">
-        <ProductDetailsClient product={product} />
+        {/* Dynamic Product Detail Template Selector */}
+        <ProductDetailsSelector style={settings?.uiTemplates?.productDetail || 'v1'} product={product} />
       </div>
 
       {Array.isArray(related) && related.length > 0 && (

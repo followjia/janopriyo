@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 
@@ -18,8 +18,14 @@ export default function FacebookPixel({
 }: {
   pixelId?: string;
 }) {
+  const [mounted, setMounted] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Shared eventId across browser pixel and CAPI for deduplication
   // Initialize with a dummy or empty string during SSR
@@ -31,6 +37,13 @@ export default function FacebookPixel({
       // 1. Browser-side tracking with explicit eventID
       if (typeof window.fbq === "function") {
         window.fbq("track", "PageView", {}, { eventID: eventId });
+      } else if (scriptLoaded) {
+        // Retry once if script says loaded but fbq not yet global
+        setTimeout(() => {
+          if (typeof window.fbq === "function") {
+            window.fbq("track", "PageView", {}, { eventID: eventId });
+          }
+        }, 100);
       }
       // 2. Server-side (CAPI) tracking with same eventID
       fetch("/api/facebook/event", {
@@ -50,13 +63,17 @@ export default function FacebookPixel({
   );
 
   useEffect(() => {
-    if (!pixelId) return;
+    if (!mounted || !pixelId) return;
     // Generate new eventId on every route change
     currentEventId.current = crypto.randomUUID();
     trackPageView(currentEventId.current);
-  }, [pathname, searchParams, trackPageView, pixelId]);
+  }, [pathname, searchParams, trackPageView, pixelId, mounted, scriptLoaded]);
 
-  if (!pixelId) {
+  // Sanitize pixelId to prevent XSS
+  const sanitizedPixelId = pixelId && /^\d+$/.test(pixelId) ? pixelId : null;
+
+  if (!sanitizedPixelId) {
+    console.warn("FacebookPixel: Invalid or missing Pixel ID");
     return null;
   }
 
@@ -65,6 +82,7 @@ export default function FacebookPixel({
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
+        onLoad={() => setScriptLoaded(true)}
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s)
@@ -75,8 +93,7 @@ export default function FacebookPixel({
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${pixelId}');
-            
+            fbq('init', '${sanitizedPixelId}');
           `,
         }}
       />
@@ -85,7 +102,7 @@ export default function FacebookPixel({
           height="1"
           width="1"
           style={{ display: "none" }}
-          src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+          src={`https://www.facebook.com/tr?id=${sanitizedPixelId}&ev=PageView&noscript=1`}
         />
       </noscript>
     </>

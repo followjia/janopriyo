@@ -92,11 +92,11 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
         <div className="container px-4 mx-auto relative z-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             {/* Left — Offer text */}
-            <div className="flex items-center gap-5 flex-1">
+            <div className="flex items-center justify-center sm:justify-start gap-5 flex-1 w-full sm:w-auto">
               <div className="hidden sm:flex h-16 w-16 rounded-2xl bg-black/10 border border-black/10 items-center justify-center shrink-0">
                 <Ticket className="h-8 w-8 text-black" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 flex flex-col items-center sm:items-start text-center sm:text-left">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-black/60">Limited Time Deal</p>
                 <h2 className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-none">
                   Special Offer!
@@ -112,16 +112,14 @@ export function ComboOfferBanner({ activeCoupon, settings }: ComboOfferBannerPro
                 <p className="text-[10px] font-black opacity-50 uppercase tracking-widest">
                   *Stackable with your loyalty tokens for extra savings
                 </p>
+                <div className="pt-4">
+                  <Button asChild className="rounded-full px-8 h-12 bg-black hover:bg-black/90 text-white font-black shadow-lg">
+                    <Link href="/shop">
+                      SHOP NOW
+                    </Link>
+                  </Button>
+                </div>
               </div>
-            </div>
-
-            {/* Middle — Shop Button */}
-            <div className="flex-shrink-0">
-              <Button asChild className="rounded-full px-8 h-12 bg-black hover:bg-black/90 text-white font-black shadow-lg">
-                <Link href="/shop">
-                  SHOP NOW
-                </Link>
-              </Button>
             </div>
 
             {/* Right — Countdown */}
