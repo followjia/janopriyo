@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
   try {
     const { slug } = await params;
     const session = await auth();
-    if (!session || (session.user as any)?.role !== 'admin') {
+    if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -65,7 +65,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
   try {
     const { slug } = await params;
     const session = await auth();
-    if (!session || (session.user as any)?.role !== 'admin') {
+    if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

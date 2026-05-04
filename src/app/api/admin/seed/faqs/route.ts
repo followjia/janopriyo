@@ -8,7 +8,7 @@ export async function GET() {
     const session = await auth();
     
     // Security check: Only admins can trigger seeding
-    if (!session || (session.user as any).role !== 'admin') {
+    if (!session || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
     }
 

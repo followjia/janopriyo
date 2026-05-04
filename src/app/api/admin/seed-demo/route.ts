@@ -40,7 +40,7 @@ const makeBlogContent = (title: string, index: number) =>
 export async function POST() {
   try {
     const session = await auth();
-    if (!session || !session.user || (session.user as { role?: string }).role !== 'admin') {
+    if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role)) && .role !== 'super_admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

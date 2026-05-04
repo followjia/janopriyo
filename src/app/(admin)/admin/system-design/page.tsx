@@ -28,30 +28,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge';
-import { useSession } from 'next-auth/react';
+
+
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5'];
 
 export default function SuperConfigPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    } else if (status === 'authenticated') {
-      if ((session?.user as any)?.role !== 'super_admin') {
-        toast.error('Access Denied: Super Admin Only');
-        router.push('/admin');
-      } else {
-        fetchSettings();
-      }
-    }
-  }, [status, session, router]);
+    fetchSettings();
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -109,7 +99,7 @@ export default function SuperConfigPage() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-[60vh]">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
     </div>
   );

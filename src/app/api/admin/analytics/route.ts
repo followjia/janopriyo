@@ -6,7 +6,7 @@ import { google } from 'googleapis';
 export async function GET(request: Request) {
   try {
     const session = await auth();
-    if (!session || (session.user as any)?.role !== 'admin') {
+    if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

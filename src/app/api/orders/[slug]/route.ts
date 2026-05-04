@@ -59,7 +59,7 @@ export async function PATCH(
   try {
     const { slug } = await params;
     const session = await auth();
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
@@ -188,7 +188,7 @@ export async function DELETE(
   try {
     const { slug } = await params;
     const session = await auth();
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 

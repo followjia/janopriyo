@@ -7,7 +7,7 @@ import { auth } from '@/auth';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !session.user || (session.user as any).role !== 'admin') {
+    if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
