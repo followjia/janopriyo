@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { generateHtml } from '@/lib/server-html';
 
 interface BlogDetailProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 interface BlogDetail {

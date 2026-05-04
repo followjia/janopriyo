@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Discover Products That Match Your Style. Filter by category, budget, and latest arrivals.',
 };
 
-export default async function ShopPage({ searchParams }: { searchParams: any }) {
+export default async function ShopPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
 
