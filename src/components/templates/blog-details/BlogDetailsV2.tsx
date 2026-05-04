@@ -79,12 +79,12 @@ export default function BlogDetailsV2({ blog, readingTime }: BlogDetailsV2Props)
         </header>
 
         {/* Content Experience */}
-        <article className="prose prose-2xl dark:prose-invert max-w-none 
+        <article className={`prose prose-2xl dark:prose-invert max-w-none 
           prose-p:leading-[1.9] prose-p:text-neutral-600 dark:prose-p:text-neutral-400 
           prose-p:font-medium prose-p:italic prose-p:text-justify
           prose-headings:font-serif prose-headings:italic prose-headings:tracking-tight
           prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:p-8 prose-blockquote:rounded-3xl prose-blockquote:italic
-          prose-img:rounded-[3rem] prose-img:shadow-2xl">
+          prose-img:rounded-[3rem] prose-img:shadow-2xl`}>
           
           <div
             className="ProseMirror drop-cap-editorial"

@@ -109,11 +109,11 @@ export default function BlogDetailsV3({ blog, readingTime }: BlogDetailsV3Props)
           {/* Module: Narrative Engine */}
           <article className="lg:col-span-8">
             <div 
-              className="prose prose-2xl prose-neutral dark:prose-invert max-w-none 
+              className={`prose prose-2xl prose-neutral dark:prose-invert max-w-none 
               prose-headings:font-black prose-headings:tracking-tighter prose-headings:uppercase prose-headings:text-foreground
               prose-p:leading-relaxed prose-p:text-foreground/80 prose-p:font-medium
               prose-blockquote:border-l-8 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-12 prose-blockquote:px-12 prose-blockquote:rounded-r-3xl
-              prose-img:rounded-[2.5rem] prose-img:border-8 prose-img:border-white dark:prose-img:border-neutral-900 prose-img:shadow-2xl"
+              prose-img:rounded-[2.5rem] prose-img:border-8 prose-img:border-white dark:prose-img:border-neutral-900 prose-img:shadow-2xl`}
               dangerouslySetInnerHTML={{ __html: cleanContent }} 
             />
             

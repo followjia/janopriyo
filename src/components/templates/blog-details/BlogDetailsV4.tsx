@@ -136,11 +136,11 @@ export default function BlogDetailsV4({ blog, readingTime }: BlogDetailsV4Props)
 
          <div className="relative">
             <div 
-              className="ProseMirror prose prose-2xl dark:prose-invert max-w-none 
+              className={`ProseMirror prose prose-2xl dark:prose-invert max-w-none 
               prose-p:leading-[2] prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-p:font-medium
               prose-headings:font-black prose-headings:tracking-tighter prose-headings:uppercase
               prose-blockquote:italic prose-blockquote:font-serif prose-blockquote:text-3xl prose-blockquote:border-none prose-blockquote:text-primary prose-blockquote:text-center prose-blockquote:py-16
-              prose-strong:text-foreground prose-a:text-primary prose-a:no-underline prose-a:border-b-2 prose-a:border-primary/20 hover:prose-a:border-primary transition-all"
+              prose-strong:text-foreground prose-a:text-primary prose-a:no-underline prose-a:border-b-2 prose-a:border-primary/20 hover:prose-a:border-primary transition-all`}
               dangerouslySetInnerHTML={{ __html: cleanContent }}
             />
             
