@@ -58,16 +58,16 @@ export default async function Footer() {
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Categories</h4>
             <ul className="grid gap-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/category/grocery" className="hover:text-primary transition-colors">Grocery</Link>
+                <Link href="/shop?category=mens-clothing" className="hover:text-primary transition-colors">Men's Clothing</Link>
               </li>
               <li>
-                <Link href="/category/electronics" className="hover:text-primary transition-colors">Electronics</Link>
+                <Link href="/shop?category=womens-clothing" className="hover:text-primary transition-colors">Women's Clothing</Link>
               </li>
               <li>
-                <Link href="/category/fashion" className="hover:text-primary transition-colors">Fashion</Link>
+                <Link href="/shop?category=footwear" className="hover:text-primary transition-colors">Footwear</Link>
               </li>
               <li>
-                <Link href="/category/gadgets" className="hover:text-primary transition-colors">Gadgets</Link>
+                <Link href="/shop?category=home-lifestyle" className="hover:text-primary transition-colors">Home & Lifestyle</Link>
               </li>
             </ul>
           </div>
@@ -75,7 +75,7 @@ export default async function Footer() {
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">Information</h4>
             <ul className="grid gap-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
+                <Link href="/" className="hover:text-primary transition-colors">About Us</Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-primary transition-colors">Contact Us</Link>

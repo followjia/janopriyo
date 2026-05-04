@@ -5,7 +5,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/favicon.ico',
   '/icon-512x512.png',
-  '/manifest.json',
+  '/manifest.webmanifest',
   OFFLINE_URL,
 ];
 
@@ -13,7 +13,12 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('Service Worker: Caching critical assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Use a more resilient approach: cache what we can, don't fail everything if one fails
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => 
+          cache.add(url).catch(err => console.error(`Failed to cache ${url}:`, err))
+        )
+      );
     })
   );
   self.skipWaiting();
