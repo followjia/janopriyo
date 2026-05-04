@@ -148,18 +148,31 @@ const data = {
           title: "General Settings",
           url: "/admin/settings",
         },
+        {
+          title: "Infrastructure (Super)",
+          url: "/admin/system-design",
+          superOnly: true
+        },
       ],
     },
   ],
 }
 
 
-function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: string }) {
+import { useSession } from "next-auth/react"
+
+function NavMain({ items, pathname, role }: { items: typeof data.navMain; pathname: string; role?: string }) {
+  // Filter items based on role
+  const filteredItems = items.map(item => ({
+    ...item,
+    items: item.items.filter((subItem: any) => !subItem.superOnly || role === 'super_admin')
+  })).filter(item => item.items.length > 0);
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Menu</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => {
+        {filteredItems.map((item) => {
           const isParentActive =
             item.items.some(
               (subItem) =>
@@ -217,6 +230,8 @@ function NavMain({ items, pathname }: { items: typeof data.navMain; pathname: st
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const role = (session?.user as any)?.role
 
   return (
     <Sidebar {...props}>
@@ -224,7 +239,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Logo imageClassName="size-6" textClassName="text-xl" />
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavMain items={data.navMain} pathname={pathname} />
+        <NavMain items={data.navMain} pathname={pathname} role={role} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
