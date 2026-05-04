@@ -141,11 +141,22 @@ export function ProductCard({ product, isFlashSale }: ProductCardProps) {
     >
       <Link href={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-muted">
         {product.images?.length > 0 ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          <>
+            {/* Primary Image */}
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className={`h-full w-full object-cover transition-all duration-700 ${product.images.length > 1 ? 'group-hover:opacity-0 group-hover:scale-105' : 'group-hover:scale-110'}`}
+            />
+            {/* Secondary Image (on Hover) */}
+            {product.images.length > 1 && (
+              <img
+                src={product.images[1]}
+                alt={`${product.name} alternate view`}
+                className="absolute inset-0 h-full w-full object-cover transition-all duration-700 opacity-0 group-hover:opacity-100 scale-110 group-hover:scale-100"
+              />
+            )}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">
             No image
