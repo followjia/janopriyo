@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
@@ -127,7 +127,8 @@ export async function PUT(
             return NextResponse.json({ message: 'Product not found' }, { status: 404 });
           }
 
-          revalidateTag('products', 'default');
+          revalidateTag('products');
+          revalidatePath('/');
           return NextResponse.json(updatedProduct);
         } catch (error: any) {
           lastError = error;
@@ -158,7 +159,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    revalidateTag('products', 'default');
+    revalidateTag('products');
 
     return NextResponse.json(updatedProduct);
   } catch (error) {
@@ -193,7 +194,7 @@ export async function DELETE(
     }
 
     try {
-      await revalidateTag('products', 'default');
+      await revalidateTag('products');
     } catch (revalidateError) {
       console.error('Failed to revalidate product tags:', revalidateError);
     }

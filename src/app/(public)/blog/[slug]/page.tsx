@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShareButtons } from '@/components/storefront/ShareButtons';
 import Image from 'next/image';
-import connectToDatabase from '@/lib/db';
-import Blog from '@/models/Blog';
 import { generateHtml } from '@/lib/server-html';
 
 interface BlogDetailProps {
@@ -30,9 +28,10 @@ const getReadingTime = (rawContent: string) => {
   return Math.max(1, Math.ceil(words / 220));
 };
 
+import { getCachedBlogBySlug } from '@/lib/data-fetching';
+
 async function getBlog(slug: string) {
-  await connectToDatabase();
-  return (await Blog.findOne({ slug, isPublished: true }).lean()) as BlogDetail | null;
+  return getCachedBlogBySlug(slug);
 }
 
 export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {

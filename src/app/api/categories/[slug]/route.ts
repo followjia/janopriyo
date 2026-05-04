@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Category from '@/models/Category';
@@ -69,7 +69,8 @@ export async function PUT(
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    await revalidateTag('categories', 'default');
+    await revalidateTag('categories');
+    revalidatePath('/');
 
     return NextResponse.json(updatedCategory);
   } catch (error) {
@@ -121,7 +122,8 @@ export async function DELETE(
       });
 
       try {
-        await revalidateTag('categories', 'default');
+        await revalidateTag('categories');
+    revalidatePath('/');
       } catch (e) {
         console.error('Revalidation error:', e);
       }

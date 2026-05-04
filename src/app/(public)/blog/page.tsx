@@ -1,69 +1,48 @@
-'use client';
-
-import { useState, useEffect, Suspense } from 'react';
+import { Metadata } from 'next';
 import Link from 'next/link';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { 
     Calendar, 
     ArrowRight, 
     Newspaper,
     Search
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { BlogFeaturedSkeleton, BlogCardSkeleton } from '@/components/storefront/Skeletons';
+import { getCachedBlogs } from '@/lib/data-fetching';
 import { Pagination } from '@/components/ui/pagination';
 
-interface BlogListItem {
-  _id: string;
-  slug: string;
-  title: string;
-  metaDescription?: string;
-  thumbnail?: string;
-  createdAt: string;
-}
+export const metadata: Metadata = {
+  title: 'Blog | Janopriyo Shop',
+  description: 'Product ideas, commerce playbooks, and practical updates from Janopriyo Shop.',
+};
 
-function BlogListingContent() {
-  const [blogs, setBlogs] = useState<BlogListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
-  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+export default async function BlogListingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
+  const { page = '1', q = '' } = await searchParams;
+  const currentPage = parseInt(page);
   const limit = 12;
 
-  useEffect(() => {
-    async function fetchBlogs(page = currentPage) {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/blogs?page=${page}&limit=${limit}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBlogs(Array.isArray(data.blogs) ? data.blogs : []);
-          setPagination(data.pagination || { total: 0, totalPages: 1 });
-        }
-      } catch {
-        console.error('Failed to fetch blogs');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBlogs();
-  }, [currentPage]);
+  // We fetch all blogs for now to match the existing filtering logic,
+  // but we should ideally implement server-side search in getCachedBlogs later.
+  const allBlogs = await getCachedBlogs(100); 
 
-  const filteredBlogs = blogs.filter((blog) => {
-    const q = search.toLowerCase().trim();
-    if (!q) return true;
+  const filteredBlogs = allBlogs.filter((blog: any) => {
+    const searchTerm = q.toLowerCase().trim();
+    if (!searchTerm) return true;
     return (
-      blog.title.toLowerCase().includes(q) ||
-      (blog.metaDescription ?? '').toLowerCase().includes(q)
+      blog.title.toLowerCase().includes(searchTerm) ||
+      (blog.metaDescription ?? '').toLowerCase().includes(searchTerm)
     );
   });
 
-  const [featuredBlog, ...gridBlogs] = filteredBlogs;
+  const totalBlogs = filteredBlogs.length;
+  const totalPages = Math.ceil(totalBlogs / limit);
+  const paginatedBlogs = filteredBlogs.slice((currentPage - 1) * limit, currentPage * limit);
+
+  const [featuredBlog, ...gridBlogs] = paginatedBlogs;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/[0.03] via-background to-background">
@@ -81,25 +60,21 @@ function BlogListingContent() {
         </div>
 
         <div className="mb-12 rounded-2xl border bg-card/70 backdrop-blur p-4 md:p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-md">
+          <form className="relative w-full md:max-w-md" method="GET">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+            <input
+              name="q"
+              defaultValue={q}
               placeholder="Search by title or topic..."
-              className="pl-9"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-9 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
-          </div>
+          </form>
           <p className="text-sm text-muted-foreground italic md:not-italic">
-            {loading ? (
-              <span className="animate-pulse">Calculating results...</span>
-            ) : (
-              <>Showing <span className="font-bold text-foreground">{filteredBlogs.length}</span> article{filteredBlogs.length === 1 ? '' : 's'}</>
-            )}
+            Showing <span className="font-bold text-foreground">{totalBlogs}</span> article{totalBlogs === 1 ? '' : 's'}
           </p>
         </div>
 
-        {!loading && featuredBlog && (
+        {featuredBlog && (
           <Link
             href={`/blog/${featuredBlog.slug}`}
             className="group mb-10 grid md:grid-cols-2 overflow-hidden rounded-[2rem] border bg-card hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500"
@@ -132,19 +107,9 @@ function BlogListingContent() {
               </span>
             </div>
           </Link>
-        )}
+        </div>
 
-        
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="md:col-span-2 lg:col-span-3">
-              <BlogFeaturedSkeleton />
-            </div>
-            {[...Array(6)].map((_, i) => (
-              <BlogCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : filteredBlogs.length === 0 ? (
+        {paginatedBlogs.length === 0 ? (
           <div className="text-center py-20 bg-muted/30 rounded-3xl border border-dashed border-border/50">
             <Newspaper className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-xl font-bold">No posts found</h2>
@@ -152,7 +117,7 @@ function BlogListingContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {(featuredBlog ? gridBlogs : filteredBlogs).map((blog) => (
+            {(currentPage === 1 && featuredBlog ? gridBlogs : paginatedBlogs).map((blog: any) => (
               <Link
                 key={blog._id}
                 href={`/blog/${blog.slug}`}
@@ -199,38 +164,17 @@ function BlogListingContent() {
           </div>
         )}
 
-        {!loading && pagination.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-12 pt-8 border-t">
             <Pagination 
               currentPage={currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={(page) => {
-                setCurrentPage(page);
-                const params = new URLSearchParams(searchParams.toString());
-                params.set('page', page.toString());
-                router.push(`${pathname}?${params.toString()}`, { scroll: false });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              totalPages={totalPages}
+              baseUrl="/blog"
+              query={{ q }}
             />
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-export default function BlogListingPage() {
-  return (
-    <Suspense fallback={
-        <div className="min-h-screen bg-gradient-to-b from-primary/[0.03] via-background to-background">
-            <div className="container mx-auto px-4 py-16 md:py-20 max-w-7xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-12">
-                    {[...Array(6)].map((_, i) => <BlogCardSkeleton key={i} />)}
-                </div>
-            </div>
-        </div>
-    }>
-        <BlogListingContent />
-    </Suspense>
   );
 }

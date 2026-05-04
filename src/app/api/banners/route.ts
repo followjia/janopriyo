@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Banner from '@/models/Banner';
 import { auth } from '@/auth';
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
       isActive: isActive !== undefined ? isActive : true,
     });
 
-    revalidateTag('banners', 'default');
+    revalidateTag('banners');
+    revalidatePath('/');
 
     return NextResponse.json(newBanner, { status: 201 });
   } catch (error) {

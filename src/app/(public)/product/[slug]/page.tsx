@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
-import { cache } from 'react';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
 import ProductDetailsClient from './ProductDetailsClient';
@@ -14,23 +13,11 @@ const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 };
 
-const getProduct = cache(async (slug: string) => {
-  try {
-    await connectToDatabase();
-    // Use lean() for better performance and plain object return
-    const product = await Product.findOne({ slug })
-      .populate('categories')
-      .lean();
+import { getCachedProductBySlug } from '@/lib/data-fetching';
 
-    if (!product) return null;
-
-    // Stringify ObjectIDs and other non-serializable fields for client components
-    return JSON.parse(JSON.stringify(product));
-  } catch (error) {
-    console.error('Error fetching product by slug:', error);
-    return null;
-  }
-});
+const getProduct = async (slug: string) => {
+  return getCachedProductBySlug(slug);
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

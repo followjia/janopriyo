@@ -60,75 +60,56 @@ const NewsletterV2 = dynamic(() => import('@/components/storefront/NewsletterV2'
   loading: () => <BannerSkeleton />
 });
 
+import {
+  getCachedBanners,
+  getCachedCategories,
+  getCachedProducts,
+  getCachedBlogs,
+  getCachedFAQs,
+  getCachedSettings,
+  getCachedActiveCoupon
+} from '@/lib/data-fetching';
+
 async function getHomeData() {
   try {
-    await connectToDatabase();
-
     const [
-      bannersRaw,
-      categoriesRaw,
-      featuredProductsRaw,
-      newArrivalsRaw,
-      flashSaleRaw,
-      trendingRaw,
-      blogsRaw,
-      faqsRaw,
-      settingsRaw,
-      activeCouponRaw
+      banners,
+      categories,
+      featuredProducts,
+      newArrivals,
+      flashSale,
+      trending,
+      blogs,
+      faqs,
+      settings,
+      activeCoupon
     ] = await Promise.all([
-      Banner.find({ isActive: true }).sort({ order: 1 }).lean(),
-      Category.find({ isActive: true }).sort({ createdAt: -1 }).lean(),
-      // Featured Products
-      Product.find({ isPublished: true, isFeatured: true })
-        .populate('categories')
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .lean(),
-      // New Arrivals
-      Product.find({ isPublished: true, isNewArrival: true })
-        .populate('categories')
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .lean(),
-      // Flash Sale (Items on sale)
-      Product.find({ isPublished: true, salePrice: { $exists: true, $ne: null } })
-        .populate('categories')
-        .sort({ salePrice: 1 })
-        .limit(10)
-        .lean(),
-      // Trending (Based on ratings/reviews)
-      Product.find({ isPublished: true })
-        .populate('categories')
-        .sort({ ratings: -1, numReviews: -1 })
-        .limit(10)
-        .lean(),
-      // Recent Blogs
-      Blog.find({ isPublished: true }).sort({ createdAt: -1 }).limit(1).lean(),
-      // FAQs
-      FAQ.find({ isActive: true }).sort({ order: 1 }).lean(),
-      // Global Settings for Loyalty Info
-      GlobalSettings.findOne({}).lean(),
-      // Active Coupon for Announcement
-      Coupon.findOne({ isActive: true, expiryDate: { $gt: new Date() } }).sort({ createdAt: -1 }).lean()
+      getCachedBanners(),
+      getCachedCategories(),
+      getCachedProducts({ isFeatured: true }, 10),
+      getCachedProducts({ isNewArrival: true }, 10),
+      getCachedProducts({ salePrice: { $exists: true, $ne: null } }, 10, { salePrice: 1 }),
+      getCachedProducts({}, 10, { ratings: -1, numReviews: -1 }),
+      getCachedBlogs(1),
+      getCachedFAQs(),
+      getCachedSettings(),
+      getCachedActiveCoupon()
     ]);
 
-
-    const serialize = (data: any): any => JSON.parse(JSON.stringify(data));
-
     return {
-      banners: serialize(bannersRaw),
-      categories: serialize(categoriesRaw),
-      featuredProducts: serialize(featuredProductsRaw),
-      newArrivals: serialize(newArrivalsRaw),
-      flashSale: serialize(flashSaleRaw),
-      trending: serialize(trendingRaw),
-      blogs: serialize(blogsRaw),
-      faqs: serialize(faqsRaw && faqsRaw.length > 0 ? faqsRaw : []),
-      settings: serialize(settingsRaw || null),
-      activeCoupon: serialize(activeCouponRaw || null)
+      banners,
+      categories,
+      featuredProducts,
+      newArrivals,
+      flashSale,
+      trending,
+      blogs,
+      faqs: faqs && faqs.length > 0 ? faqs : [],
+      settings,
+      activeCoupon
     };
   } catch (error) {
-    console.error("Error fetching home data directly from DB:", error);
+    console.error("Error fetching home data via cache:", error);
     return {
       banners: [],
       categories: [],

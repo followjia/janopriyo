@@ -1,13 +1,11 @@
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Marquee } from '@/components/layout/Marquee';
-import connectToDatabase from "@/lib/db";
-import GlobalSettings from "@/models/GlobalSettings";
+import { getCachedSettings } from '@/lib/data-fetching';
 
 async function getMarqueeText() {
   try {
-    await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).select('marqueeText').lean();
+    const settings = await getCachedSettings();
     return settings?.marqueeText || 'Welcome to Janopriyo Shop! Free shipping on orders over $500.';
   } catch (error) {
     console.error('Error fetching marquee text:', error);

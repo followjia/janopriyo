@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
@@ -138,7 +138,8 @@ export async function POST(req: NextRequest) {
           isPublished: isPublished !== undefined ? isPublished : true,
         });
 
-        revalidateTag('products', 'default');
+        revalidateTag('products');
+    revalidatePath('/');
         return NextResponse.json(newProduct, { status: 201 });
       } catch (error: any) {
         lastError = error;

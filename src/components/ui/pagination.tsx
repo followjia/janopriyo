@@ -2,11 +2,14 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
+  onPageChange?: (page: number) => void;
+  baseUrl?: string;
+  query?: Record<string, string>;
   className?: string;
 }
 
@@ -14,6 +17,8 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
+  baseUrl,
+  query = {},
   className,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
@@ -35,6 +40,47 @@ export function Pagination({
     }
   }
 
+  const getPageUrl = (page: number) => {
+    if (!baseUrl) return "#";
+    const params = new URLSearchParams(query);
+    if (page > 1) params.set('page', page.toString());
+    else params.delete('page');
+    const queryString = params.toString();
+    return `${baseUrl}${queryString ? `?${queryString}` : ''}`;
+  };
+
+  const renderButton = (page: number, label: React.ReactNode, icon?: React.ReactNode, disabled?: boolean) => {
+    const isCurrent = currentPage === page;
+    const content = icon || label;
+    
+    if (baseUrl && !disabled) {
+      return (
+        <Button
+          asChild
+          variant={isCurrent ? "default" : "ghost"}
+          size={icon ? "icon" : "default"}
+          className={cn(icon ? "h-9 w-9" : "px-4", !isCurrent && "text-muted-foreground")}
+        >
+          <Link href={getPageUrl(page)} aria-label={typeof label === 'string' ? label : undefined}>
+            {content}
+          </Link>
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        variant={isCurrent ? "default" : "ghost"}
+        size={icon ? "icon" : "default"}
+        onClick={() => onPageChange?.(page)}
+        disabled={disabled}
+        className={cn(icon ? "h-9 w-9" : "px-4", !isCurrent && "text-muted-foreground")}
+      >
+        {content}
+      </Button>
+    );
+  };
+
   return (
     <nav
       role="navigation"
@@ -43,15 +89,7 @@ export function Pagination({
     >
       <ul className="flex flex-row items-center gap-1">
         <li>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            aria-label="Go to previous page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          {renderButton(currentPage - 1, "Previous", <ChevronLeft className="h-4 w-4" />, currentPage === 1)}
         </li>
         {visiblePages.map((page, index) => {
           if (page === -1) {
@@ -59,7 +97,6 @@ export function Pagination({
               <li key={`ellipsis-${index}`}>
                 <span className="flex h-9 w-9 items-center justify-center text-muted-foreground">
                   <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More pages</span>
                 </span>
               </li>
             );
@@ -67,28 +104,12 @@ export function Pagination({
 
           return (
             <li key={page}>
-              <Button
-                variant={currentPage === page ? "default" : "ghost"}
-                size="icon"
-                onClick={() => onPageChange(page)}
-                aria-current={currentPage === page ? "page" : undefined}
-                className={currentPage === page ? "" : "text-muted-foreground"}
-              >
-                {page}
-              </Button>
+              {renderButton(page, page.toString())}
             </li>
           );
         })}
         <li>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            aria-label="Go to next page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          {renderButton(currentPage + 1, "Next", <ChevronRight className="h-4 w-4" />, currentPage === totalPages)}
         </li>
       </ul>
     </nav>
