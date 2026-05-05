@@ -128,7 +128,10 @@ export async function POST(req: NextRequest) {
       settings = await GlobalSettings.create(allowedBody);
     }
 
-    revalidateTag('settings', 'max');
+    revalidateTag('settings');
+    revalidatePath('/', 'layout');
+    revalidatePath('/shop', 'page');
+    revalidatePath('/blog', 'page');
     
     // Mask sensitive response data for the return
     const safeResult = {

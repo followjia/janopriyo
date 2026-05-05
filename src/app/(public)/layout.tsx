@@ -17,9 +17,8 @@ export default async function PublicLayout({ children }: { children: React.React
 
   const marqueeText = settings?.marqueeText || 'Welcome to Janopriyo Shop! Free shipping on orders over $500.';
   const ui = {
-    navbar: 'v1',
-    footer: 'v1',
-    ...settings?.uiTemplates
+    navbar: settings?.uiTemplates?.navbar || 'v1',
+    footer: settings?.uiTemplates?.footer || 'v1',
   };
 
   return (

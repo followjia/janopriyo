@@ -129,10 +129,10 @@ async function getHomeData() {
 
 export default async function Home() {
   const data = await getHomeData();
-  const ui = data.settings?.uiTemplates || { 
-    hero: 'v1', 
-    categories: 'v1', 
-    productCard: 'v1' 
+  const ui = {
+    hero: data.settings?.uiTemplates?.hero || 'v1',
+    categories: data.settings?.uiTemplates?.categories || 'v1',
+    productCard: data.settings?.uiTemplates?.productCard || 'v1'
   };
 
   return (

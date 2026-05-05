@@ -50,9 +50,10 @@ export const BlogDetailsSelector = ({ style, blog, readingTime }: { style: strin
 const ShopV1 = dynamic(() => import('./shop-page/ShopV1'));
 
 export const ShopListingSelector = ({ style, products, categories, searchParams }: { style: string, products: any[], categories: any[], searchParams: any }) => {
-  switch (style) {
-    case 'v1': return <ShopV1 products={products} categories={categories} searchParams={searchParams} />;
-    default: return <ShopV1 products={products} categories={categories} searchParams={searchParams} />;
+  const activeStyle = style || 'v1';
+  switch (activeStyle) {
+    case 'v1': return <ShopV1 products={products} categories={categories} searchParams={searchParams} style={activeStyle} />;
+    default: return <ShopV1 products={products} categories={categories} searchParams={searchParams} style={activeStyle} />;
   }
 };
 
@@ -82,7 +83,7 @@ export const BlogListingSelector = ({
   const activeQ = q || searchTerm || '';
 
   switch (activeStyle) {
-    case 'v1': return <BlogListingV1 blogs={blogs} totalBlogs={totalBlogs} totalPages={totalPages} currentPage={currentPage} q={activeQ} />;
-    default: return <BlogListingV1 blogs={blogs} totalBlogs={totalBlogs} totalPages={totalPages} currentPage={currentPage} q={activeQ} />;
+    case 'v1': return <BlogListingV1 blogs={blogs} totalBlogs={totalBlogs} totalPages={totalPages} currentPage={currentPage} q={activeQ} style={activeStyle} />;
+    default: return <BlogListingV1 blogs={blogs} totalBlogs={totalBlogs} totalPages={totalPages} currentPage={currentPage} q={activeQ} style={activeStyle} />;
   }
 };

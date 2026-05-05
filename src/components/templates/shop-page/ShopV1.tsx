@@ -2,9 +2,10 @@ import { Suspense } from 'react';
 import ShopClient from './ShopClient';
 import { ShopHeaderSkeleton, ProductCardSkeleton } from '@/components/storefront/Skeletons';
 
-export default function ShopV1({ products, categories, searchParams }: { products: any[], categories: any[], searchParams: any }) {
+export default function ShopV1({ products, categories, searchParams, style }: { products: any[], categories: any[], searchParams: any, style?: string }) {
   return (
     <Suspense fallback={
+      // ... (keeping existing fallback code)
       <div className="container py-10">
         <ShopHeaderSkeleton />
         <div className="flex flex-col gap-8 md:flex-row">
@@ -35,6 +36,7 @@ export default function ShopV1({ products, categories, searchParams }: { product
         initialProducts={products} 
         initialCategories={categories} 
         searchParams={searchParams}
+        cardStyle={style}
       />
     </Suspense>
   );

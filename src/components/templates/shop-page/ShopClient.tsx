@@ -62,9 +62,10 @@ interface ShopClientProps {
   initialProducts: ShopProduct[];
   initialCategories: ShopCategory[];
   searchParams?: any;
+  cardStyle?: string;
 }
 
-export default function ShopClient({ initialProducts, initialCategories, searchParams: initialSearchParams }: ShopClientProps) {
+export default function ShopClient({ initialProducts, initialCategories, searchParams: initialSearchParams, cardStyle }: ShopClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -369,7 +370,7 @@ export default function ShopClient({ initialProducts, initialCategories, searchP
           ) : (
             <div className={`grid gap-6 ${view === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
               {paginatedProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard key={product._id} product={product} style={cardStyle} />
               ))}
             </div>
           )}

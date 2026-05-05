@@ -134,7 +134,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {related.map((item: any) => (
-              <ProductCard key={item._id} product={item} />
+              <ProductCard key={item._id} product={item} style={settings?.uiTemplates?.productCard || 'v1'} />
             ))}
           </div>
         </section>

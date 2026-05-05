@@ -21,6 +21,7 @@ export default function BlogListingV1({
   totalPages: number;
   currentPage: number;
   q: string;
+  style?: string;
 }) {
   const [featuredBlog, ...gridBlogs] = blogs;
 
