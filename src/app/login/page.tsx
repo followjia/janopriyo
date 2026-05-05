@@ -67,7 +67,15 @@ export default function LoginPage() {
         toast.error(response.error);
       } else {
         toast.success('Logged in successfully!');
-        router.push('/dashboard');
+        
+        const remoteTenant = searchParams.get('remote_tenant');
+        const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
+
+        if (remoteTenant && isValidTenant) {
+          router.push(`/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}`);
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       }
     } catch (error) {
@@ -81,22 +89,23 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     try {
       const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
+      const currentHost = window.location.host;
       
       // Normalize comparison to handle www vs non-www
-      const isHub = window.location.host === hubDomain || 
-                    window.location.host.replace('www.', '') === hubDomain.replace('www.', '');
+      const isHub = currentHost === hubDomain || 
+                    currentHost.replace('www.', '') === hubDomain.replace('www.', '');
 
       if (!isHub) {
+        // We are on a tenant, redirect to the HUB LOGIN PAGE first
         const isProd = process.env.NODE_ENV === 'production';
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-        const callbackUrl = `${window.location.protocol}//${window.location.host}/dashboard`;
-        const authUrl = `${protocol}://${hubDomain}/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-        window.location.href = authUrl;
+        const hubLoginUrl = `${protocol}://${hubDomain}/login?remote_tenant=${currentHost}`;
+        window.location.href = hubLoginUrl;
         return;
       }
 
       // We are on the hub, check if we need to return to a tenant after login
-      // Security: Validate remoteTenant to prevent Open Redirect
+      const remoteTenant = searchParams.get('remote_tenant');
       const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
       
       const finalCallback = (remoteTenant && isValidTenant)
