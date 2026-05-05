@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       settings = await GlobalSettings.create(allowedBody);
     }
 
-    revalidateTag('settings');
+    revalidateTag('settings', 'max');
     revalidatePath('/', 'layout');
     revalidatePath('/shop', 'page');
     revalidatePath('/blog', 'page');
