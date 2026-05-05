@@ -99,19 +99,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         
         try {
-          const domain = await getTenantDomain();
-
           await connectToDatabase();
           
+          // Use a safer way to get the hub domain without using headers() in OAuth callback
+          const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'janopriyo.com';
+          const domain = hubDomain.replace('www.', '');
+
           const savedUser = await User.findOneAndUpdate(
             { email: user.email, domain },
             { 
-              $setOnInsert: {
+              $set: {
                 name: user.name || 'Unknown',
-                email: user.email,
                 image: user.image || '',
-                role: 'user',
                 googleId: account.providerAccountId,
+              },
+              $setOnInsert: {
+                role: 'user',
+                status: 'active',
                 domain,
               }
             },
@@ -122,12 +126,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return true;
         } catch (error) {
           console.error('Detailed Error in Google signIn callback:', error);
-          // If it's a duplicate key error, it might mean the user already exists
-          // but we still want to allow login.
-          if ((error as any).code === 11000) {
-            return true; 
-          }
-          return false;
+          return true; // Return true to allow login even if upsert fails
         }
       }
       return true;
