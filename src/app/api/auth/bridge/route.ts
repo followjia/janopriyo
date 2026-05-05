@@ -40,6 +40,21 @@ export async function GET(req: NextRequest) {
        return NextResponse.redirect(new URL('/login?error=TokenExpired', req.url));
     }
 
+    // Re-encode the token for a long-term session (30 days)
+    const { encode } = await import('next-auth/jwt');
+    const sessionToken = await encode({
+      token: {
+        id: decoded.id,
+        email: decoded.email,
+        name: decoded.name,
+        image: decoded.image,
+        role: (decoded as any).role,
+        exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days
+      },
+      secret,
+      salt: 'authjs.session-token',
+    });
+
     // Connect to DB to sync user for this tenant
     const { headers } = await import('next/headers');
     const headersList = await headers();
@@ -73,13 +88,12 @@ export async function GET(req: NextRequest) {
       }
     } catch (dbError) {
       console.error('Bridge: Database/User sync error:', dbError instanceof Error ? dbError.message : dbError);
-      // We continue even if DB sync fails, so the user can still get a session
     }
 
     const cookieStore = await cookies();
     
     console.log('Bridge: Setting session cookie');
-    cookieStore.set(cookieName, token, {
+    cookieStore.set(cookieName, sessionToken, {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',
