@@ -56,7 +56,14 @@ const ProductSchema: Schema<IProduct> = new Schema(
     },
     discountRate: { type: Number },
     sku: { type: String, required: true },
-    domain: { type: String, required: true, index: true },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
     stock: { type: Number, required: true, default: 0, min: [0, 'Stock cannot be negative'] },
     categories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
     tags: [{ type: String }],

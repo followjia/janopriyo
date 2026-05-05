@@ -47,7 +47,14 @@ const UserSchema: Schema<IUser> = new Schema(
       trim: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.[A-Za-z]{2,})+$/, 'Please provide a valid email address']
     },
-    domain: { type: String, required: true, index: true, default: 'unknown' },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
     password: { type: String, select: false },
     role: { type: String, enum: ['super_admin', 'admin', 'user'], default: 'user' },
     image: { type: String },

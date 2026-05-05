@@ -18,7 +18,14 @@ const CategorySchema: Schema<ICategory> = new Schema(
     image: { type: String },
     parentCategory: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     isActive: { type: Boolean, default: true },
-    domain: { type: String, required: true, index: true },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
   },
   { timestamps: true }
 );

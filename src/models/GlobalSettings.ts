@@ -132,7 +132,15 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       activationThreshold: { type: Number, default: 5000 },
       rewardPercentage: { type: Number, default: 5 },
     },
-    domain: { type: String, required: false, unique: false }, // Will be set to required: true, unique: true after migration
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
     storeId: { type: String, required: false, unique: false }, // Will be set to required: true, unique: true after migration
     paymentConfig: {
       activeMethod: { type: String, enum: ['sslcommerz', 'none'], default: 'none' },

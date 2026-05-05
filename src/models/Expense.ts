@@ -23,7 +23,14 @@ const ExpenseSchema: Schema<IExpense> = new Schema(
     },
     date: { type: Date, required: true, default: Date.now },
     description: { type: String },
-    domain: { type: String, required: true, index: true, default: 'unknown' },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
   },
   { timestamps: true }
 );

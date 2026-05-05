@@ -22,7 +22,14 @@ const CouponSchema: Schema<ICoupon> = new Schema(
       uppercase: true, 
       trim: true 
     },
-    domain: { type: String, required: true, index: true },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
     discountType: { 
       type: String, 
       enum: ['fixed', 'percentage'], 

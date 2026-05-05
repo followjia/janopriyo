@@ -98,7 +98,14 @@ const OrderSchema: Schema<IOrder> = new Schema(
       trackingUrl: { type: String },
       courierStatus: { type: String },
     },
-    domain: { type: String, required: true, index: true, default: 'unknown' },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
