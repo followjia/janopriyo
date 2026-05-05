@@ -31,14 +31,16 @@ const getReadingTime = (rawContent: string) => {
 
 import { BlogDetailsSelector } from '@/components/templates/ServerRegistry';
 import { getCachedBlogBySlug, getCachedSettings } from '@/lib/data-fetching';
+import { getTenantDomain } from '@/lib/tenant';
 
-async function getBlog(slug: string) {
-  return getCachedBlogBySlug(slug);
+async function getBlog(domain: string, slug: string) {
+  return getCachedBlogBySlug(domain, slug);
 }
 
 export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {
   const { slug } = await params;
-  const blog = await getBlog(slug);
+  const domain = await getTenantDomain();
+  const blog = await getBlog(domain, slug);
 
   if (!blog) return { title: 'Blog Not Found' };
 
@@ -56,11 +58,12 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
 
 export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const { slug } = await params;
+  const domain = await getTenantDomain();
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
 
   const [blog, settings] = await Promise.all([
-    getBlog(slug),
+    getBlog(domain, slug),
     getCachedSettings(hostname)
   ]);
 

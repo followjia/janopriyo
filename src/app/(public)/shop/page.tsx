@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
 import { getCachedProducts, getCachedCategories, getCachedSettings } from '@/lib/data-fetching';
+import { getTenantDomain } from '@/lib/tenant';
 import { ShopHeaderSkeleton, ProductCardSkeleton } from '@/components/storefront/Skeletons';
 import { ShopListingSelector } from '@/components/templates/ServerRegistry';
 
@@ -10,13 +11,14 @@ export const metadata = {
 };
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const domain = await getTenantDomain();
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
 
   // Fetch initial data on the server with caching
   const [initialProducts, initialCategories, settings] = await Promise.all([
-    getCachedProducts({}, 1000), // Get a large batch for client-side filtering
-    getCachedCategories(),
+    getCachedProducts(domain, {}, 1000), // Pass domain
+    getCachedCategories(domain), // Pass domain
     getCachedSettings(hostname)
   ]);
 

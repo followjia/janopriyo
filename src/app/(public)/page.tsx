@@ -60,6 +60,7 @@ const NewsletterV2 = dynamic(() => import('@/components/storefront/NewsletterV2'
   loading: () => <BannerSkeleton />
 });
 
+import { getTenantDomain } from '@/lib/tenant';
 import { headers } from 'next/headers';
 import {
   getCachedBanners,
@@ -73,6 +74,7 @@ import {
 
 async function getHomeData() {
   try {
+    const domain = await getTenantDomain();
     const headersList = await headers();
     const hostname = headersList.get('host') || 'localhost';
 
@@ -88,16 +90,16 @@ async function getHomeData() {
       settings,
       activeCoupon
     ] = await Promise.all([
-      getCachedBanners(),
-      getCachedCategories(),
-      getCachedProducts({ isFeatured: true }, 10),
-      getCachedProducts({ isNewArrival: true }, 10),
-      getCachedProducts({ salePrice: { $exists: true, $ne: null } }, 10, { salePrice: 1 }),
-      getCachedProducts({}, 10, { ratings: -1, numReviews: -1 }),
-      getCachedBlogs(1),
-      getCachedFAQs(),
+      getCachedBanners(domain),
+      getCachedCategories(domain),
+      getCachedProducts(domain, { isFeatured: true }, 10),
+      getCachedProducts(domain, { isNewArrival: true }, 10),
+      getCachedProducts(domain, { salePrice: { $exists: true, $ne: null } }, 10, { salePrice: 1 }),
+      getCachedProducts(domain, {}, 10, { ratings: -1, numReviews: -1 }),
+      getCachedBlogs(domain, 1),
+      getCachedFAQs(domain),
       getCachedSettings(hostname),
-      getCachedActiveCoupon()
+      getCachedActiveCoupon(domain)
     ]);
 
     return {

@@ -10,18 +10,20 @@ import { ProductDetailsSelector } from '@/components/templates/ServerRegistry';
 import { ProductCard } from '@/components/storefront/ProductCard';
 import { getCachedProductBySlug, getCachedSettings } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
+import { getTenantDomain } from '@/lib/tenant';
 
 const sanitizeForScript = (json: any) => {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 };
 
-const getProduct = async (slug: string) => {
-  return getCachedProductBySlug(slug);
+const getProduct = async (domain: string, slug: string) => {
+  return getCachedProductBySlug(domain, slug);
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const domain = await getTenantDomain();
+  const product = await getProduct(domain, slug);
   if (!product) return { title: 'Product Not Found' };
 
   const safeDescription = (product.description ?? '').slice(0, 160);
@@ -51,11 +53,12 @@ import Script from 'next/script';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const domain = await getTenantDomain();
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
 
   const [product, settings] = await Promise.all([
-    getProduct(slug),
+    getProduct(domain, slug),
     getCachedSettings(hostname)
   ]);
 
@@ -67,6 +70,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   try {
     await connectToDatabase();
     const relatedProducts = await Product.find({
+      domain,
       _id: { $ne: product._id },
       isPublished: true,
       $or: [

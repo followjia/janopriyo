@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { getCachedBlogs, getCachedSettings } from '@/lib/data-fetching';
+import { getTenantDomain } from '@/lib/tenant';
 import { BlogListingSelector } from '@/components/templates/ServerRegistry';
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default async function BlogListingPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string }>;
 }) {
+  const domain = await getTenantDomain();
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
   const { page = '1', q = '' } = await searchParams;
@@ -26,8 +28,8 @@ export default async function BlogListingPage({
   // Fetch settings first to see if there's a custom limit, or just fetch all
   const settings = await getCachedSettings(hostname);
   
-  // Fetch blogs based on settings or a reasonable high limit for listing
-  const allBlogs = await getCachedBlogs(500); // Increased limit for better filtering
+  // Fetch blogs based on domain and a reasonable high limit for listing
+  const allBlogs = await getCachedBlogs(domain, 500); // Pass domain
 
   const filteredBlogs = allBlogs.filter((blog: any) => {
     const searchTerm = q.toLowerCase().trim();
