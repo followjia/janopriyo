@@ -19,14 +19,12 @@ export async function GET(req: NextRequest) {
   const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
 
   try {
-    // Verify the token with the correct salt
     const decoded = await decode({
       token,
       secret,
       salt: 'authjs.session-token', // Must match the salt used in hub-callback encode
     });
 
-    // Explicitly validate expiration and token presence
     const now = Math.floor(Date.now() / 1000);
     const isExpired = !decoded || typeof decoded.exp !== 'number' || decoded.exp < now;
 
@@ -44,7 +42,6 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
-    // Ensure the user exists for THIS tenant
     if (decoded.email) {
       await User.findOneAndUpdate(
         { email: decoded.email, domain },
@@ -52,7 +49,7 @@ export async function GET(req: NextRequest) {
           $setOnInsert: {
             name: decoded.name || 'Unknown',
             email: decoded.email,
-            image: decoded.picture || decoded.image || '',
+            image: (decoded as any).picture || (decoded as any).image || '',
             role: (decoded as any).role || 'user',
             domain,
           }
@@ -61,7 +58,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Set the session cookie on the tenant domain
     const cookieStore = await cookies();
     
     cookieStore.set(cookieName, token, {
@@ -72,16 +68,10 @@ export async function GET(req: NextRequest) {
       maxAge: 30 * 24 * 60 * 60, 
     });
 
-    // Create redirect response
     const response = NextResponse.redirect(new URL('/dashboard', req.url));
-
-    // Security Headers to prevent token leakage in Referrers
     response.headers.set('Referrer-Policy', 'no-referrer');
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-
     return response;
   } catch (error) {
-    // Sanitize logging to avoid leaking sensitive data in logs
     console.error('Bridge Error:', error instanceof Error ? error.message : 'Auth bridge failed');
     return NextResponse.redirect(new URL('/login?error=BridgeFailed', req.url));
   }

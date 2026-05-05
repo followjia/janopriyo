@@ -23,7 +23,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error('Please provide both email and password.');
         }
 
-        // headers() is safe inside authorize() — it runs during an HTTP request
         const headersList = await headers();
         const domain = headersList.get('host') || 'unknown';
 
@@ -52,11 +51,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // NOTE: Do NOT call headers() here — JWT callback runs outside request context
-      // during OAuth flows and will throw a Configuration error.
-
+      // Security: DO NOT use headers() in jwt callback to avoid Configuration Error
       if (user) {
-        // First login: get role from DB using the user's ID (domain-agnostic)
         if (user.id) {
           await connectToDatabase();
           const dbUser = await User.findById(user.id);
@@ -65,7 +61,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             token.role = dbUser.role ?? 'user';
             token.image = dbUser.image || user.image || token.picture;
           } else {
-            // Fallback: use data from the provider directly
             token.id = user.id;
             token.role = (user as any).role ?? 'user';
             token.image = user.image || token.picture;
@@ -77,7 +72,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // Update session if requested (e.g. name/image update)
       if (trigger === 'update') {
         if (session?.name !== undefined) token.name = session.name;
         if (session?.image !== undefined) token.image = session.image;
@@ -98,12 +92,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        if (!user.email) {
-          console.error('Google login failed: No email provided by Google');
-          return false;
-        }
+        if (!user.email) return false;
 
-        // headers() is safe in signIn callback — runs during an HTTP request
         try {
           const headersList = await headers();
           const domain = headersList.get('host') || 'unknown';
@@ -125,24 +115,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             { upsert: true, new: true }
           );
 
-          // Attach the DB id so jwt callback can use findById
           user.id = savedUser._id.toString();
           return true;
         } catch (error: any) {
           console.error('Error in Google signIn callback:', error);
-          // Duplicate key = user already exists for this domain → allow login
-          if (error.code === 11000) {
-            return true;
-          }
+          if (error.code === 11000) return true;
           return false;
         }
       }
       return true;
     },
   },
-  session: {
-    strategy: 'jwt',
-  },
+  session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
     error: '/login',

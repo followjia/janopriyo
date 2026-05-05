@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
   console.log(`Hub Callback triggered. Target: ${target}, Session: ${!!session}`);
 
   if (!session || !session.user) {
-    // If no session, go back to login with the target preserved
     const loginUrl = target ? `/login?remote_tenant=${encodeURIComponent(target)}` : '/login';
     return NextResponse.redirect(new URL(loginUrl, req.url));
   }
@@ -21,7 +20,6 @@ export async function GET(req: NextRequest) {
   }
 
   // Validate target to prevent Open Redirect attacks
-  // Must be a valid hostname (no protocol, no path traversal)
   const hasProtocol = target.includes('://');
   const hasDotOrIsLocal = target.includes('.') || target.includes('localhost');
   const isAllowed = !hasProtocol && hasDotOrIsLocal;
@@ -50,14 +48,10 @@ export async function GET(req: NextRequest) {
     salt: 'authjs.session-token',
   });
 
-  // Redirect back to tenant bridge
   const protocol = req.nextUrl.protocol;
   const bridgeUrl = `${protocol}//${target}/api/auth/bridge?token=${token}`;
 
   const response = NextResponse.redirect(bridgeUrl);
-  
-  // Security: Prevent token leakage in referrers
   response.headers.set('Referrer-Policy', 'no-referrer');
-  
   return response;
 }
