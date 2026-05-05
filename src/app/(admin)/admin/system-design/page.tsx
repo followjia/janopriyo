@@ -33,6 +33,19 @@ import {
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5'];
 
+const TEMPLATE_CONFIG = [
+  { id: 'layout', label: 'Primary Layout' },
+  { id: 'navbar', label: 'Navbar' },
+  { id: 'hero', label: 'Hero Section' },
+  { id: 'productCard', label: 'Product Card' },
+  { id: 'productDetail', label: 'Product Detail' },
+  { id: 'categories', label: 'Category View' },
+  { id: 'footer', label: 'Footer' },
+  { id: 'shopListing', label: 'Shop Page' },
+  { id: 'blogListing', label: 'Blog Listing' },
+  { id: 'blogDetail', label: 'Blog Detail' },
+];
+
 export default function SuperConfigPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -278,27 +291,34 @@ export default function SuperConfigPage() {
         </Card>
 
         {/* 6. Layout & Templates */}
-        <Card className="lg:col-span-2 border-2 shadow-none overflow-hidden rounded-3xl">
-           <CardHeader className="bg-muted/30 border-b">
-              <CardTitle className="flex items-center gap-2">
-                 <Layout className="h-5 w-5 text-primary" /> Design Orchestration
+        <Card className="lg:col-span-3 border-2 border-primary/10 shadow-none overflow-hidden rounded-3xl">
+           <CardHeader className="bg-primary/5 border-b">
+              <CardTitle className="flex items-center gap-2 text-primary">
+                 <Layout className="h-5 w-5" /> Design Orchestration
               </CardTitle>
+              <CardDescription>Select the active version for each UI component across the platform.</CardDescription>
            </CardHeader>
-           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="space-y-2">
-                <Label className="font-bold text-xs">Navbar</Label>
-                <Select value={ui.navbar ?? TEMPLATE_OPTIONS[0]} onValueChange={(v) => updateTemplate('navbar', v)}>
-                  <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>{TEMPLATE_OPTIONS.map(o => <SelectItem key={o} value={o}>Version {o.toUpperCase()}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold text-xs">Product Detail</Label>
-                <Select value={ui.productDetail ?? TEMPLATE_OPTIONS[0]} onValueChange={(v) => updateTemplate('productDetail', v)}>
-                  <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>{TEMPLATE_OPTIONS.map(o => <SelectItem key={o} value={o}>Version {o.toUpperCase()}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+           <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+               {TEMPLATE_CONFIG.map((template) => (
+                 <div key={template.id} className="space-y-2">
+                   <Label className="font-bold text-[10px] uppercase tracking-wider opacity-60">{template.label}</Label>
+                   <Select 
+                     value={ui[template.id] ?? 'v1'} 
+                     onValueChange={(v) => updateTemplate(template.id, v)}
+                   >
+                     <SelectTrigger className="h-12 rounded-xl bg-background border-2 border-muted hover:border-primary/50 transition-colors">
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       {TEMPLATE_OPTIONS.map(o => (
+                         <SelectItem key={o} value={o} className="rounded-lg">
+                           Version {o.toUpperCase()}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+               ))}
            </CardContent>
         </Card>
 
