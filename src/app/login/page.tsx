@@ -96,11 +96,19 @@ export default function LoginPage() {
                     currentHost.replace('www.', '') === hubDomain.replace('www.', '');
 
       if (!isHub) {
-        // We are on a tenant, redirect to the HUB LOGIN PAGE first
+        // We are on a tenant — go DIRECTLY to the hub's Google OAuth endpoint.
+        // This avoids relying on React state (useSearchParams) on the hub login page,
+        // which was causing remote_tenant to be silently dropped.
         const isProd = process.env.NODE_ENV === 'production';
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-        const hubLoginUrl = `${protocol}://${hubDomain}/login?remote_tenant=${currentHost}`;
-        window.location.href = hubLoginUrl;
+        const hubBase = `${protocol}://${hubDomain}`;
+
+        // Build the full hub-callback URL that Google will redirect to after auth
+        const hubCallbackUrl = `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(currentHost)}`;
+
+        // Go directly to Google sign-in on the hub, with the callback pre-encoded
+        const googleSignInUrl = `${hubBase}/api/auth/signin/google?callbackUrl=${encodeURIComponent(hubCallbackUrl)}`;
+        window.location.href = googleSignInUrl;
         return;
       }
 
