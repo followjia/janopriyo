@@ -55,12 +55,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Security: DO NOT use headers() here as it causes Configuration Error in OAuth
         if (user.id) {
            await connectToDatabase();
-           const dbUser = await User.findById(user.id);
-           if (dbUser) {
-             token.id = dbUser._id.toString();
-             token.role = dbUser.role ?? 'user';
-             token.image = dbUser.image || user.image || token.picture;
+           const mongoose = (await import('mongoose')).default;
+           
+           // Only query DB if it's a valid MongoDB ObjectId
+           // This prevents "Configuration Error" when Google sends its own string ID
+           if (mongoose.Types.ObjectId.isValid(user.id)) {
+             const dbUser = await User.findById(user.id);
+             if (dbUser) {
+               token.id = dbUser._id.toString();
+               token.role = dbUser.role ?? 'user';
+               token.image = dbUser.image || user.image || token.picture;
+             } else {
+               token.id = user.id;
+               token.role = (user as any).role ?? 'user';
+               token.image = user.image || token.picture;
+             }
            } else {
+             // If not a valid ObjectId, we still need to keep the user's data
              token.id = user.id;
              token.role = (user as any).role ?? 'user';
              token.image = user.image || token.picture;
@@ -127,7 +138,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             { upsert: true, new: true }
           );
 
-          user.id = savedUser._id.toString();
+          if (savedUser) {
+            user.id = savedUser._id.toString();
+            // Assign super_admin role for the specific email during sign-in
+            if (user.email === 'imranshuvo101@gmail.com') {
+              (user as any).role = 'super_admin';
+            }
+          }
+          
           return true;
         } catch (error) {
           console.error('Detailed Error in Google signIn callback:', error);
