@@ -34,6 +34,33 @@ export async function GET(req: NextRequest) {
        return NextResponse.redirect(new URL('/login?error=TokenExpired', req.url));
     }
 
+    // Connect to DB to sync user for this tenant
+    const { headers } = await import('next/headers');
+    const headersList = await headers();
+    const domain = headersList.get('host') || 'unknown';
+
+    const connectToDatabase = (await import('@/lib/db')).default;
+    const User = (await import('@/models/User')).default;
+
+    await connectToDatabase();
+
+    // Ensure the user exists for THIS tenant
+    if (decoded.email) {
+      await User.findOneAndUpdate(
+        { email: decoded.email, domain },
+        {
+          $setOnInsert: {
+            name: decoded.name || 'Unknown',
+            email: decoded.email,
+            image: decoded.picture || decoded.image || '',
+            role: (decoded as any).role || 'user',
+            domain,
+          }
+        },
+        { upsert: true }
+      );
+    }
+
     // Set the session cookie on the tenant domain
     const cookieStore = await cookies();
     

@@ -96,13 +96,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        if (!user.email) return false;
+        if (!user.email) {
+          console.error('Google login failed: No email provided by Google');
+          return false;
+        }
         
-        const headersList = await headers();
-        const domain = headersList.get('host') || 'unknown';
-
-        await connectToDatabase();
         try {
+          const headersList = await headers();
+          const domain = headersList.get('host') || 'unknown';
+
+          await connectToDatabase();
+          
           await User.findOneAndUpdate(
             { email: user.email, domain },
             { 
@@ -119,7 +123,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           );
           return true;
         } catch (error) {
-          console.error('Error in Google signIn callback', error);
+          console.error('Detailed Error in Google signIn callback:', error);
+          // If it's a duplicate key error, it might mean the user already exists
+          // but we still want to allow login.
+          if ((error as any).code === 11000) {
+            return true; 
+          }
           return false;
         }
       }
