@@ -22,7 +22,14 @@ async function migrate() {
     console.log('Connected to database.');
 
     const defaultDomain = 'janopriyo.com';
-    const filter = { domain: { $exists: false } };
+    const filter = { 
+      $or: [
+        { domain: { $exists: false } },
+        { domain: 'unknown' },
+        { domain: null },
+        { domain: '' }
+      ] 
+    };
     const update = { $set: { domain: defaultDomain } };
 
     const models = [
