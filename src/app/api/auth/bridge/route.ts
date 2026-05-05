@@ -100,7 +100,9 @@ export async function GET(req: NextRequest) {
       maxAge: 30 * 24 * 60 * 60,
     });
 
-    const response = NextResponse.redirect(new URL('/dashboard', req.url));
+    // Redirect to the tenant's homepage, NOT the hub
+    const tenantOrigin = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+    const response = NextResponse.redirect(`${tenantOrigin}/`);
     response.headers.set('Referrer-Policy', 'no-referrer');
     return response;
   } catch (error) {
