@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { auth } from '../../../../auth';
 import { encode } from 'next-auth/jwt';
 
 export async function GET(req: NextRequest) {
@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=InvalidTarget', req.url));
   }
 
-  const secret = process.env.NEXTAUTH_SECRET;
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
   if (!secret) {
-    console.error('NEXTAUTH_SECRET is not defined');
+    console.error('Hub Callback: NEXTAUTH_SECRET/AUTH_SECRET is not defined');
     return NextResponse.redirect(new URL('/login?error=ConfigurationError', req.url));
   }
 
