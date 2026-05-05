@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,12 +38,25 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const remoteTenant = searchParams.get('remote_tenant');
+  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'janopriyo.com';
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const searchParams = useSearchParams();
-  const remoteTenant = searchParams.get('remote_tenant');
-  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
+
+  // If already logged in and trying to access a tenant, redirect to callback immediately
+  useEffect(() => {
+    if (status === 'authenticated' && remoteTenant) {
+      const isValidTenant = !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
+      if (isValidTenant) {
+        console.log('User already logged in, redirecting to tenant:', remoteTenant);
+        router.push(`/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}`);
+      }
+    }
+  }, [status, remoteTenant, router]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
