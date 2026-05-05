@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const decoded = await decode({
       token,
       secret,
-      salt: cookieName,
+      salt: 'authjs.session-token', // Must match the salt used in hub-callback encode
     });
 
     // Explicitly validate expiration and token presence

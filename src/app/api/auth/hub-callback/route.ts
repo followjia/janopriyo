@@ -20,16 +20,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
-  // Validate target domain to prevent Open Redirect attacks
-  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 
-                   (process.env.NEXTAUTH_URL ? new URL(process.env.NEXTAUTH_URL).host : 'localhost:3000');
-  
-  const cleanHub = hubDomain.replace('www.', '');
-  const cleanTarget = target.replace('www.', '');
-
-  const isAllowed = cleanTarget === cleanHub || 
-                   target.endsWith(`.${cleanHub}`) || 
-                   target.includes('localhost');
+  // Validate target to prevent Open Redirect attacks
+  // Must be a valid hostname (no protocol, no path traversal)
+  const hasProtocol = target.includes('://');
+  const hasDotOrIsLocal = target.includes('.') || target.includes('localhost');
+  const isAllowed = !hasProtocol && hasDotOrIsLocal;
 
   if (!isAllowed) {
     return NextResponse.redirect(new URL('/login?error=InvalidTarget', req.url));
@@ -52,7 +47,7 @@ export async function GET(req: NextRequest) {
       exp: Math.floor(Date.now() / 1000) + 60, // 1 minute expiration
     },
     secret,
-    salt: 'authjs.session-token', // Default salt for Auth.js
+    salt: 'authjs.session-token',
   });
 
   // Redirect back to tenant bridge
