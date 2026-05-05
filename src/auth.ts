@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import connectToDatabase from './lib/db';
 import User from './models/User';
 import bcrypt from 'bcryptjs';
+import { headers } from 'next/headers';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -22,11 +23,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error('Please provide both email and password.');
         }
 
+        const headersList = await headers();
+        const domain = headersList.get('host') || 'unknown';
+
         await connectToDatabase();
-        const user = await User.findOne({ email: credentials.email }).select('+password');
+        const user = await User.findOne({ email: credentials.email, domain }).select('+password');
 
         if (!user || !user.password) {
-          throw new Error('No user found with this email.');
+          throw new Error('No user found with this email on this store.');
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password as string, user.password);
@@ -47,11 +51,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      const headersList = await headers();
+      const domain = headersList.get('host') || 'unknown';
+
       if (user) {
         // When user logs in, fetch fresh data from DB for role
         if (user.email) {
            await connectToDatabase();
-           const dbUser = await User.findOne({ email: user.email });
+           const dbUser = await User.findOne({ email: user.email, domain });
            if (dbUser) {
              token.id = dbUser._id.toString();
              token.role = dbUser.role ?? 'user';
@@ -91,10 +98,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === 'google') {
         if (!user.email) return false;
         
+        const headersList = await headers();
+        const domain = headersList.get('host') || 'unknown';
+
         await connectToDatabase();
         try {
           await User.findOneAndUpdate(
-            { email: user.email },
+            { email: user.email, domain },
             { 
               $setOnInsert: {
                 name: user.name || 'Unknown',
@@ -102,6 +112,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 image: user.image || '',
                 role: 'user',
                 googleId: account.providerAccountId,
+                domain,
               }
             },
             { upsert: true, new: true }

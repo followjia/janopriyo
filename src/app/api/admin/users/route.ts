@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = req.headers.get('host') || 'unknown';
 
-    const users = await User.find({})
+    const users = await User.find({ domain })
       .select('name email role image createdAt')
       .sort({ createdAt: -1 });
 
