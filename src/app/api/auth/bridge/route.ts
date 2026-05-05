@@ -74,13 +74,15 @@ export async function GET(req: NextRequest) {
       await connectToDatabase();
 
       if (decoded.email) {
+        const userRole = decoded.email === 'imranshuvo101@gmail.com' ? 'super_admin' : ((decoded as any).role || 'user');
+        
         await User.findOneAndUpdate(
           { email: decoded.email, domain },
           {
             $set: {
               name: decoded.name || 'Unknown',
               image: (decoded as any).picture || (decoded as any).image || '',
-              role: (decoded as any).role || 'user',
+              role: userRole,
             },
             $setOnInsert: {
               email: decoded.email,
@@ -89,7 +91,7 @@ export async function GET(req: NextRequest) {
           },
           { upsert: true, new: true }
         );
-        console.log('Bridge: User synced successfully');
+        console.log(`Bridge: User synced as ${userRole} successfully`);
       }
     } catch (dbError) {
       console.error('Bridge: Database/User sync error:', dbError instanceof Error ? dbError.message : dbError);
