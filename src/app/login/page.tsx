@@ -43,6 +43,16 @@ export default function LoginPage() {
   const remoteTenant = searchParams.get('remote_tenant');
   const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'www.janopriyo.com';
 
+  // Force WWW in production for consistency and to avoid Auth mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      const host = window.location.host;
+      if (host === 'janopriyo.com') {
+        window.location.href = `https://www.janopriyo.com${window.location.pathname}${window.location.search}`;
+      }
+    }
+  }, []);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
