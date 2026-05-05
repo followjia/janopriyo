@@ -110,12 +110,18 @@ export default function LoginPage() {
   async function loginWithGoogle() {
     setIsGoogleLoading(true);
     try {
-      const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
       const currentHost = window.location.host;
+      let hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'janopriyo.com';
       
+      // If we're on a janopriyo domain but the env var says localhost, use the current domain as hub
+      if (currentHost.includes('janopriyo.com') && hubDomain.includes('localhost')) {
+        hubDomain = currentHost.includes('www.') ? currentHost.replace('www.', '') : currentHost;
+      }
+
       console.log('Google Login Initiated:', { currentHost, hubDomain });
 
       const isHub = currentHost === hubDomain || 
+                    currentHost === `www.${hubDomain}` ||
                     currentHost.replace('www.', '') === hubDomain.replace('www.', '');
 
       if (!isHub) {
