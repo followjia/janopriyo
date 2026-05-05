@@ -51,32 +51,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // Security: DO NOT use headers() in jwt callback to avoid Configuration Error
       if (user) {
+        // When user logs in, fetch fresh data from DB for role
+        // Security: DO NOT use headers() here as it causes Configuration Error in OAuth
         if (user.id) {
-          await connectToDatabase();
-          const dbUser = await User.findById(user.id);
-          if (dbUser) {
-            token.id = dbUser._id.toString();
-            token.role = dbUser.role ?? 'user';
-            token.image = dbUser.image || user.image || token.picture;
-          } else {
-            token.id = user.id;
-            token.role = (user as any).role ?? 'user';
-            token.image = user.image || token.picture;
-          }
+           await connectToDatabase();
+           const dbUser = await User.findById(user.id);
+           if (dbUser) {
+             token.id = dbUser._id.toString();
+             token.role = dbUser.role ?? 'user';
+             token.image = dbUser.image || user.image || token.picture;
+           } else {
+             token.id = user.id;
+             token.role = (user as any).role ?? 'user';
+             token.image = user.image || token.picture;
+           }
         } else {
-          token.id = user.id;
-          token.role = (user as any).role ?? 'user';
-          token.image = user.image || token.picture;
+           token.id = user.id;
+           token.role = (user as any).role ?? 'user';
+           token.image = user.image || token.picture;
         }
       }
 
+      // Update session if requested (e.g. name/image update)
       if (trigger === 'update') {
         if (session?.name !== undefined) token.name = session.name;
         if (session?.image !== undefined) token.image = session.image;
       }
-
+      
       return token;
     },
     async session({ session, token }) {
@@ -92,17 +94,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        if (!user.email) return false;
-
+        if (!user.email) {
+          console.error('Google login failed: No email provided by Google');
+          return false;
+        }
+        
         try {
           const headersList = await headers();
           const domain = headersList.get('host') || 'unknown';
 
           await connectToDatabase();
-
+          
           const savedUser = await User.findOneAndUpdate(
             { email: user.email, domain },
-            {
+            { 
               $setOnInsert: {
                 name: user.name || 'Unknown',
                 email: user.email,
@@ -117,18 +122,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           user.id = savedUser._id.toString();
           return true;
-        } catch (error: any) {
-          console.error('Error in Google signIn callback:', error);
-          if (error.code === 11000) return true;
+        } catch (error) {
+          console.error('Detailed Error in Google signIn callback:', error);
+          // If it's a duplicate key error, it might mean the user already exists
+          // but we still want to allow login.
+          if ((error as any).code === 11000) {
+            return true; 
+          }
           return false;
         }
       }
       return true;
     },
   },
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: 'jwt',
+  },
   pages: {
-    signIn: '/login',
+    signIn: '/login', // Will be created later
     error: '/login',
   },
 });
