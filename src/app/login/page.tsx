@@ -43,30 +43,56 @@ export default function LoginPage() {
   const remoteTenant = searchParams.get('remote_tenant');
   const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'www.janopriyo.com';
 
-  // Force WWW in production for consistency and to avoid Auth mismatch
-  useEffect(() => {
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-      const host = window.location.host;
-      if (host === 'janopriyo.com') {
-        window.location.href = `https://www.janopriyo.com${window.location.pathname}${window.location.search}`;
-      }
-    }
-  }, []);
-
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
 
   // If already logged in and trying to access a tenant, redirect to callback immediately
   useEffect(() => {
     if (status === 'authenticated' && remoteTenant) {
-      const isValidTenant = !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
-      if (isValidTenant) {
-        console.log('User already logged in, redirecting to tenant:', remoteTenant);
-        router.push(`/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}`);
-      }
+      router.push(`/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}`);
     }
   }, [status, remoteTenant, router]);
+
+  // Auto-trigger Google login if coming from a tenant with the auto_google flag
+  useEffect(() => {
+    const autoGoogle = searchParams.get('auto_google');
+    if (autoGoogle === 'true' && !hasAutoTriggered) {
+      setHasAutoTriggered(true);
+      setTimeout(() => {
+        loginWithGoogle();
+      }, 500);
+    }
+  }, [searchParams, hasAutoTriggered]);
+
+  async function loginWithGoogle() {
+    setIsGoogleLoading(true);
+    try {
+      const currentHost = window.location.host;
+      const isHub = currentHost.includes('janopriyo.com') || currentHost.includes('localhost');
+
+      if (!isHub) {
+        const isProd = process.env.NODE_ENV === 'production';
+        const protocol = (isProd && !currentHost.includes('localhost')) ? 'https' : 'http';
+        window.location.href = `${protocol}://${hubDomain}/login?remote_tenant=${currentHost}&auto_google=true`;
+        return;
+      }
+
+      const isProd = process.env.NODE_ENV === 'production';
+      const protocol = (isProd && !currentHost.includes('localhost')) ? 'https' : 'http';
+      const baseUrl = `${protocol}://${currentHost}`;
+      
+      const finalCallback = remoteTenant
+        ? `${baseUrl}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
+        : `${baseUrl}/dashboard`;
+
+      await signIn('google', { callbackUrl: finalCallback });
+    } catch (error) {
+      setIsGoogleLoading(false);
+      toast.error('Failed to log in with Google.');
+    }
+  }
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -75,8 +101,6 @@ export default function LoginPage() {
       password: '',
     },
   });
-
-  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
@@ -108,95 +132,6 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   }
-
-  useEffect(() => {
-    const autoGoogle = searchParams.get('auto_google');
-    const remoteTenant = searchParams.get('remote_tenant');
-    
-    console.log('Login Page Load:', { 
-      currentHost: window.location.host, 
-      autoGoogle, 
-      remoteTenant,
-      hasAutoTriggered 
-    });
-
-    if (autoGoogle === 'true' && !hasAutoTriggered) {
-      console.log('Auto-triggering Google login...');
-      setHasAutoTriggered(true);
-      setTimeout(() => {
-        loginWithGoogle();
-      }, 500);
-    }
-  }, [searchParams, hasAutoTriggered]);
-
-  async function loginWithGoogle() {
-    setIsGoogleLoading(true);
-    try {
-      const currentHost = window.location.host;
-      let hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'www.janopriyo.com';
-      
-      // If we're on a janopriyo domain but the env var says localhost, use www.janopriyo.com
-      if (currentHost.includes('janopriyo.com') && hubDomain.includes('localhost')) {
-        hubDomain = 'www.janopriyo.com';
-      }
-
-      console.log('Google Login Initiated:', { currentHost, hubDomain });
-
-      const isHub = currentHost === hubDomain || 
-                    currentHost === `www.${hubDomain}` ||
-                    currentHost.replace('www.', '') === hubDomain.replace('www.', '');
-
-      if (!isHub) {
-        const isProd = process.env.NODE_ENV === 'production';
-        const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-        
-        // Use www for the hub in production if possible
-        const finalHubDomain = (isProd && !hubDomain.includes('www.') && hubDomain === 'janopriyo.com') 
-                               ? `www.${hubDomain}` 
-                               : hubDomain;
-        const hubBase = `${protocol}://${finalHubDomain}`;
-        
-        // Use the absolute URL of the HUB login page to avoid losing context
-        const hubLoginUrl = new URL(`${hubBase}/login`);
-        hubLoginUrl.searchParams.set('remote_tenant', currentHost);
-        hubLoginUrl.searchParams.set('auto_google', 'true');
-        
-        console.log('Redirecting to Hub for auto-login:', hubLoginUrl.toString());
-        window.location.href = hubLoginUrl.toString();
-        return;
-      }
-
-      const remoteTenant = searchParams.get('remote_tenant');
-      const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
-      
-      const isProd = process.env.NODE_ENV === 'production';
-      const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-      const baseUrl = `${protocol}://${currentHost}`;
-      
-      const finalCallback = (remoteTenant && isValidTenant)
-        ? `${baseUrl}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
-        : `${baseUrl}/dashboard`;
-
-      console.log('Signing in with Google. Callback:', finalCallback);
-      await signIn('google', { callbackUrl: finalCallback });
-    } catch (error) {
-      console.error('Google Login Error:', error);
-      setIsGoogleLoading(false);
-      toast.error('Failed to log in with Google.');
-    }
-  }
-
-  // Auto-trigger Google login if coming from a tenant with the auto_google flag
-  useEffect(() => {
-    const autoGoogle = searchParams.get('auto_google');
-    if (autoGoogle === 'true' && !hasAutoTriggered) {
-      setHasAutoTriggered(true);
-      // Small delay to ensure everything is loaded
-      setTimeout(() => {
-        loginWithGoogle();
-      }, 500);
-    }
-  }, [searchParams, hasAutoTriggered]);
 
   return (
     <div className="relative min-h-screen">
