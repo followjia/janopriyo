@@ -12,6 +12,7 @@ import { auth } from '@/auth';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
+import { getTenantDomain } from '@/lib/tenant';
 
 class StockError extends Error {
   constructor(message: string) {
@@ -77,10 +78,15 @@ export async function POST(req: NextRequest) {
     const { items, shippingAddress, paymentMethod, useWallet, couponCode } = validation.data;
     const clientProvidedDeliveryCharge = validation.data.deliveryCharge;
 
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
     const conn = await connectToDatabase();
     
-    // Fetch Settings
-    const settings = await GlobalSettings.findOne({});
+    // Fetch Settings for the current domain
+    const settings = await GlobalSettings.findOne({ domain });
     const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
 
     session = await conn.startSession();
@@ -210,6 +216,7 @@ export async function POST(req: NextRequest) {
       const coupon = await Coupon.findOneAndUpdate(
         { 
           code: couponCode.toUpperCase(), 
+          domain, // Filter by domain
           isActive: true,
           expiryDate: { $gt: new Date() },
           minPurchase: { $lte: baseTotal },
@@ -255,7 +262,8 @@ export async function POST(req: NextRequest) {
           amount: walletAmountUsed,
           type: 'spent',
           status: 'completed',
-          description: `Used tokens for order payment`
+          description: `Used tokens for order payment`,
+          domain, // Add domain to transaction
         }], { session });
         
         walletTxId = walletTx._id.toString();
@@ -295,6 +303,7 @@ export async function POST(req: NextRequest) {
           paymentStatus: 'Pending',
           status: 'Order Placed',
           transactionId: paymentMethod === 'Online' ? `ORDER-${crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 16)}` : undefined,
+          domain, // MUST set the domain
         },
       ],
       { session }
@@ -344,17 +353,21 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
-    let query: any = { deletedAt: null };
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    let query: any = { domain, deletedAt: null };
     if (fetchAll && isAdmin) {
-      // Admins can see all orders
-      query = { deletedAt: null };
+      // Admins can see all orders for their domain
+      query = { domain, deletedAt: null };
     } else {
-      // Normal users (or admins without ?all=true) see their own orders
+      // Normal users (or admins without ?all=true) see their own orders on this domain
       const userId = (session.user as any).id;
       if (!userId) {
         return NextResponse.json({ message: 'User ID missing from session' }, { status: 400 });
       }
-      query = { user: userId, deletedAt: null };
+      query = { user: userId, domain, deletedAt: null };
     }
 
     const orders = await Order.find(query)

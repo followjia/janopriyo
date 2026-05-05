@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,9 +20,14 @@ export async function POST(req: NextRequest) {
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     const user = await User.findOne({
       resetPasswordToken: tokenHash,
       resetPasswordExpires: { $gt: Date.now() },
+      domain, // Add domain check for extra security
     });
 
     if (!user) {

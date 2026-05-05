@@ -3,12 +3,17 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import GlobalSettings from '@/models/GlobalSettings';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET global settings
 export async function GET() {
   try {
     await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const settings = await GlobalSettings.findOne({ domain }).sort({ updatedAt: -1 });
     if (!settings) {
       return NextResponse.json({
         brandName: process.env.NEXT_PUBLIC_STORE_NAME || "Janopriyo Shop",
@@ -114,10 +119,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'No valid fields provided for update' }, { status: 400 });
     }
 
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
     await connectToDatabase();
 
-    // Check if settings already exist
-    let settings = await GlobalSettings.findOne({});
+    // Check if settings already exist for this domain
+    let settings = await GlobalSettings.findOne({ domain }).sort({ updatedAt: -1 });
     if (settings) {
       // Update existing settings document manually to trigger setters/encryption
       Object.keys(allowedBody).forEach((key) => {
@@ -125,8 +135,8 @@ export async function POST(req: NextRequest) {
       });
       await settings.save({ validateBeforeSave: false });
     } else {
-      // Create new settings record
-      settings = await GlobalSettings.create(allowedBody);
+      // Create new settings record for this domain
+      settings = await GlobalSettings.create({ ...allowedBody, domain });
     }
 
     revalidateTag('settings', 'max');

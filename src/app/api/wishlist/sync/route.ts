@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // POST sync local wishlist with database
 export async function POST(req: NextRequest) {
@@ -37,9 +38,14 @@ export async function POST(req: NextRequest) {
 
     console.log('[Wishlist Sync] Connecting to database...');
     await connectToDatabase();
-    console.log(`[Wishlist Sync] Database connected in ${Date.now() - startTime}ms`);
+    const domain = await getTenantDomain();
+    if (!domain) {
+      console.error('[Wishlist Sync] Tenant domain is missing');
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    console.log(`[Wishlist Sync] Database connected and domain fetched in ${Date.now() - startTime}ms`);
 
-    const user = await User.findOne({ email: session.user.email });
+    const user = await User.findOne({ email: session.user.email, domain });
     
     if (!user) {
       console.warn('[Wishlist Sync] User not found for session');

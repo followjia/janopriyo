@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(
   req: NextRequest,
@@ -9,8 +10,12 @@ export async function GET(
   try {
     await connectToDatabase();
     const { slug } = await params;
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const blog = await Blog.findOne({ slug, isPublished: true });
+    const blog = await Blog.findOne({ slug, domain, isPublished: true });
 
     if (!blog) {
       return NextResponse.json({ message: 'Blog not found' }, { status: 404 });

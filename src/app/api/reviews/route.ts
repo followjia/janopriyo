@@ -5,6 +5,7 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
 import { z } from 'zod';
+import { getTenantDomain } from '@/lib/tenant';
 
 const reviewSchema = z.object({
   productId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID'),
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest) {
     const userId = (session.user as any).id;
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
     // 1. STRICT VERIFICATION: Check if user has a DELIVERED order for this product
     // And ensure the order was placed while logged in (user field matches)
@@ -39,6 +44,7 @@ export async function POST(req: NextRequest) {
       user: userId,
       'items.product': productId,
       status: 'Delivered',
+      domain, // Add domain check
     });
 
     if (!deliveredOrder) {
@@ -47,8 +53,8 @@ export async function POST(req: NextRequest) {
       }, { status: 403 });
     }
 
-    // 2. Check if user already reviewed this product
-    const existingReview = await Review.findOne({ user: userId, product: productId });
+    // 2. Check if user already reviewed this product on this domain
+    const existingReview = await Review.findOne({ user: userId, product: productId, domain });
     if (existingReview) {
       return NextResponse.json({ message: 'You have already reviewed this product' }, { status: 400 });
     }
@@ -60,6 +66,7 @@ export async function POST(req: NextRequest) {
       name: session.user.name || 'Anonymous',
       rating,
       comment,
+      domain, // MUST set domain
       status: 'pending',
     });
 
@@ -81,9 +88,14 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     const reviews = await Review.find({ 
       product: productId, 
-      status: 'approved' 
+      status: 'approved',
+      domain, // Filter by domain
     })
     .sort({ createdAt: -1 })
     .populate('user', 'name image');

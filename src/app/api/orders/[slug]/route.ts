@@ -7,6 +7,7 @@ import User from '@/models/User';
 import GlobalSettings from '@/models/GlobalSettings';
 import WalletTransaction from '@/models/WalletTransaction';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET single order details
 export async function GET(
@@ -25,7 +26,8 @@ export async function GET(
     }
 
     await connectToDatabase();
-    const order = await Order.findById(slug)
+    const domain = await getTenantDomain();
+    const order = await Order.findOne({ _id: slug, domain })
       .populate('user', 'name email image')
       .populate('items.product', 'name price images');
 
@@ -72,12 +74,13 @@ export async function PATCH(
     const { status, paymentStatus } = body;
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
 
     if (!mongoose.Types.ObjectId.isValid(slug)) {
       return NextResponse.json({ message: 'Invalid order id' }, { status: 400 });
     }
 
-    const order = await Order.findById(slug);
+    const order = await Order.findOne({ _id: slug, domain });
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
@@ -118,7 +121,8 @@ export async function PATCH(
             session.startTransaction();
 
             const user = await User.findById(order.user).session(session);
-            const settings = await GlobalSettings.findOne({}).session(session);
+            // GlobalSettings lookup must be domain-aware
+            const settings = await GlobalSettings.findOne({ domain }).session(session);
             const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
 
             if (user) {
@@ -144,6 +148,7 @@ export async function PATCH(
                         type: 'earned',
                         status: 'completed',
                         orderId: order._id,
+                        domain: domain, // MUST set domain
                         description: `Tokens earned from order #${order._id.toString().slice(-6).toUpperCase()}`
                     }], { session });
                 }
@@ -197,7 +202,8 @@ export async function DELETE(
     }
 
     await connectToDatabase();
-    const deletedOrder = await Order.findByIdAndDelete(slug);
+    const domain = await getTenantDomain();
+    const deletedOrder = await Order.findOneAndDelete({ _id: slug, domain });
 
     if (!deletedOrder) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });

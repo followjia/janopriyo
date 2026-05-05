@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import Coupon from '@/models/Coupon';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +12,11 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const coupons = await Coupon.find({ domain }).sort({ createdAt: -1 });
     return NextResponse.json(coupons);
   } catch (error) {
     console.error('Error fetching coupons:', error);
@@ -58,8 +63,14 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
     const coupon = await Coupon.create({
       code: code.toUpperCase(),
+      domain, // MUST set domain
       discountType,
       discountValue,
       minPurchase,

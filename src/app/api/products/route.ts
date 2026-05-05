@@ -11,6 +11,9 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
     const searchParams = req.nextUrl.searchParams;
     const ids = searchParams.get('ids');
@@ -20,8 +23,24 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const query: any = { domain };
+    
     if (ids) {
       query._id = { $in: ids.split(',') };
+    }
+
+    const search = searchParams.get('search');
+    if (search) {
+      const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+      query.$or = [
+        { name: { $regex: sanitizedSearch, $options: 'i' } },
+        { description: { $regex: sanitizedSearch, $options: 'i' } },
+        { sku: { $regex: sanitizedSearch, $options: 'i' } }
+      ];
+    }
+
+    const category = searchParams.get('category');
+    if (category) {
+      query.categories = { $in: category.split(',') };
     }
 
     const [products, total] = await Promise.all([

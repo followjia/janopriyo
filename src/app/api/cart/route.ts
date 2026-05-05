@@ -12,7 +12,13 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ email: session.user.email.trim() });
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    
+    const user = await User.findOne({ email: session.user.email.trim(), domain });
     
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });

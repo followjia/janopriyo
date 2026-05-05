@@ -3,6 +3,7 @@ import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
 import { auth } from '@/auth';
 import mongoose from 'mongoose';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(
     req: NextRequest,
@@ -20,7 +21,11 @@ export async function GET(
         }
 
         await connectToDatabase();
-        const blog = await Blog.findById(id);
+        const domain = await getTenantDomain();
+        if (!domain) {
+            return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+        }
+        const blog = await Blog.findOne({ _id: id, domain });
 
         if (!blog) {
             return NextResponse.json({ message: 'Blog not found' }, { status: 404 });
@@ -51,9 +56,14 @@ export async function PUT(
     const body = await req.json();
     await connectToDatabase();
 
-    // Check slug uniqueness if it's changing
+    const domain = await getTenantDomain();
+    if (!domain) {
+        return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
+    // Check slug uniqueness if it's changing within the domain
     if (body.slug) {
-        const existingBlog = await Blog.findOne({ slug: body.slug, _id: { $ne: id } });
+        const existingBlog = await Blog.findOne({ slug: body.slug, domain, _id: { $ne: id } });
         if (existingBlog) {
             return NextResponse.json({ message: 'A blog with this slug already exists' }, { status: 400 });
         }
@@ -73,7 +83,11 @@ export async function PUT(
     // Remove undefined fields to avoid overwriting with null/undefined if not provided
     Object.keys(updates).forEach(key => (updates as any)[key] === undefined && delete (updates as any)[key]);
 
-    const blog = await Blog.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+    const blog = await Blog.findOneAndUpdate(
+        { _id: id, domain }, 
+        { $set: updates }, 
+        { new: true, runValidators: true }
+    );
 
     if (!blog) {
       return NextResponse.json({ message: 'Blog not found' }, { status: 404 });
@@ -102,8 +116,12 @@ export async function DELETE(
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+        return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const blog = await Blog.findByIdAndDelete(id);
+    const blog = await Blog.findOneAndDelete({ _id: id, domain });
 
     if (!blog) {
       return NextResponse.json({ message: 'Blog not found' }, { status: 404 });

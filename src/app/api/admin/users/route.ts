@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const domain = req.headers.get('host') || 'unknown';
+    const domain = await getTenantDomain();
 
     const users = await User.find({ domain })
       .select('name email role image createdAt')

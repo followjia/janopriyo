@@ -7,6 +7,7 @@ export interface IWalletTransaction extends Document {
   status: 'pending' | 'completed' | 'failed';
   orderId?: mongoose.Types.ObjectId;
   description: string;
+  domain: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,14 @@ const WalletTransactionSchema: Schema<IWalletTransaction> = new Schema(
     },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
     description: { type: String, required: true },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
   },
   { timestamps: true }
 );

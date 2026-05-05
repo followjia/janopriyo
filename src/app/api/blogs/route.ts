@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,14 +12,20 @@ export async function GET(req: NextRequest) {
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '12'));
     const skip = (page - 1) * limit;
     
-    // Show only published blogs publicly, newest first
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    
+    // Show only published blogs publicly for the current domain, newest first
+    const query = { domain, isPublished: true };
     const [blogs, total] = await Promise.all([
-      Blog.find({ isPublished: true })
+      Blog.find(query)
         .sort({ createdAt: -1 })
         .select('title slug metaDescription thumbnail createdAt')
         .skip(skip)
         .limit(limit),
-      Blog.countDocuments({ isPublished: true })
+      Blog.countDocuments(query)
     ]);
 
     return NextResponse.json({

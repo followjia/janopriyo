@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import FAQ from '@/models/FAQ';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET() {
   try {
@@ -11,7 +12,11 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const faqs = await FAQ.find().sort({ order: 1 });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const faqs = await FAQ.find({ domain }).sort({ order: 1 });
     return NextResponse.json(faqs);
   } catch (error) {
     console.error('Fetch FAQs Error:', error);
@@ -43,8 +48,15 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const faq = await FAQ.create(sanitizedData);
+    const faq = await FAQ.create({
+        ...sanitizedData,
+        domain
+    });
     return NextResponse.json(faq, { status: 201 });
   } catch (error) {
     console.error('Create FAQ Error:', error);

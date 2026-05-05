@@ -93,6 +93,8 @@ const ProductSchema: Schema<IProduct> = new Schema(
 // Scoped unique indexes for multi-tenant support
 ProductSchema.index({ slug: 1, domain: 1 }, { unique: true });
 ProductSchema.index({ sku: 1, domain: 1 }, { unique: true });
+ProductSchema.index({ domain: 1, name: 1 }); // Optimized for search
+ProductSchema.index({ domain: 1, categories: 1 }); // Optimized for category filtering
 
 ProductSchema.pre('validate', function(this: any) {
   // Main product validation

@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,8 +30,12 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const user = await User.findOne({ email: session.user.email }).select('+password');
+    const user = await User.findOne({ email: session.user.email, domain }).select('+password');
 
     if (!user) {
       return NextResponse.json({ message: 'User not found.' }, { status: 404 });

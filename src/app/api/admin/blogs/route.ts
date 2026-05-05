@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET all blogs for admin
 export async function GET(req: NextRequest) {
@@ -18,9 +19,15 @@ export async function GET(req: NextRequest) {
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '10'));
     const skip = (page - 1) * limit;
 
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const query = { domain };
+
     const [blogs, total] = await Promise.all([
-      Blog.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Blog.countDocuments({})
+      Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Blog.countDocuments(query)
     ]);
 
     return NextResponse.json({
@@ -49,8 +56,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     await connectToDatabase();
 
-    // Basic server-side validation for slug uniqueness
-    const existingBlog = await Blog.findOne({ slug: body.slug });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
+    // Basic server-side validation for slug uniqueness within the domain
+    const existingBlog = await Blog.findOne({ slug: body.slug, domain });
     if (existingBlog) {
       return NextResponse.json({ message: 'A blog with this slug already exists' }, { status: 400 });
     }
@@ -63,6 +75,7 @@ export async function POST(req: NextRequest) {
       metaDescription: body.metaDescription,
       content: body.content,
       thumbnail: body.thumbnail,
+      domain: domain,
       isPublished: body.isPublished ?? true
     };
 

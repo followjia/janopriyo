@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET the user's wishlist (populated)
 export async function GET() {
@@ -12,7 +13,11 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ email: session.user.email }).populate('wishlist');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const user = await User.findOne({ email: session.user.email, domain }).populate('wishlist');
     
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
@@ -39,7 +44,11 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ email: session.user.email });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const user = await User.findOne({ email: session.user.email, domain });
     
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });

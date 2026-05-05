@@ -10,6 +10,7 @@ export interface IBanner extends Document {
   secondaryBtnLink?: string;
   order: number;
   isActive: boolean;
+  domain: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +26,14 @@ const BannerSchema: Schema<IBanner> = new Schema(
     secondaryBtnLink: { type: String },
     order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com'
+    },
   },
   { timestamps: true }
 );

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/db';
 import Order from '@/models/Order';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 const ALLOWED_ORDER_STATUSES = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
 const ALLOWED_PAYMENT_STATUSES = ['Pending', 'Paid', 'Failed'];
@@ -62,9 +63,13 @@ export async function PATCH(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
     const result = await Order.updateMany(
-      { _id: { $in: ids } },
+      { _id: { $in: ids }, domain }, // Add domain filter for security
       { $set: updateData }
     );
 
@@ -93,9 +98,13 @@ export async function DELETE(req: NextRequest) {
       }
   
       await connectToDatabase();
+      const domain = await getTenantDomain();
+      if (!domain) {
+        return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+      }
   
       const result = await Order.updateMany(
-        { _id: { $in: ids } },
+        { _id: { $in: ids }, domain }, // Add domain filter for security
         { $set: { deletedAt: new Date() } }
       );
   

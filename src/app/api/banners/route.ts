@@ -3,12 +3,14 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Banner from '@/models/Banner';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET all active banners
 export async function GET() {
   try {
     await connectToDatabase();
-    const banners = await Banner.find({ isActive: true }).sort({ order: 1 });
+    const domain = await getTenantDomain();
+    const banners = await Banner.find({ domain, isActive: true }).sort({ order: 1 });
     return NextResponse.json(banners);
   } catch (error) {
     console.error('Error fetching banners:', error);
@@ -32,11 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Title and Image are required' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    const domain = await getTenantDomain();
     const newBanner = await Banner.create({
       title,
       image,
       link,
+      domain, // MUST set domain
       order: order || 0,
       isActive: isActive !== undefined ? isActive : true,
     });

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
 import { sendResetEmail } from '@/lib/mail';
+import { getTenantDomain } from '@/lib/tenant';
 
 // In-memory rate limiting map (Note: In production/serverless, use Redis)
 const rateLimit = new Map<string, { count: number; lastRequest: number }>();
@@ -51,8 +52,12 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail, domain });
 
     if (!user) {
       // Timing parity delay

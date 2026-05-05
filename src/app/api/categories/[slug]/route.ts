@@ -6,6 +6,7 @@ import connectToDatabase from '@/lib/db';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET a single category
 export async function GET(
@@ -15,7 +16,11 @@ export async function GET(
   try {
     const { slug } = await params;
     await connectToDatabase();
-    const category = await Category.findOne({ slug });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const category = await Category.findOne({ slug, domain });
 
     if (!category) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
@@ -59,8 +64,10 @@ export async function PUT(
 
     await connectToDatabase();
 
+    const domain = await getTenantDomain();
+
     const updatedCategory = await Category.findOneAndUpdate(
-      { slug },
+      { slug, domain },
       { $set: updateData },
       { new: true, runValidators: true }
     );
@@ -92,10 +99,12 @@ export async function DELETE(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const domain = await getTenantDomain();
+
     await connectToDatabase();
 
     // 1. Verify existence first
-    const category = await Category.findOne({ slug });
+    const category = await Category.findOne({ slug, domain });
     if (!category) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
@@ -105,15 +114,17 @@ export async function DELETE(
     try {
       await dbSession.withTransaction(async () => {
         // Remove this category from all products ($pull removes the ID from the array)
+        // Scoped by domain for safety
         await Product.updateMany(
-          { categories: category._id },
+          { categories: category._id, domain },
           { $pull: { categories: category._id } },
           { session: dbSession }
         );
 
         // Rescue subcategories: update them to have no parent category
+        // Scoped by domain for safety
         await Category.updateMany(
-          { parentCategory: category._id },
+          { parentCategory: category._id, domain },
           { $set: { parentCategory: null } },
           { session: dbSession }
         );

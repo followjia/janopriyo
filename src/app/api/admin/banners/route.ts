@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Banner from '@/models/Banner';
 import { auth } from '@/auth';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET() {
   try {
@@ -11,7 +12,11 @@ export async function GET() {
     }
 
     await connectToDatabase();
-    const banners = await Banner.find().sort({ order: 1 });
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const banners = await Banner.find({ domain }).sort({ order: 1 });
     return NextResponse.json(banners);
   } catch (error) {
     console.error('Fetch Banners Error:', error);
@@ -28,8 +33,12 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const banner = await Banner.create(body);
+    const banner = await Banner.create({ ...body, domain });
     return NextResponse.json(banner, { status: 201 });
   } catch (error) {
     console.error('Create Banner Error:', error);

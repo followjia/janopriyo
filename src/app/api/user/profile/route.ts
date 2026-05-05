@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,8 +13,12 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const user = await User.findById(session.user.id).select('-password').lean();
+    const user = await User.findOne({ _id: session.user.id, domain }).select('-password').lean();
 
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
@@ -42,12 +47,12 @@ export async function PUT(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const updateData: any = { name };
-    if (image !== undefined) updateData.image = image;
-    if (phone !== undefined) updateData.phone = phone;
-
-    const user = await User.findById(session.user.id);
+    const user = await User.findOne({ _id: session.user.id, domain });
     
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });

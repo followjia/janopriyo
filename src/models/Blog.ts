@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IBlog extends Document {
   title: string;
   slug: string;
+  domain: string;
   metaTitle: string;
   metaDescription: string;
   content: string;
@@ -22,10 +23,17 @@ const BlogSchema: Schema = new Schema(
     slug: { 
       type: String, 
       required: [true, 'Slug is required'], 
-      unique: true,
       maxlength: [100, 'Slug cannot exceed 100 characters'],
       lowercase: true,
       trim: true 
+    },
+    domain: { 
+      type: String, 
+      required: [true, 'Domain is required'], 
+      index: true,
+      trim: true,
+      lowercase: true,
+      default: 'janopriyo.com' // Safe default for existing docs
     },
     metaTitle: { 
       type: String, 
@@ -56,7 +64,7 @@ const BlogSchema: Schema = new Schema(
   }
 );
 
-// We'll handle the slug generation on the frontend/API instead of a pre-save hook 
-// to give the user better control over the "live auto-generate" requirement.
+// Ensure slug is unique per domain
+BlogSchema.index({ slug: 1, domain: 1 }, { unique: true });
 
 export default mongoose.models.Blog || mongoose.model<IBlog>('Blog', BlogSchema);

@@ -9,6 +9,7 @@ export interface IPageSection {
 export interface IPageContent extends Document {
   pageName: string; // e.g., 'About Us', 'Terms & Conditions'
   slug: string;
+  domain: string;
   sections: IPageSection[];
   isActive: boolean;
   createdAt: Date;
@@ -18,7 +19,8 @@ export interface IPageContent extends Document {
 const PageContentSchema: Schema<IPageContent> = new Schema(
   {
     pageName: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true },
+    domain: { type: String, required: true, index: true },
     sections: [
       {
         title: { type: String },
@@ -30,6 +32,9 @@ const PageContentSchema: Schema<IPageContent> = new Schema(
   },
   { timestamps: true }
 );
+
+// Ensure slug is unique per domain
+PageContentSchema.index({ slug: 1, domain: 1 }, { unique: true });
 
 const PageContent: Model<IPageContent> =
   mongoose.models.PageContent || mongoose.model<IPageContent>('PageContent', PageContentSchema);
