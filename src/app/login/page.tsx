@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -54,6 +54,8 @@ export default function LoginPage() {
     },
   });
 
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
+
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     try {
@@ -96,17 +98,12 @@ export default function LoginPage() {
                     currentHost.replace('www.', '') === hubDomain.replace('www.', '');
 
       if (!isHub) {
-        // We are on a tenant — go DIRECTLY to the hub's Google OAuth endpoint.
         const isProd = process.env.NODE_ENV === 'production';
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
         const hubBase = `${protocol}://${hubDomain}`;
-
-        // Build the full hub-callback URL that Google will redirect to after auth
-        const hubCallbackUrl = `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(currentHost)}`;
-
-        // Go directly to Google sign-in on the hub, with the callback pre-encoded
-        const googleSignInUrl = `${hubBase}/api/auth/signin/google?callbackUrl=${encodeURIComponent(hubCallbackUrl)}`;
-        window.location.href = googleSignInUrl;
+        
+        // Redirect to hub login page with auto-login flag
+        window.location.href = `${hubBase}/login?remote_tenant=${currentHost}&auto_google=true`;
         return;
       }
 
@@ -130,6 +127,18 @@ export default function LoginPage() {
       toast.error('Failed to log in with Google.');
     }
   }
+
+  // Auto-trigger Google login if coming from a tenant with the auto_google flag
+  useEffect(() => {
+    const autoGoogle = searchParams.get('auto_google');
+    if (autoGoogle === 'true' && !hasAutoTriggered) {
+      setHasAutoTriggered(true);
+      // Small delay to ensure everything is loaded
+      setTimeout(() => {
+        loginWithGoogle();
+      }, 500);
+    }
+  }, [searchParams, hasAutoTriggered]);
 
   return (
     <div className="relative min-h-screen">
