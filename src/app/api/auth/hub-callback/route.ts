@@ -16,7 +16,9 @@ export async function GET(req: NextRequest) {
   }
 
   // Validate target domain to prevent Open Redirect attacks
-  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
+  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 
+                   (process.env.NEXTAUTH_URL ? new URL(process.env.NEXTAUTH_URL).host : 'localhost:3000');
+  
   const allowedHosts = [hubDomain, 'localhost'];
   const isAllowed = allowedHosts.some(h => h && (target === h || target.endsWith(`.${h}`))) || 
                    target.includes('localhost');
