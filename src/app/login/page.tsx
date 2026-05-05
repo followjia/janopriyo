@@ -139,7 +139,12 @@ export default function LoginPage() {
       if (!isHub) {
         const isProd = process.env.NODE_ENV === 'production';
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-        const hubBase = `${protocol}://${hubDomain}`;
+        
+        // Use www for the hub in production if possible
+        const finalHubDomain = (isProd && !hubDomain.includes('www.') && hubDomain === 'janopriyo.com') 
+                               ? `www.${hubDomain}` 
+                               : hubDomain;
+        const hubBase = `${protocol}://${finalHubDomain}`;
         
         // Use the absolute URL of the HUB login page to avoid losing context
         const hubLoginUrl = new URL(`${hubBase}/login`);
