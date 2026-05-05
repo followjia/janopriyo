@@ -135,11 +135,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
   },
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
   },
   pages: {
-    signIn: '/login', // Will be created later
+    signIn: '/login',
     error: '/login',
   },
 });

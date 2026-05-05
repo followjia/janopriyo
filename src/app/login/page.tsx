@@ -129,9 +129,13 @@ export default function LoginPage() {
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
         const hubBase = `${protocol}://${hubDomain}`;
         
-        const redirectUrl = `${hubBase}/login?remote_tenant=${currentHost}&auto_google=true`;
-        console.log('Redirecting to Hub:', redirectUrl);
-        window.location.href = redirectUrl;
+        // Use the absolute URL of the HUB login page to avoid losing context
+        const hubLoginUrl = new URL(`${hubBase}/login`);
+        hubLoginUrl.searchParams.set('remote_tenant', currentHost);
+        hubLoginUrl.searchParams.set('auto_google', 'true');
+        
+        console.log('Redirecting to Hub for auto-login:', hubLoginUrl.toString());
+        window.location.href = hubLoginUrl.toString();
         return;
       }
 
