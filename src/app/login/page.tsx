@@ -123,11 +123,11 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     try {
       const currentHost = window.location.host;
-      let hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'janopriyo.com';
+      let hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'www.janopriyo.com';
       
-      // If we're on a janopriyo domain but the env var says localhost, use the current domain as hub
+      // If we're on a janopriyo domain but the env var says localhost, use www.janopriyo.com
       if (currentHost.includes('janopriyo.com') && hubDomain.includes('localhost')) {
-        hubDomain = currentHost.includes('www.') ? currentHost.replace('www.', '') : currentHost;
+        hubDomain = 'www.janopriyo.com';
       }
 
       console.log('Google Login Initiated:', { currentHost, hubDomain });

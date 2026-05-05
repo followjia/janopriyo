@@ -16,7 +16,11 @@ export async function GET(req: NextRequest) {
 
   if (!target) {
     console.warn('Hub Callback: No target found, redirecting to hub dashboard');
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    const isProd = process.env.NODE_ENV === 'production';
+    const hubDashUrl = isProd 
+      ? 'https://www.janopriyo.com/dashboard' 
+      : new URL('/dashboard', req.url).toString();
+    return NextResponse.redirect(hubDashUrl);
   }
 
   // Validate target to prevent Open Redirect attacks
