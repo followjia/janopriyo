@@ -16,14 +16,20 @@ export async function GET(req: NextRequest) {
   }
 
   const isProd = process.env.NODE_ENV === 'production';
+  // Auth.js v5 uses the cookie name itself as the JWT salt
   const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
+  const jwtSalt = cookieName;
 
   try {
     console.log('Bridge: Decoding token...');
+    // Use the hub's salt (always 'authjs.session-token' on hub in prod = '__Secure-authjs.session-token')
+    // Hub encoded the token with its own salt, so we must decode with the same.
+    // Hub is always janopriyo.com (production), so its cookie name is __Secure-authjs.session-token
+    const hubSalt = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
     const decoded = await decode({
       token,
       secret,
-      salt: 'authjs.session-token',
+      salt: hubSalt,
     });
 
     if (!decoded) {
@@ -41,6 +47,7 @@ export async function GET(req: NextRequest) {
 
     // Re-encode the token for a long-term session (30 days)
     const { encode } = await import('next-auth/jwt');
+    // Re-encode with THIS tenant's salt (cookie name) so Auth.js on mibd.shop can read it
     const sessionToken = await encode({
       token: {
         id: decoded.id,
@@ -51,7 +58,7 @@ export async function GET(req: NextRequest) {
         exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days
       },
       secret,
-      salt: 'authjs.session-token',
+      salt: jwtSalt, // Must match the cookie name on THIS tenant domain
     });
 
     // Connect to DB to sync user for this tenant

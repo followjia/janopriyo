@@ -43,6 +43,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=ConfigurationError', req.url));
   }
 
+  const isProd = process.env.NODE_ENV === 'production';
+  const jwtSalt = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
+
   const token = await encode({
     token: {
       id: session.user.id,
@@ -54,7 +57,7 @@ export async function GET(req: NextRequest) {
       exp: Math.floor(Date.now() / 1000) + 60, // 1 minute expiration
     },
     secret,
-    salt: 'authjs.session-token',
+    salt: jwtSalt,
   });
 
   const protocol = req.nextUrl.protocol;
