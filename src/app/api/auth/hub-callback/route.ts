@@ -4,14 +4,19 @@ import { encode } from 'next-auth/jwt';
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  const { searchParams } = new URL(req.url);
-  const target = searchParams.get('target');
+  const url = new URL(req.url);
+  const target = url.searchParams.get('target');
+
+  console.log(`Hub Callback triggered. Target: ${target}, Session: ${!!session}`);
 
   if (!session || !session.user) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    // If no session, go back to login with the target preserved
+    const loginUrl = target ? `/login?remote_tenant=${encodeURIComponent(target)}` : '/login';
+    return NextResponse.redirect(new URL(loginUrl, req.url));
   }
 
   if (!target) {
+    console.warn('Hub Callback: No target found, redirecting to hub dashboard');
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
