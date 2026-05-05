@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const siteUrl = (settings?.domain ? `https://${settings.domain}/` : null) || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL;
 
     if (!clientEmail || !privateKey || !propertyId || !siteUrl) {
-      console.error('Analytics Configuration Missing for:', hostname, { propertyId, siteUrl });
+      console.error('Analytics Configuration Missing for:', domain, { propertyId, siteUrl });
       return NextResponse.json({ message: 'Analytics is not configured for this shop.' }, { status: 400 });
     }
 
