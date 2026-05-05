@@ -4,7 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import connectToDatabase from './lib/db';
 import User from './models/User';
 import bcrypt from 'bcryptjs';
-import { headers } from 'next/headers';
+import { getTenantDomain } from './lib/tenant';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -23,8 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error('Please provide both email and password.');
         }
 
-        const headersList = await headers();
-        const domain = headersList.get('host') || 'unknown';
+        const domain = await getTenantDomain();
 
         await connectToDatabase();
         const user = await User.findOne({ email: credentials.email, domain }).select('+password');
@@ -100,8 +99,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         
         try {
-          const headersList = await headers();
-          const domain = headersList.get('host') || 'unknown';
+          const domain = await getTenantDomain();
 
           await connectToDatabase();
           
