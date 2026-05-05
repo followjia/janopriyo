@@ -81,13 +81,17 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     try {
       const currentHost = window.location.host;
+      const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
       const isHub = currentHost === hubDomain;
 
       if (!isHub) {
         // Redirect to hub for centralized login
-        const protocol = window.location.protocol;
-        const callbackUrl = `${protocol}//${hubDomain}/login?remote_tenant=${currentHost}`;
-        window.location.href = callbackUrl;
+        const isProd = process.env.NODE_ENV === 'production';
+        // Use https in production, but allow http for localhost testing
+        const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
+        const callbackUrl = `${window.location.protocol}//${currentHost}/dashboard`;
+        const authUrl = `${protocol}://${hubDomain}/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+        window.location.href = authUrl;
         return;
       }
 
