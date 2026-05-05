@@ -5,7 +5,12 @@ import { encode } from 'next-auth/jwt';
 export async function GET(req: NextRequest) {
   const session = await auth();
   const url = new URL(req.url);
-  const target = url.searchParams.get('target');
+  let target = url.searchParams.get('target');
+  
+  // Strip 'www.' from target for consistency if present
+  if (target && target.startsWith('www.')) {
+    target = target.replace('www.', '');
+  }
 
   console.log(`Hub Callback triggered. Target: ${target}, Session: ${!!session}`);
 

@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
     const isExpired = typeof decoded.exp !== 'number' || decoded.exp < now;
 
     if (isExpired) {
-       console.error('Bridge: Token expired');
-       return NextResponse.redirect(new URL('/login?error=TokenExpired', req.url));
+      console.error('Bridge: Token expired');
+      return NextResponse.redirect(new URL('/login?error=TokenExpired', req.url));
     }
 
     // Re-encode the token for a long-term session (30 days)
@@ -56,12 +56,11 @@ export async function GET(req: NextRequest) {
     });
 
     // Connect to DB to sync user for this tenant
-    const { headers } = await import('next/headers');
-    const headersList = await headers();
-    const domain = headersList.get('host') || 'unknown';
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
 
     console.log(`Bridge: Syncing user for domain: ${domain}`);
-    
+
     try {
       const connectToDatabase = (await import('@/lib/db')).default;
       const User = (await import('@/models/User')).default;
@@ -91,14 +90,14 @@ export async function GET(req: NextRequest) {
     }
 
     const cookieStore = await cookies();
-    
+
     console.log('Bridge: Setting session cookie');
     cookieStore.set(cookieName, sessionToken, {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',
       path: '/',
-      maxAge: 30 * 24 * 60 * 60, 
+      maxAge: 30 * 24 * 60 * 60,
     });
 
     const response = NextResponse.redirect(new URL('/dashboard', req.url));

@@ -1,44 +1,49 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 
-export const proxy = auth((req) => {
+export const proxy = auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const role = (req.auth?.user as any)?.role as string | undefined;
+  
+  // Host detection
+  const host = req.headers.get("host") || "";
+  const isHub = host.includes("janopriyo.com") || host.includes("localhost:3000");
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
-  const isSystemDesignRoute = nextUrl.pathname.startsWith("/admin/system-design");
   const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
 
-  // 1. Logged-in ইউজারদের login/register থেকে দূরে রাখো
-  if (isAuthRoute) {
-    if (isLoggedIn) {
+  // 1. Redirection for logged-in users on Auth routes (Login/Register)
+  if (isAuthRoute && isLoggedIn) {
+    // If admin on Hub, go to management console
+    if (isHub && (role === "admin" || role === "super_admin")) {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
-    return NextResponse.next();
+    // All other cases (Tenant users or Hub normal users), go to storefront dashboard
+    return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
-  // 2. Admin route সুরক্ষা
+  // 2. Protection for Admin routes
   if (isAdminRoute) {
-    // Login নেই → login এ পাঠাও
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL("/login", nextUrl));
     }
 
-    // admin বা super_admin না হলে → home এ পাঠাও
+    // Only allow admin/super_admin on hub admin routes
     if (role !== "admin" && role !== "super_admin") {
-      return NextResponse.redirect(new URL("/", nextUrl));
+      return NextResponse.redirect(new URL("/dashboard", nextUrl));
     }
 
-    // /admin/system-design → শুধুমাত্র super_admin
+    // /admin/system-design → strictly super_admin
+    const isSystemDesignRoute = nextUrl.pathname.startsWith("/admin/system-design");
     if (isSystemDesignRoute && role !== "super_admin") {
       return NextResponse.redirect(new URL("/admin/dashboard", nextUrl));
     }
   }
 
   return NextResponse.next();
-})
+});
 
 export const config = {
   matcher: ["/admin/:path*", "/login", "/register"],
-}
+};

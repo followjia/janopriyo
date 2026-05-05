@@ -79,8 +79,8 @@ export default function LoginPage() {
   async function loginWithGoogle() {
     setIsGoogleLoading(true);
     try {
-      const currentHost = window.location.host;
-      const isHub = currentHost.includes('janopriyo.com') || currentHost.includes('localhost');
+      const currentHost = window.location.host.replace('www.', '');
+      const isHub = currentHost === 'janopriyo.com' || currentHost.includes('localhost');
 
       if (!isHub) {
         const isProd = process.env.NODE_ENV === 'production';
