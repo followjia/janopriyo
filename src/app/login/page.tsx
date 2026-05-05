@@ -87,13 +87,34 @@ export default function LoginPage() {
     }
   }
 
+  useEffect(() => {
+    const autoGoogle = searchParams.get('auto_google');
+    const remoteTenant = searchParams.get('remote_tenant');
+    
+    console.log('Login Page Load:', { 
+      currentHost: window.location.host, 
+      autoGoogle, 
+      remoteTenant,
+      hasAutoTriggered 
+    });
+
+    if (autoGoogle === 'true' && !hasAutoTriggered) {
+      console.log('Auto-triggering Google login...');
+      setHasAutoTriggered(true);
+      setTimeout(() => {
+        loginWithGoogle();
+      }, 500);
+    }
+  }, [searchParams, hasAutoTriggered]);
+
   async function loginWithGoogle() {
     setIsGoogleLoading(true);
     try {
       const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
       const currentHost = window.location.host;
       
-      // Normalize comparison to handle www vs non-www
+      console.log('Google Login Initiated:', { currentHost, hubDomain });
+
       const isHub = currentHost === hubDomain || 
                     currentHost.replace('www.', '') === hubDomain.replace('www.', '');
 
@@ -102,27 +123,27 @@ export default function LoginPage() {
         const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
         const hubBase = `${protocol}://${hubDomain}`;
         
-        // Redirect to hub login page with auto-login flag
-        window.location.href = `${hubBase}/login?remote_tenant=${currentHost}&auto_google=true`;
+        const redirectUrl = `${hubBase}/login?remote_tenant=${currentHost}&auto_google=true`;
+        console.log('Redirecting to Hub:', redirectUrl);
+        window.location.href = redirectUrl;
         return;
       }
 
-      // We are on the hub, check if we need to return to a tenant after login
       const remoteTenant = searchParams.get('remote_tenant');
       const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
       
       const isProd = process.env.NODE_ENV === 'production';
       const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-      
-      // Use the Hub's base URL for the callback
       const hubBase = `${protocol}://${hubDomain}`;
       
       const finalCallback = (remoteTenant && isValidTenant)
         ? `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
         : `${hubBase}/dashboard`;
 
+      console.log('Signing in with Google. Callback:', finalCallback);
       await signIn('google', { callbackUrl: finalCallback });
     } catch (error) {
+      console.error('Google Login Error:', error);
       setIsGoogleLoading(false);
       toast.error('Failed to log in with Google.');
     }
