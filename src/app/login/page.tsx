@@ -91,12 +91,11 @@ export default function LoginPage() {
 
       const isProd = process.env.NODE_ENV === 'production';
       const protocol = (isProd && !currentHost.includes('localhost')) ? 'https' : 'http';
-      // MUST use the hub's absolute base URL for the callbackUrl
-      // so Auth.js doesn't strip/ignore it after OAuth redirect.
+      // Use the hub's absolute base URL for the callbackUrl
       const hubBase = `${protocol}://${hubDomain}`;
       
       const finalCallback = remoteTenant
-        ? `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(currentHost)}` 
+        ? `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
         : `${hubBase}/dashboard`;
 
       await signIn('google', { callbackUrl: finalCallback });
