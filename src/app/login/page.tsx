@@ -114,12 +114,15 @@ export default function LoginPage() {
       const remoteTenant = searchParams.get('remote_tenant');
       const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
       
-      const protocol = (process.env.NODE_ENV === 'production' && !hubDomain.includes('localhost')) ? 'https' : 'http';
-      const baseUrl = `${protocol}://${currentHost}`;
+      const isProd = process.env.NODE_ENV === 'production';
+      const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
+      
+      // Use the Hub's base URL for the callback
+      const hubBase = `${protocol}://${hubDomain}`;
       
       const finalCallback = (remoteTenant && isValidTenant)
-        ? `${baseUrl}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
-        : `${baseUrl}/dashboard`;
+        ? `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
+        : `${hubBase}/dashboard`;
 
       await signIn('google', { callbackUrl: finalCallback });
     } catch (error) {
