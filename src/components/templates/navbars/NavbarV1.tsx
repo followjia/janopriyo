@@ -380,7 +380,7 @@ export default function Navbar() {
                       )}
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })} className="text-destructive">
+                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="text-destructive">
                       <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>

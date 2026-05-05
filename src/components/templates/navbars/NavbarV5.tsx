@@ -118,7 +118,7 @@ export default function NavbarV5() {
                      <Settings className="mr-3 h-5 w-5" /> Account Studio
                    </DropdownMenuItem>
                    <DropdownMenuSeparator className="bg-black/5" />
-                   <DropdownMenuItem onClick={() => signOut()} className="rounded-2xl cursor-pointer py-3 text-red-500">
+                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-2xl cursor-pointer py-3 text-red-500">
                      <LogOut className="mr-3 h-5 w-5" /> End Experience
                    </DropdownMenuItem>
                 </DropdownMenuContent>

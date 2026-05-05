@@ -124,7 +124,7 @@ export default function NavbarV3() {
                     <Settings className="mr-2 h-4 w-4" /> Account Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut()} className="rounded-lg cursor-pointer text-destructive">
+                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-500 hover:bg-red-500/10">
                     <LogOut className="mr-2 h-4 w-4" /> End Session
                   </DropdownMenuItem>
                 </DropdownMenuContent>

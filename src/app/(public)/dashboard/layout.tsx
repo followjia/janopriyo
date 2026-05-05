@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Button 
                     variant="ghost" 
                     className="justify-start px-6 h-12 rounded-none border-l-4 border-transparent text-destructive hover:bg-destructive/10"
-                    onClick={() => signOut({ callbackUrl: '/' })}
+                    onClick={() => signOut({ callbackUrl: window.location.origin })}
                 >
                   <LogOut className="mr-3 h-4 w-4" /> Sign Out
                 </Button>
