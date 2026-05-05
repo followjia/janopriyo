@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 export async function generateUniqueSlug(
   model: Model<any>,
   baseSlug: string,
+  domain: string,
   excludeId?: string
 ): Promise<string> {
   let slug = baseSlug;
@@ -20,7 +21,7 @@ export async function generateUniqueSlug(
   let exists = true;
 
   while (exists) {
-    const query: any = { slug };
+    const query: any = { slug, domain };
     if (excludeId) {
       query._id = { $ne: excludeId };
     }

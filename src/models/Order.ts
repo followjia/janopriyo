@@ -42,6 +42,7 @@ export interface IOrder extends Document {
     trackingUrl?: string;
     courierStatus?: string;
   };
+  domain: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -97,6 +98,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
       trackingUrl: { type: String },
       courierStatus: { type: String },
     },
+    domain: { type: String, required: true, index: true, default: 'unknown' },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }

@@ -5,12 +5,18 @@ import Order from '@/models/Order';
 import User from '@/models/User';
 import Product from '@/models/Product';
 import Expense from '@/models/Expense';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session || !(['admin', 'super_admin'].includes((session?.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -45,6 +51,7 @@ export async function GET(req: NextRequest) {
     const revenueStats = await Order.aggregate([
       { 
         $match: { 
+          domain,
           status: 'Delivered',
           createdAt: { $gte: startDate, $lte: endDate },
           deletedAt: null
@@ -82,6 +89,7 @@ export async function GET(req: NextRequest) {
     const expenseStats = await Expense.aggregate([
       { 
         $match: { 
+          domain,
           date: { $gte: startDate, $lte: endDate }
         } 
       },
@@ -99,33 +107,34 @@ export async function GET(req: NextRequest) {
     const netProfit = grossProfit - totalExpenses;
 
     // 5. Total Users
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments({ domain });
 
     // 6. Pending Orders (Total, not date filtered)
-    const pendingOrdersCount = await Order.countDocuments({ status: 'Order Placed', deletedAt: null });
+    const pendingOrdersCount = await Order.countDocuments({ domain, status: 'Order Placed', deletedAt: null });
 
     // 7. Recent Orders
-    const recentOrders = await Order.find({ deletedAt: null })
+    const recentOrders = await Order.find({ domain, deletedAt: null })
       .sort({ createdAt: -1 })
       .limit(5)
       .select('slug totalAmount status createdAt')
       .populate('user', 'name email');
 
     // 8. Low Stock Products
-    const lowStockProducts = await Product.find({ stock: { $lt: 5 } })
+    const lowStockProducts = await Product.find({ domain, stock: { $lt: 5 } })
       .limit(5)
       .select('name stock price');
 
     // 9. Loyalty Stats
-    const activeSubscribers = await User.countDocuments({ isSubscriptionActive: true });
+    const activeSubscribers = await User.countDocuments({ domain, isSubscriptionActive: true });
     const totalWalletBalanceResult = await User.aggregate([
+      { $match: { domain } },
       { $group: { _id: null, total: { $sum: '$walletBalance' } } }
     ]);
     const totalWalletTokens = totalWalletBalanceResult[0]?.total || 0;
 
     // 10. Top Selling Products
     const topSellingProducts = await Order.aggregate([
-      { $match: { status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
+      { $match: { domain, status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
       { $unwind: '$items' },
       {
         $group: {
@@ -140,7 +149,7 @@ export async function GET(req: NextRequest) {
 
     // 11. Top Customers
     const topCustomers = await Order.aggregate([
-      { $match: { status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
+      { $match: { domain, status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
       {
         $group: {
           _id: '$user',
@@ -171,7 +180,7 @@ export async function GET(req: NextRequest) {
 
     // 12. Ad ROI (ROAS)
     const adExpenses = await Expense.aggregate([
-      { $match: { category: 'Ads', date: { $gte: startDate, $lte: endDate } } },
+      { $match: { domain, category: 'Ads', date: { $gte: startDate, $lte: endDate } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const totalAdSpend = adExpenses[0]?.total || 0;
@@ -181,6 +190,7 @@ export async function GET(req: NextRequest) {
     const allUsersWithOrders = await Order.aggregate([
       { 
         $match: { 
+          domain,
           deletedAt: null,
           createdAt: { $gte: startDate, $lte: endDate }
         } 
@@ -194,6 +204,7 @@ export async function GET(req: NextRequest) {
     const chartData = await Order.aggregate([
       {
         $match: {
+          domain,
           status: 'Delivered',
           createdAt: { $gte: startDate, $lte: endDate },
           deletedAt: null
@@ -266,3 +277,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
+

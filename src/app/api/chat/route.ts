@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import OpenAI from 'openai';
 import { getCachedSettings } from '@/lib/data-fetching';
+import { getTenantDomain } from '@/lib/tenant';
 
 const MAX_MESSAGES = 20;
 const MAX_CONTENT_LENGTH = 2000;
 
 export async function POST(req: NextRequest) {
   try {
-    const hostname = req.nextUrl.hostname || 'localhost';
+    const domain = await getTenantDomain();
     
     // Fetch store-specific AI configuration
-    const settings = await getCachedSettings(hostname);
+    const settings = await getCachedSettings(domain);
     const aiConfig = settings?.aiConfig || {};
     
     const apiKey = aiConfig.openRouterApiKey || process.env.OPENROUTER_API_KEY;

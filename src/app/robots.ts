@@ -1,7 +1,11 @@
 import { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 
-export default function robots(): MetadataRoute.Robots {
-  const BASE_URL = "https://www.janopriyo.com";
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const BASE_URL = `${protocol}://${host}`;
   
   return {
     rules: {

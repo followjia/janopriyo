@@ -5,8 +5,6 @@ import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 import "./prosemirror.css";
-import connectToDatabase from "@/lib/db";
-import GlobalSettings from "@/models/GlobalSettings";
 import Script from "next/script";
 import { PWARegistry } from "@/components/pwa-registry";
 import GoogleTagManager from "./components/GoogleTagManager";
@@ -15,6 +13,9 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import { generateOrganizationSchema } from "@/lib/seo";
 import FacebookPixel from "./components/FacebookPixel";
+import SubscriptionBlocker from "./components/SubscriptionBlocker";
+import { headers } from "next/headers";
+import { getCachedSettings } from "@/lib/data-fetching";
 
 
 const geistSans = Geist({
@@ -31,43 +32,15 @@ const geistMono = Geist_Mono({
 
 export const dynamic = 'force-dynamic';
 
-async function getGlobalSettings() {
-  try {
-    await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).sort({ updatedAt: -1 }).lean();
-
-    if (!settings) {
-      // Consistent fallback logic
-      return {
-        brandName: "Janopriyo Shop",
-        contact: {
-          email: "support@janopriyo.shop",
-          phone: "+8801234567890",
-          address: "Dhaka, Bangladesh"
-        }
-      };
-    }
-    return settings as any;
-  } catch (error) {
-    console.error("Critical error in settings fetch:", error);
-    // Hardcoded defaults for ultimate resilience
-    return {
-      brandName: "Janopriyo Shop",
-      contact: {
-        email: "support@janopriyo.shop",
-        phone: "+8801234567890",
-        address: "Dhaka, Bangladesh"
-      }
-    };
-  }
-}
-
-
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const headersList = await headers();
+  const hostname = headersList.get('host') || 'localhost';
+  const baseUrl = `https://${hostname}`;
 
   try {
-    const settings = await getGlobalSettings();
+    const settings = await getCachedSettings(hostname);
+
+    if (!settings) throw new Error("No settings found");
 
     return {
       metadataBase: new URL(baseUrl),
@@ -76,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
         template: `%s | ${settings.brandName || "Janopriyo Shop"}`,
       },
       description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
-      manifest: process.env.NODE_ENV === 'production' ? '/manifest.json' : undefined,
+      manifest: '/manifest.json',
       appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
@@ -103,7 +76,6 @@ export async function generateMetadata(): Promise<Metadata> {
       alternates: {
         canonical: './',
       },
-
       other: {
         ...(settings.facebookDomainVerification
           ? { "facebook-domain-verification": settings.facebookDomainVerification }
@@ -118,20 +90,37 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getGlobalSettings();
-  let jsonLd = null;
+  const headersList = await headers();
+  const hostname = headersList.get('host') || 'localhost';
+  const pathname = headersList.get('x-invoke-path') || '';
+  const settings = await getCachedSettings(hostname);
 
+  let jsonLd = null;
   try {
-    jsonLd = generateOrganizationSchema(settings);
+    if (settings) {
+      jsonLd = generateOrganizationSchema(settings);
+    }
   } catch (e) {
     console.error("Error generating JSON-LD structured data", e);
   }
+
+  // Subscription Enforcement Logic
+  const sub = settings?.saasSubscription;
+  // If sub is missing, default to not expired (allow access by default)
+  const isExpired = sub ? (sub.status !== 'Active' || (sub.expiryDate && new Date(sub.expiryDate) < new Date())) : false;
+
+  // Allow system-design routes to bypass blocker so they can fix the subscription
+  const isSystemDesign = pathname.includes('/admin/system-design');
+  const showBlocker = isExpired && !isSystemDesign;
+
+  // Security Helper: Validate GA ID format (G-XXXX or UA-XXXX)
+  const isValidGAId = (id?: string) => id ? /^(G-[A-Z0-9]{10}|UA-\d{4,}-\d+)$/.test(id) : false;
+  const gaId = settings?.googleAnalyticsId;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -149,12 +138,39 @@ export default async function RootLayout({
           />
         )}
         <Providers>
-          <GoogleTagManager gtmId={settings.googleTagManagerId} />
+          {showBlocker && <SubscriptionBlocker brandName={settings?.brandName || 'Store'} />}
+          {settings?.googleTagManagerId && (
+            <GoogleTagManager gtmId={settings.googleTagManagerId} />
+          )}
+
           <Suspense fallback={null}>
             <FacebookPixel
-              pixelId={process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID || settings.metaPixelId}
+              pixelId={settings?.metaPixelId || process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID}
             />
           </Suspense>
+
+          {isValidGAId(gaId) && (
+            <>
+              <Script
+                id="google-analytics"
+                strategy="afterInteractive"
+                src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              />
+              <Script
+                id="ga-init"
+                strategy="afterInteractive"
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', '${gaId}');
+                  `,
+                }}
+              />
+            </>
+          )}
+
           <SmoothScroll>
             {children}
             <ScrollProgress />

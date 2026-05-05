@@ -13,6 +13,7 @@ export interface IUser extends Document {
   resetPasswordExpires?: Date;
   isSubscriptionActive: boolean;
   walletBalance: number;
+  domain: string;
   addresses: {
     street?: string;
     division?: string;
@@ -42,11 +43,11 @@ const UserSchema: Schema<IUser> = new Schema(
     email: { 
       type: String, 
       required: true, 
-      unique: true,
       lowercase: true,
       trim: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.[A-Za-z]{2,})+$/, 'Please provide a valid email address'] 
     },
+    domain: { type: String, required: true, index: true, default: 'unknown' },
     password: { type: String, select: false },
     role: { type: String, enum: ['super_admin', 'admin', 'user'], default: 'user' },
     image: { type: String },
@@ -82,6 +83,9 @@ const UserSchema: Schema<IUser> = new Schema(
   },
   { timestamps: true }
 );
+
+// Make email unique per domain for multi-tenant support
+UserSchema.index({ email: 1, domain: 1 }, { unique: true });
 
 UserSchema.pre('save', async function () {
   if (!this.isModified('password') || !this.password) return;

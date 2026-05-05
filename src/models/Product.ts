@@ -35,6 +35,7 @@ export interface IProduct extends Document {
   isPublished: boolean;
   ratings: number;
   numReviews: number;
+  domain: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,7 +43,7 @@ export interface IProduct extends Document {
 const ProductSchema: Schema<IProduct> = new Schema(
   {
     name: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true, min: [0, 'Price cannot be negative'] },
     salePrice: { 
@@ -54,7 +55,8 @@ const ProductSchema: Schema<IProduct> = new Schema(
       min: [0, 'Purchase price cannot be negative'],
     },
     discountRate: { type: Number },
-    sku: { type: String, required: true, unique: true },
+    sku: { type: String, required: true },
+    domain: { type: String, required: true, index: true },
     stock: { type: Number, required: true, default: 0, min: [0, 'Stock cannot be negative'] },
     categories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
     tags: [{ type: String }],
@@ -87,6 +89,10 @@ const ProductSchema: Schema<IProduct> = new Schema(
   },
   { timestamps: true }
 );
+
+// Scoped unique indexes for multi-tenant support
+ProductSchema.index({ slug: 1, domain: 1 }, { unique: true });
+ProductSchema.index({ sku: 1, domain: 1 }, { unique: true });
 
 ProductSchema.pre('validate', function(this: any) {
   // Main product validation

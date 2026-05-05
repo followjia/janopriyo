@@ -6,6 +6,7 @@ export interface ICategory extends Document {
   image?: string;
   parentCategory?: mongoose.Types.ObjectId;
   isActive: boolean;
+  domain: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,13 +14,17 @@ export interface ICategory extends Document {
 const CategorySchema: Schema<ICategory> = new Schema(
   {
     name: { type: String, required: true },
-    slug: { type: String, unique: true },
+    slug: { type: String },
     image: { type: String },
     parentCategory: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     isActive: { type: Boolean, default: true },
+    domain: { type: String, required: true, index: true },
   },
   { timestamps: true }
 );
+
+// Scoped unique index for multi-tenant support
+CategorySchema.index({ slug: 1, domain: 1 }, { unique: true });
 
 CategorySchema.pre('save', function (this: any, next: any) {
   if (!this.slug && this.name) {

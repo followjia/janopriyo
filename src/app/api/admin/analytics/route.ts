@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { google } from 'googleapis';
+import { headers } from 'next/headers';
+import { getCachedSettings } from '@/lib/data-fetching';
+import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(request: Request) {
   try {
@@ -19,13 +22,33 @@ export async function GET(request: Request) {
     if (range === '7d') startDate = '7daysAgo';
     if (range === '90d') startDate = '90daysAgo';
 
+    // Fetch store-specific settings based on hostname
+    const domain = await getTenantDomain();
+    
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
+    // Security: Verify that the admin has access to this domain
+    const isSuperAdmin = (session.user as any).role === 'super_admin';
+    const userDomain = (session.user as any).domain;
+
+    if (!isSuperAdmin && userDomain !== domain) {
+      return NextResponse.json({ message: 'Unauthorized access to this tenant' }, { status: 403 });
+    }
+
+    const settings = await getCachedSettings(domain);
+
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    const propertyId = process.env.GOOGLE_GA4_PROPERTY_ID;
-    const siteUrl = process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL;
+    
+    // Use store-specific IDs or fallback to global envs
+    const propertyId = settings?.googleAnalyticsId || process.env.GOOGLE_GA4_PROPERTY_ID;
+    const siteUrl = (settings?.domain ? `https://${settings.domain}/` : null) || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL;
 
     if (!clientEmail || !privateKey || !propertyId || !siteUrl) {
-      return NextResponse.json({ message: 'Missing credentials' }, { status: 400 });
+      console.error('Analytics Configuration Missing for:', hostname, { propertyId, siteUrl });
+      return NextResponse.json({ message: 'Analytics is not configured for this shop.' }, { status: 400 });
     }
 
     const analyticsClient = new BetaAnalyticsDataClient({

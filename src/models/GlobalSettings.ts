@@ -74,6 +74,10 @@ export interface IGlobalSettings extends Document {
     blogListing: string;
     footer: string;
   };
+  saasSubscription?: {
+    expiryDate: Date;
+    status: 'Active' | 'Expired' | 'Suspended';
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -155,10 +159,14 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       blogListing: { type: String, default: 'v1' },
       footer: { type: String, default: 'v1' },
     },
+    saasSubscription: {
+      expiryDate: { type: Date, required: true, index: true },
+      status: { type: String, enum: ['Active', 'Expired', 'Suspended'], default: 'Active' },
+    },
   },
-  { 
+  {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       getters: false, // Prevent automatic decryption and exposure in API responses
       transform: (doc, ret) => {
         // Security: Explicitly remove sensitive courier credentials from serialized output

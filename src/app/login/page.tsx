@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -41,6 +42,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const remoteTenant = searchParams.get('remote_tenant');
+  const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'localhost:3000';
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -76,7 +80,26 @@ export default function LoginPage() {
   async function loginWithGoogle() {
     setIsGoogleLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      const currentHost = window.location.host;
+      const isHub = currentHost === hubDomain;
+
+      if (!isHub) {
+        // Redirect to hub for centralized login
+        const protocol = window.location.protocol;
+        const callbackUrl = `${protocol}//${hubDomain}/login?remote_tenant=${currentHost}`;
+        window.location.href = callbackUrl;
+        return;
+      }
+
+      // We are on the hub, check if we need to return to a tenant after login
+      // Security: Validate remoteTenant to prevent Open Redirect
+      const isValidTenant = remoteTenant && !remoteTenant.includes('://') && (remoteTenant.includes('.') || remoteTenant === 'localhost');
+      
+      const finalCallback = (remoteTenant && isValidTenant)
+        ? `/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
+        : '/dashboard';
+
+      await signIn('google', { callbackUrl: finalCallback });
     } catch (error) {
       setIsGoogleLoading(false);
       toast.error('Failed to log in with Google.');

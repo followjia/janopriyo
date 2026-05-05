@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
-const ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
-
-// Using Edge runtime for best performance now that we're using ENV variables exclusively
-export const runtime = 'edge';
+import { getCachedSettings } from '@/lib/data-fetching';
+import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
     try {
-        if (!PIXEL_ID || !ACCESS_TOKEN) {
-            console.error('[FB CAPI] Missing configuration in environment variables');
+        const headersList = await headers();
+        const hostname = headersList.get('host') || 'localhost';
+        const settings = await getCachedSettings(hostname);
+
+        const pixelId = settings?.metaPixelId || process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
+        const accessToken = settings?.facebookAccessToken || process.env.FACEBOOK_ACCESS_TOKEN;
+
+        if (!pixelId || !accessToken) {
+            console.error('[FB CAPI] Missing configuration for', hostname);
             return NextResponse.json({ error: 'Missing Facebook config' }, { status: 500 });
         }
 
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
 
 
         const fbResponse = await fetch(
-            `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
+            `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

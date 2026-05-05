@@ -270,22 +270,64 @@ export default function SuperConfigPage() {
               </div>
            </CardContent>
         </Card>
-
-        {/* 5. Payments */}
-        <Card className="lg:col-span-1 border-2 border-blue-500/20 shadow-none overflow-hidden rounded-3xl">
-           <CardHeader className="bg-blue-500/5 border-b">
+        {/* NEW: SaaS Subscription Control */}
+        <Card className="lg:col-span-1 border-2 border-red-500/20 shadow-none overflow-hidden rounded-3xl">
+           <CardHeader className="bg-red-500/5 border-b">
               <CardTitle className="flex items-center gap-2">
-                 <CreditCard className="h-5 w-5 text-blue-600" /> SSLCommerz
+                 <CreditCard className="h-5 w-5 text-red-600" /> Subscription Control
               </CardTitle>
            </CardHeader>
-           <CardContent className="p-6 space-y-4">
+           <CardContent className="p-6 space-y-6">
                <div className="space-y-2">
-                <Label htmlFor="ssl-store-id" className="font-bold text-xs">Store ID</Label>
-                <input id="ssl-store-id" value={settings?.paymentConfig?.sslcommerz?.storeId || ''} onChange={(e) => setSettings({...settings, paymentConfig: {...(settings?.paymentConfig || {}), sslcommerz: {...(settings?.paymentConfig?.sslcommerz || {}), storeId: e.target.value}}})} className="w-full h-12 rounded-xl border px-4 text-sm" />
+                <Label htmlFor="sub-expiry" className="font-bold text-xs">Expiry Date & Time</Label>
+                <input 
+                  id="sub-expiry" 
+                  type="datetime-local" 
+                  value={(() => {
+                    if (!settings?.saasSubscription?.expiryDate) return '';
+                    const date = new Date(settings.saasSubscription.expiryDate);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                  })()}
+                  onChange={(e) => {
+                    const localDate = new Date(e.target.value);
+                    setSettings({
+                      ...settings, 
+                      saasSubscription: {
+                        ...(settings?.saasSubscription || {}),
+                        expiryDate: localDate.toISOString()
+                      }
+                    });
+                  }} 
+                  className="w-full h-12 rounded-xl border px-4 text-sm" 
+                />
+                <p className="text-[10px] text-muted-foreground italic">Set when the tenant's access will automatically expire.</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ssl-store-password" className="font-bold text-xs">Store Password</Label>
-                <input id="ssl-store-password" type="password" value={settings?.paymentConfig?.sslcommerz?.storePassword || ''} onChange={(e) => setSettings({...settings, paymentConfig: {...(settings?.paymentConfig || {}), sslcommerz: {...(settings?.paymentConfig?.sslcommerz || {}), storePassword: e.target.value}}})} className="w-full h-12 rounded-xl border px-4 text-sm" />
+                <Label className="font-bold text-xs">Access Status</Label>
+                <Select 
+                  value={settings?.saasSubscription?.status || 'Active'} 
+                  onValueChange={(v) => setSettings({
+                    ...settings, 
+                    saasSubscription: {
+                      ...(settings?.saasSubscription || {}),
+                      status: v
+                    }
+                  })}
+                >
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active (Live)</SelectItem>
+                    <SelectItem value="Expired">Expired (Blocked)</SelectItem>
+                    <SelectItem value="Suspended">Suspended (Manual Block)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
            </CardContent>
         </Card>

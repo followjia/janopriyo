@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidateTag, revalidatePath } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import GlobalSettings from '@/models/GlobalSettings';
 import { auth } from '@/auth';
@@ -36,9 +36,9 @@ export async function GET() {
       } : maskedSettings.courierConfig,
       paymentConfig: maskedSettings.paymentConfig ? {
         ...maskedSettings.paymentConfig,
-        sslcommerz: rawSettings.paymentConfig?.sslcommerz?.storePassword ? { 
+        sslcommerz: rawSettings.paymentConfig?.sslcommerz?.storePassword ? {
           ...maskedSettings.paymentConfig.sslcommerz,
-          storePassword: "********************" 
+          storePassword: "********************"
         } : maskedSettings.paymentConfig.sslcommerz
       } : maskedSettings.paymentConfig,
       aiConfig: maskedSettings.aiConfig ? {
@@ -82,10 +82,10 @@ export async function POST(req: NextRequest) {
 
     // Restricted fields - ONLY for super_admin
     const superAdminFields = [
-      'uiTemplates', 
-      'domain', 
-      'storeId', 
-      'paymentConfig', 
+      'uiTemplates',
+      'domain',
+      'storeId',
+      'paymentConfig',
       'googleAnalyticsId',
       'aiConfig',
       'courierConfig',
@@ -94,9 +94,10 @@ export async function POST(req: NextRequest) {
       'facebookDomainVerification',
       'metaPixelId',
       'facebookAccessToken',
-      'facebookTestEventCode'
+      'facebookTestEventCode',
+      'saasSubscription'
     ];
-    
+
     const isSuperAdmin = (session.user as any).role === 'super_admin';
     const allowedBody: any = {};
 
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
     revalidatePath('/', 'layout');
     revalidatePath('/shop', 'page');
     revalidatePath('/blog', 'page');
-    
+
     // Mask sensitive response data for the return
     const safeResult = {
       ...(settings as any).toObject ? (settings as any).toObject() : settings,
@@ -144,9 +145,9 @@ export async function POST(req: NextRequest) {
     console.error('CRITICAL: Error updating settings:', error);
     if (error.name === 'ValidationError') {
       const fieldErrors = Object.keys(error.errors || {}).join(', ');
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: `Validation Error: Missing or invalid fields (${fieldErrors}). Please ensure General Settings are filled.`,
-        details: error.errors 
+        details: error.errors
       }, { status: 400 });
     }
     return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });

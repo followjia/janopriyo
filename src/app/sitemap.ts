@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import connectToDatabase from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -7,25 +8,23 @@ import Blog from "@/models/Blog";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://www.janopriyo.com";
-
-const getDynamicRoutes = async (): Promise<MetadataRoute.Sitemap> => {
+const getDynamicRoutes = async (domain: string, baseUrl: string): Promise<MetadataRoute.Sitemap> => {
   try {
     await connectToDatabase();
 
-    // Use safety limits to prevent OOM and stay within standard sitemap limits (max 50k URLs)
+    // Use safety limits and filter by domain for multi-tenant support
     const [products, categories, blogs] = await Promise.all([
-      Product.find({ isPublished: true }, "slug updatedAt")
+      Product.find({ domain, isPublished: true }, "slug updatedAt")
         .sort({ updatedAt: -1 })
         .limit(40000)
         .lean()
         .exec(),
-      Category.find({ isActive: true }, "slug updatedAt")
+      Category.find({ domain, isActive: true }, "slug updatedAt")
         .sort({ updatedAt: -1 })
         .limit(5000)
         .lean()
         .exec(),
-      Blog.find({ isPublished: true }, "slug updatedAt")
+      Blog.find({ domain, isPublished: true }, "slug updatedAt")
         .sort({ updatedAt: -1 })
         .limit(4000)
         .lean()
@@ -33,21 +32,21 @@ const getDynamicRoutes = async (): Promise<MetadataRoute.Sitemap> => {
     ]);
 
     const productRoutes: MetadataRoute.Sitemap = products.map((item: any) => ({
-      url: `${BASE_URL}/product/${item.slug}`,
+      url: `${baseUrl}/product/${item.slug}`,
       lastModified: item.updatedAt || new Date(),
       changeFrequency: "daily",
       priority: 0.8,
     }));
 
     const categoryRoutes: MetadataRoute.Sitemap = categories.map((item: any) => ({
-      url: `${BASE_URL}/shop?category=${encodeURIComponent(item.slug)}`,
+      url: `${baseUrl}/shop?category=${encodeURIComponent(item.slug)}`,
       lastModified: item.updatedAt || new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
     }));
 
     const blogRoutes: MetadataRoute.Sitemap = blogs.map((item: any) => ({
-      url: `${BASE_URL}/blog/${item.slug}`,
+      url: `${baseUrl}/blog/${item.slug}`,
       lastModified: item.updatedAt || new Date(),
       changeFrequency: "weekly",
       priority: 0.6,
@@ -65,41 +64,52 @@ const getDynamicRoutes = async (): Promise<MetadataRoute.Sitemap> => {
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const dynamicRoutes = await getDynamicRoutes();
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost';
+  
+  // Strip port if present (e.g., localhost:3000 -> localhost)
+  const domain = host.split(':')[0];
+  
+  // Detect protocol safely
+  const forwardedProto = headersList.get('x-forwarded-proto');
+  const protocol = forwardedProto || (host.includes('localhost') ? 'http' : 'https');
+  const baseUrl = `${protocol}://${host}`;
+
+  const dynamicRoutes = await getDynamicRoutes(domain, baseUrl);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: `${BASE_URL}`,
+      url: `${baseUrl}`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/shop`,
+      url: `${baseUrl}/shop`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/blog`,
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/contact`,
+      url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${BASE_URL}/privacy`,
+      url: `${baseUrl}/privacy`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: `${BASE_URL}/terms`,
+      url: `${baseUrl}/terms`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,

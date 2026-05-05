@@ -4,11 +4,13 @@ import connectToDatabase from '@/lib/db';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
 import { generateUniqueSlug } from '@/lib/slugify';
+import { getTenantDomain } from '@/lib/tenant';
 
 // GET all products
 export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
+    const domain = await getTenantDomain();
 
     const searchParams = req.nextUrl.searchParams;
     const ids = searchParams.get('ids');
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '40')));
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: any = { domain };
     if (ids) {
       query._id = { $in: ids.split(',') };
     }
@@ -53,6 +55,11 @@ export async function POST(req: NextRequest) {
 
     if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const domain = await getTenantDomain();
+    if (!domain || domain === 'localhost' || domain === 'unknown') {
+      return NextResponse.json({ message: 'Tenant domain is missing or invalid' }, { status: 400 });
     }
 
     let body;
@@ -116,12 +123,13 @@ export async function POST(req: NextRequest) {
     while (attempt < maxRetries) {
       attempt++;
       const currentSlug = attempt === 1 ? slug : `${slug}-${attempt - 1}`;
-      const uniqueSlug = await generateUniqueSlug(Product, currentSlug);
+      const uniqueSlug = await generateUniqueSlug(Product, currentSlug, domain);
 
       try {
         const newProduct = await Product.create({
           name,
           slug: uniqueSlug,
+          domain,
           description,
           price: parsedPrice,
           salePrice: parsedSalePrice,
