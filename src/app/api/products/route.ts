@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
         });
 
         revalidateTag('products', 'max');
-    revalidatePath('/');
+        revalidatePath('/');
         return NextResponse.json(newProduct, { status: 201 });
       } catch (error: any) {
         lastError = error;
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
           // If slug conflict, retry with incremented slug
           continue;
         }
-        
+
         // If other duplicate error (e.g. SKU), or other DB error, return 400
         if (error.code === 11000) {
           const field = Object.keys(error.keyPattern || {})[0] || 'slug/SKU';
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
     }
 
     // If we exhausted retries
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Failed to generate a unique slug after several attempts. Please try a different name or slug.',
       error: lastError?.message
     }, { status: 400 });

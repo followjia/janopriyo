@@ -111,6 +111,26 @@ export default function SuperConfigPage() {
     });
   };
 
+  const handleRepair = async () => {
+    if (!confirm('This will sync all orphaned data (products, orders, etc.) to the current domain. Continue?')) return;
+    
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/seed/repair-tenants', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Repair Complete! ${data.results.products} products and ${data.results.orders} orders synced.`);
+        router.refresh();
+      } else {
+        throw new Error(data.message || 'Repair failed');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to repair database');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
@@ -130,13 +150,23 @@ export default function SuperConfigPage() {
           <h1 className="text-4xl font-black tracking-tighter">Tenant Deep Config</h1>
           <p className="text-muted-foreground">Manage keys, tracking, and logistics for this specific domain.</p>
         </div>
-        <Button 
-          onClick={handleUpdate} 
-          disabled={saving || !settings}
-          className="h-12 px-8 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20"
-        >
-          {saving ? 'Applying...' : <><Save className="h-5 w-5" /> Save SaaS Config</>}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            onClick={handleRepair} 
+            disabled={saving || !settings}
+            className="h-12 px-6 rounded-xl font-bold gap-2 border-2"
+          >
+            {saving ? 'Repairing...' : 'Repair Database'}
+          </Button>
+          <Button 
+            onClick={handleUpdate} 
+            disabled={saving || !settings}
+            className="h-12 px-8 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20"
+          >
+            {saving ? 'Applying...' : <><Save className="h-5 w-5" /> Save SaaS Config</>}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
