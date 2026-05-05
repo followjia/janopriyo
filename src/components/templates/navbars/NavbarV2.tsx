@@ -142,7 +142,7 @@ export default function NavbarV2() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button className="rounded-full bg-primary text-white hover:bg-white hover:text-black font-black text-[10px] px-8 py-6 uppercase tracking-widest shadow-xl shadow-primary/20 transition-all">
                 Access
               </Button>
@@ -175,7 +175,7 @@ export default function NavbarV2() {
                 </Link>
              ))}
              {!session && (
-               <Link href="/auth/login" className="mt-10" onClick={() => setMobileMenuOpen(false)}>
+               <Link href="/login" className="mt-10" onClick={() => setMobileMenuOpen(false)}>
                  <Button className="rounded-full bg-primary text-white w-56 h-16 font-black text-xl uppercase tracking-widest">
                     Access
                  </Button>

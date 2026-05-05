@@ -141,7 +141,7 @@ export default function NavbarV4() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/login" className="flex items-center gap-3 group">
+            <Link href="/login" className="flex items-center gap-3 group">
               <div className="h-11 w-11 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-white/10">
                 <User className="h-5 w-5" />
               </div>

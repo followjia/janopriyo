@@ -130,7 +130,7 @@ export default function NavbarV3() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/auth/login" className="hidden sm:block">
+              <Link href="/login" className="hidden sm:block">
                 <User className="h-5 w-5 stroke-[1.5] hover:text-primary transition-colors" />
               </Link>
             )}
@@ -176,7 +176,7 @@ export default function NavbarV3() {
                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">Saved</span>
               </button>
               {!session && (
-                <button onClick={() => { router.push('/auth/login'); setIsMobileMenuOpen(false); }} className="flex flex-col items-center gap-2">
+                <button onClick={() => { router.push('/login'); setIsMobileMenuOpen(false); }} className="flex flex-col items-center gap-2">
                   <User className="h-6 w-6" />
                   <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">Entry</span>
                 </button>
