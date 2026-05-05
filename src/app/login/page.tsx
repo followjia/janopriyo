@@ -156,11 +156,11 @@ export default function LoginPage() {
       
       const isProd = process.env.NODE_ENV === 'production';
       const protocol = (isProd && !hubDomain.includes('localhost')) ? 'https' : 'http';
-      const hubBase = `${protocol}://${hubDomain}`;
+      const baseUrl = `${protocol}://${currentHost}`;
       
       const finalCallback = (remoteTenant && isValidTenant)
-        ? `${hubBase}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
-        : `${hubBase}/dashboard`;
+        ? `${baseUrl}/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}` 
+        : `${baseUrl}/dashboard`;
 
       console.log('Signing in with Google. Callback:', finalCallback);
       await signIn('google', { callbackUrl: finalCallback });
