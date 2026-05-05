@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { decode } from 'next-auth/jwt';
-import { cookies } from 'next/headers';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -89,21 +88,22 @@ export async function GET(req: NextRequest) {
       console.error('Bridge: Database/User sync error:', dbError instanceof Error ? dbError.message : dbError);
     }
 
-    const cookieStore = await cookies();
-
-    console.log('Bridge: Setting session cookie');
-    cookieStore.set(cookieName, sessionToken, {
+    // Redirect to the tenant's homepage, NOT the hub
+    // IMPORTANT: Cookie MUST be set on the response object directly,
+    // not via cookieStore.set() — that doesn't carry over to NextResponse.redirect()
+    const tenantOrigin = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+    const response = NextResponse.redirect(`${tenantOrigin}/`);
+    
+    response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',
       path: '/',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60, // 30 days
     });
 
-    // Redirect to the tenant's homepage, NOT the hub
-    const tenantOrigin = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
-    const response = NextResponse.redirect(`${tenantOrigin}/`);
     response.headers.set('Referrer-Policy', 'no-referrer');
+    console.log(`Bridge: Cookie set on response. Redirecting to ${tenantOrigin}/`);
     return response;
   } catch (error) {
     console.error('Bridge Fatal Error:', error instanceof Error ? error.message : 'Auth bridge failed');
