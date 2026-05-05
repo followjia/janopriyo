@@ -19,8 +19,11 @@ export async function GET(req: NextRequest) {
   const hubDomain = process.env.NEXT_PUBLIC_HUB_DOMAIN || 
                    (process.env.NEXTAUTH_URL ? new URL(process.env.NEXTAUTH_URL).host : 'localhost:3000');
   
-  const allowedHosts = [hubDomain, 'localhost'];
-  const isAllowed = allowedHosts.some(h => h && (target === h || target.endsWith(`.${h}`))) || 
+  const cleanHub = hubDomain.replace('www.', '');
+  const cleanTarget = target.replace('www.', '');
+
+  const isAllowed = cleanTarget === cleanHub || 
+                   target.endsWith(`.${cleanHub}`) || 
                    target.includes('localhost');
 
   if (!isAllowed) {
