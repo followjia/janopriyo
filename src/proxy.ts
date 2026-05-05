@@ -12,6 +12,14 @@ export const proxy = auth(async (req) => {
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
+  
+  // If user is logged in on Hub but trying to access a tenant shop, 
+  // redirect them to the hub-callback immediately.
+  const remoteTenant = nextUrl.searchParams.get("remote_tenant");
+  if (isLoggedIn && isHub && remoteTenant) {
+    console.log(`Proxy: Redirecting logged-in hub user to tenant: ${remoteTenant}`);
+    return NextResponse.redirect(new URL(`/api/auth/hub-callback?target=${encodeURIComponent(remoteTenant)}`, nextUrl));
+  }
 
   // 1. Redirection for logged-in users on Auth routes (Login/Register)
   if (isAuthRoute && isLoggedIn) {
