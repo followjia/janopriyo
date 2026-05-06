@@ -37,7 +37,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
             </Button>
           </Link>
           <div className="space-y-6 mb-12">
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.1]">
+            <h1 className="text-4xl md:text-6xl text-primary font-black tracking-tighter leading-[1.1]">
               {blog.title}
             </h1>
             <div className="flex flex-wrap items-center gap-6 pt-4 text-muted-foreground">
