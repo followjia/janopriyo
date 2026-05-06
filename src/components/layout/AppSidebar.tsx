@@ -137,10 +137,6 @@ const data = {
       icon: Settings,
       items: [
         {
-          title: "Marketing Tools",
-          url: "/admin/marketing",
-        },
-        {
           title: "Coupons",
           url: "/admin/coupons",
         },
@@ -149,7 +145,7 @@ const data = {
           url: "/admin/settings",
         },
         {
-          title: "Infrastructure (Super)",
+          title: "Infrastructure & Marketing",
           url: "/admin/system-design",
           superOnly: true
         },

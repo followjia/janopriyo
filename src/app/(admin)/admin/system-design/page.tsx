@@ -178,7 +178,7 @@ export default function SuperConfigPage() {
                  <Globe className="h-5 w-5 text-primary" /> Core Identity
               </CardTitle>
            </CardHeader>
-           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+           <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                <div className="space-y-2">
                 <Label htmlFor="store-domain" className="font-bold">Store Domain</Label>
                 <input 
@@ -207,6 +207,16 @@ export default function SuperConfigPage() {
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ga4-id" className="font-bold">GA4 Property ID</Label>
+                <input 
+                  id="ga4-id"
+                  value={settings?.googleAnalyticsId || ''} 
+                  onChange={(e) => setSettings({...settings, googleAnalyticsId: e.target.value})}
+                  placeholder="e.g. 534447077"
+                  className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
+                />
+              </div>
            </CardContent>
         </Card>
 
@@ -226,8 +236,22 @@ export default function SuperConfigPage() {
                 <Label htmlFor="fb-access-token" className="font-bold text-xs">Facebook Access Token</Label>
                 <input id="fb-access-token" type="password" value={settings?.facebookAccessToken || ''} onChange={(e) => setSettings({...settings, facebookAccessToken: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fb-domain-verify" className="font-bold text-xs">FB Domain Verification</Label>
+                  <input id="fb-domain-verify" value={settings?.facebookDomainVerification || ''} onChange={(e) => setSettings({...settings, facebookDomainVerification: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fb-test-code" className="font-bold text-xs">FB Test Event Code</Label>
+                  <input id="fb-test-code" value={settings?.facebookTestEventCode || ''} onChange={(e) => setSettings({...settings, facebookTestEventCode: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
+                </div>
+              </div>
               <div className="space-y-2">
-                <Label htmlFor="search-console-meta" className="font-bold text-xs">Search Console Meta</Label>
+                <Label htmlFor="sc-api-url" className="font-bold text-xs">Search Console ID / URL (for Analytics)</Label>
+                <input id="sc-api-url" value={settings?.googleSearchConsoleId || ''} onChange={(e) => setSettings({...settings, googleSearchConsoleId: e.target.value})} placeholder="e.g. https://www.example.com/ or sc-domain:example.com" className="w-full h-12 rounded-xl border px-4 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="search-console-meta" className="font-bold text-xs">Search Console Meta Tag (for Verification)</Label>
                 <input id="search-console-meta" value={settings?.searchConsoleMeta || ''} onChange={(e) => setSettings({...settings, searchConsoleMeta: e.target.value})} className="w-full h-12 rounded-xl border px-4 text-sm" />
               </div>
            </CardContent>

@@ -66,8 +66,7 @@ export default function Navbar() {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
-  const isAdmin = (session?.user as any)?.role === 'admin';
-  const dashboardHref = isAdmin ? '/admin/dashboard' : '/dashboard';
+
 
   useEffect(() => {
     const controller = new AbortController();
@@ -295,30 +294,38 @@ export default function Navbar() {
               </div>
 
               {/* Wishlist */}
-              <Link href="/wishlist" className="hidden sm:block">
-                <Button variant="ghost" size="icon" className="h-10 w-10 relative hover:text-primary transition-all hover:bg-primary/5 active:scale-90">
+              <Link
+                href="/wishlist"
+                className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary"
+                aria-label="Wishlist"
+              >
+                <div className="relative">
                   <Heart className="h-5 w-5" />
                   {wishlistItems.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 bg-primary text-[8px] font-bold text-white flex items-center justify-center rounded-full shadow-sm animate-in fade-in zoom-in duration-300">
+                    <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-primary text-[8px] font-bold text-white flex items-center justify-center rounded-full shadow-sm animate-in fade-in zoom-in duration-300">
                       {wishlistItems.length}
                     </span>
                   )}
-                </Button>
+                </div>
               </Link>
 
               {/* Cart */}
               <CartDrawer>
-                <div className="flex items-center gap-2 group cursor-pointer hover:bg-primary/5 px-2 py-1.5 rounded-full transition-all active:scale-95">
-                  <div className="relative transition-all group-hover:scale-110 group-hover:text-primary shrink-0">
-                    <ShoppingCart className="h-5 w-5" />
+                <div 
+                  className="flex items-center gap-2 group cursor-pointer hover:text-primary px-2 py-1.5 rounded-full transition-all active:scale-95"
+                  aria-label="Shopping Cart"
+                  role="button"
+                >
+                  <div className="relative">
+                    <ShoppingCart className="h-5 w-5 stroke-[1.5]" />
                     {cartCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-primary text-[10px] font-bold text-white flex items-center justify-center rounded-full border-2 border-background">
+                      <span className="absolute -top-2 -right-2 h-4 w-4 bg-primary text-white text-[8px] font-black rounded-full flex items-center justify-center animate-in zoom-in">
                         {cartCount}
                       </span>
                     )}
                   </div>
-                  <div className="hidden lg:block leading-none">
-                    <span className="text-xs font-bold font-serif whitespace-nowrap">৳{Math.round(totalAmount)}</span>
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="text-[10px] font-bold leading-none tracking-tighter">৳{totalAmount.toLocaleString()}</span>
                   </div>
                 </div>
               </CartDrawer>
@@ -326,25 +333,13 @@ export default function Navbar() {
               {/* User Account (Right end) */}
               {status === 'authenticated' && session?.user ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-2 rounded-full px-1.5 py-1 hover:bg-primary/5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
-                    {/* Avatar */}
-                    <div className="relative h-8 w-8 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                      {session.user.image ? (
-                        <img
-                          src={session.user.image}
-                          alt={session.user.name ?? 'User'}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-[11px] font-bold text-primary uppercase">
-                          {(session.user.name ?? 'U').slice(0, 2)}
-                        </span>
-                      )}
-                    </div>
-                    {/* Name — desktop only, max 5 chars */}
-                    <span className="hidden md:block text-[11px] font-semibold tracking-wide max-w-[44px] truncate">
-                      {(session.user.name ?? '').slice(0, 5)}
-                    </span>
+                  <DropdownMenuTrigger asChild>
+                    <button 
+                      className="h-10 w-10 flex items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary outline-none"
+                      aria-label="Account menu"
+                    >
+                      <User className="h-5 w-5" />
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
                     <DropdownMenuGroup>
@@ -361,35 +356,72 @@ export default function Navbar() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={dashboardHref}>
-                          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile">
-                          <User className="mr-2 h-4 w-4" /> Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/settings">
-                            <Settings className="mr-2 h-4 w-4" /> Admin Settings
-                          </Link>
-                        </DropdownMenuItem>
+
+                      {/* Role Based Navigation */}
+                      {(session.user as any)?.role === 'super_admin' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/system-design" className="cursor-pointer">
+                              <Settings className="mr-2 h-4 w-4" /> System Design
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
                       )}
+
+                      {(session.user as any)?.role === 'admin' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/orders" className="cursor-pointer">
+                              <Truck className="mr-2 h-4 w-4" /> Manage Orders
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {(session.user as any)?.role === 'user' && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dashboard" className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/track-order" className="cursor-pointer">
+                              <Truck className="mr-2 h-4 w-4" /> Track Order
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" /> Profile Settings
+                        </Link>
+                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="text-destructive">
+                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="text-destructive cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link href="/login" className="inline-flex">
-                  <Button variant="ghost" size="icon" className="h-10 w-10 hover:text-primary transition-colors">
-                    <User className="h-5 w-5" />
-                  </Button>
+                <Link 
+                  href="/login" 
+                  className="h-10 w-10 flex items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary"
+                  aria-label="Log in"
+                >
+                  <User className="h-5 w-5" />
                 </Link>
               )}
 

@@ -4,10 +4,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, LayoutDashboard, Settings, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,7 @@ export default function NavbarV3() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const cartItemsCount = useAppSelector((state) => state.cart.items.reduce((total, item) => total + item.quantity, 0));
   const wishlistCount = useAppSelector((state) => state.wishlist.items.length);
-  const isAdmin = (session?.user as any)?.role === 'admin';
+
 
   const NAV_LINKS = [
     { label: 'Shop', href: '/shop' },
@@ -98,7 +99,7 @@ export default function NavbarV3() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-9 w-9 rounded-full border border-neutral-200 overflow-hidden hover:scale-110 transition-transform">
+                  <button className="h-9 w-9 rounded-full border border-neutral-200 overflow-hidden hover:scale-110 transition-transform cursor-pointer">
                     <img 
                       src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=random`} 
                       alt={session.user?.name || "User Profile"} 
@@ -115,13 +116,43 @@ export default function NavbarV3() {
                     <p className="text-sm font-bold truncate">{session.user?.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{session.user?.email}</p>
                   </div>
-                  {isAdmin && (
-                    <DropdownMenuItem onClick={() => router.push('/admin')} className="rounded-lg cursor-pointer">
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> Management Console
-                    </DropdownMenuItem>
+                  
+                  {/* Role Based Navigation */}
+                  {(session.user as any)?.role === 'super_admin' && (
+                    <>
+                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-lg cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-lg cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" /> System Design
+                      </DropdownMenuItem>
+                    </>
                   )}
-                  <DropdownMenuItem onClick={() => router.push('/account')} className="rounded-lg cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" /> Account Settings
+
+                  {(session.user as any)?.role === 'admin' && (
+                    <>
+                      <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-lg cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/admin/orders')} className="rounded-lg cursor-pointer">
+                        <Truck className="mr-2 h-4 w-4" /> Manage Orders
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  {(session.user as any)?.role === 'user' && (
+                    <>
+                      <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-lg cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/track-order')} className="rounded-lg cursor-pointer">
+                        <Truck className="mr-2 h-4 w-4" /> Track Order
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-lg cursor-pointer">
+                    <User className="mr-2 h-4 w-4" /> Profile settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-500 hover:bg-red-500/10">
@@ -135,17 +166,19 @@ export default function NavbarV3() {
               </Link>
             )}
 
-            <Link href="/cart" className="flex items-center gap-3 group">
-              <div className="relative">
-                <ShoppingBag className="h-5 w-5 stroke-[1.5] group-hover:text-primary transition-all" />
-                {cartItemsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 h-4 w-4 bg-black text-white text-[8px] font-black rounded-full flex items-center justify-center">
-                    {cartItemsCount}
-                  </span>
-                )}
+            <CartDrawer>
+              <div className="flex items-center gap-3 group cursor-pointer">
+                <div className="relative">
+                  <ShoppingBag className="h-5 w-5 stroke-[1.5] group-hover:text-primary transition-all" />
+                  {cartItemsCount > 0 && (
+                    <span className="absolute -top-2 -right-2 h-4 w-4 bg-black text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                      {cartItemsCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden md:block border-b-2 border-transparent group-hover:border-primary transition-all">Atelier</span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] hidden md:block border-b-2 border-transparent group-hover:border-primary transition-all">Atelier</span>
-            </Link>
+            </CartDrawer>
           </div>
 
         </div>

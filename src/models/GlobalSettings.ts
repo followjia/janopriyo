@@ -58,6 +58,7 @@ export interface IGlobalSettings extends Document {
     };
   };
   googleAnalyticsId?: string; // GA4 Property ID
+  googleSearchConsoleId?: string; // Search Console Site URL (e.g. https://www.example.com/ or sc-domain:example.com)
   aiConfig?: {
     openRouterApiKey?: string;
     systemPrompt?: string;
@@ -151,6 +152,7 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       }
     },
     googleAnalyticsId: { type: String },
+    googleSearchConsoleId: { type: String },
     aiConfig: {
       openRouterApiKey: { type: String, get: decrypt, set: encrypt },
       systemPrompt: { type: String, default: 'You are a helpful e-commerce assistant.' }

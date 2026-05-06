@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, LayoutDashboard, Settings, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +26,7 @@ export default function NavbarV2() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const cartItemsCount = useAppSelector((state) => state.cart.items.reduce((total, item) => total + item.quantity, 0));
   const wishlistCount = useAppSelector((state) => state.wishlist.items.length);
-  const isAdmin = (session?.user as any)?.role === 'admin';
+
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -96,23 +97,25 @@ export default function NavbarV2() {
             </Button>
           </Link>
 
-          <Link href="/cart" className="relative group">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-primary/20 rounded-full relative">
-              <ShoppingCart className="h-5 w-5 group-hover:text-primary transition-all" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-white text-[9px] font-black text-black rounded-full flex items-center justify-center border-2 border-black animate-in zoom-in duration-300">
-                  {cartItemsCount}
-                </span>
-              )}
-            </Button>
-          </Link>
+          <CartDrawer>
+            <div className="relative group cursor-pointer">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-primary/20 rounded-full relative pointer-events-none">
+                <ShoppingCart className="h-5 w-5 group-hover:text-primary transition-all" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-white text-[9px] font-black text-black rounded-full flex items-center justify-center border-2 border-black animate-in zoom-in duration-300">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </Button>
+            </div>
+          </CartDrawer>
 
           <div className="hidden md:block h-6 w-[1px] bg-white/10" />
 
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-10 w-10 rounded-full border-2 border-primary/50 overflow-hidden hover:scale-110 transition-transform relative">
+                <button className="h-10 w-10 rounded-full border-2 border-primary/50 overflow-hidden hover:scale-110 transition-transform relative cursor-pointer">
                   <Image 
                     src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} 
                     alt={session.user?.name || 'User'} 
@@ -127,13 +130,43 @@ export default function NavbarV2() {
                    <p className="text-sm font-bold truncate">{session.user?.name}</p>
                    <p className="text-[10px] opacity-60 truncate">{session.user?.email}</p>
                 </div>
-                {isAdmin && (
-                  <DropdownMenuItem onClick={() => router.push('/admin')} className="rounded-xl cursor-pointer hover:bg-primary/20">
-                    <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Dashboard
-                  </DropdownMenuItem>
+                
+                {/* Role Based Navigation */}
+                {(session.user as any)?.role === 'super_admin' && (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Admin Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <Settings className="mr-2 h-4 w-4" /> System Design
+                    </DropdownMenuItem>
+                  </>
                 )}
-                <DropdownMenuItem onClick={() => router.push('/account')} className="rounded-xl cursor-pointer hover:bg-primary/20">
-                  <Settings className="mr-2 h-4 w-4" /> Profile
+
+                {(session.user as any)?.role === 'admin' && (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Admin Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/admin/orders')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <Truck className="mr-2 h-4 w-4" /> Manage Orders
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {(session.user as any)?.role === 'user' && (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/track-order')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                      <Truck className="mr-2 h-4 w-4" /> Track Order
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-xl cursor-pointer hover:bg-primary/20">
+                  <User className="mr-2 h-4 w-4" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-400 hover:bg-red-400/10">

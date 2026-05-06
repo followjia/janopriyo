@@ -5,11 +5,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, User, Menu, X, Heart, LayoutDashboard, Settings, LogOut, MapPin, Phone, HelpCircle } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, LayoutDashboard, Settings, LogOut, MapPin, Phone, HelpCircle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,7 @@ export default function NavbarV4() {
   const cartItemsCount = useAppSelector((state) => state.cart.items.reduce((total, item) => total + item.quantity, 0));
   const wishlistCount = useAppSelector((state) => state.wishlist.items.length);
   const totalAmount = useAppSelector((state) => state.cart.items.reduce((total, item) => total + (item.price * item.quantity), 0));
-  const isAdmin = (session?.user as any)?.role === 'admin';
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function NavbarV4() {
           <div className="hidden md:flex items-center gap-8">
              <Link href="/help" className="hover:text-white flex items-center gap-1.5"><HelpCircle className="h-3.5 w-3.5" /> Assistance</Link>
              <span className="text-white/20">|</span>
-             <Link href="/track" className="hover:text-white">Track Order</Link>
+             <Link href="/track-order" className="hover:text-white">Track Order</Link>
           </div>
         </div>
       </div>
@@ -105,7 +106,7 @@ export default function NavbarV4() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 group">
+                <button className="flex items-center gap-3 group cursor-pointer">
                 <div className="h-11 w-11 rounded-xl border-2 border-white/10 overflow-hidden group-hover:border-primary transition-all relative">
                   <Image 
                     src={session.user?.image || `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#E2E8F0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" font-weight="bold" fill="#475569">${session.user?.name?.split(' ').map((n:any) => n[0]).join('').toUpperCase() || 'U'}</text></svg>`)}`} 
@@ -126,13 +127,43 @@ export default function NavbarV4() {
                     <p className="text-sm font-bold truncate">{session.user?.name}</p>
                     <p className="text-[10px] opacity-40 truncate">{session.user?.email}</p>
                  </div>
-                 {isAdmin && (
-                   <DropdownMenuItem onClick={() => router.push('/admin')} className="rounded-xl cursor-pointer hover:bg-primary/20 text-primary">
-                     <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Console
-                   </DropdownMenuItem>
+                 
+                 {/* Role Based Navigation */}
+                 {(session.user as any)?.role === 'super_admin' && (
+                   <>
+                     <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20 text-primary">
+                       <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Console
+                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-xl cursor-pointer hover:bg-white/5">
+                       <Settings className="mr-2 h-4 w-4" /> System Design
+                     </DropdownMenuItem>
+                   </>
                  )}
-                 <DropdownMenuItem onClick={() => router.push('/account')} className="rounded-xl cursor-pointer hover:bg-white/5">
-                   <Settings className="mr-2 h-4 w-4" /> User Settings
+
+                 {(session.user as any)?.role === 'admin' && (
+                   <>
+                     <DropdownMenuItem onClick={() => router.push('/admin/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20 text-primary">
+                       <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Console
+                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => router.push('/admin/orders')} className="rounded-xl cursor-pointer hover:bg-white/5">
+                       <Truck className="mr-2 h-4 w-4" /> Manage Orders
+                     </DropdownMenuItem>
+                   </>
+                 )}
+
+                 {(session.user as any)?.role === 'user' && (
+                   <>
+                     <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20 text-primary">
+                       <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-xl cursor-pointer hover:bg-white/5">
+                       <Truck className="mr-2 h-4 w-4" /> Track Order
+                     </DropdownMenuItem>
+                   </>
+                 )}
+
+                 <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-xl cursor-pointer hover:bg-white/5">
+                   <User className="mr-2 h-4 w-4" /> Profile Settings
                  </DropdownMenuItem>
                  <DropdownMenuSeparator className="bg-white/5" />
                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-500 hover:bg-red-500/10">
@@ -152,22 +183,24 @@ export default function NavbarV4() {
             </Link>
           )}
 
-          <Link href="/cart" className="relative group flex items-center gap-3">
-            <div className="relative">
-              <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(var(--primary-rgb),0.5)] group-hover:bg-white group-hover:text-black transition-all">
-                <ShoppingCart className="h-5 w-5" />
+          <CartDrawer>
+            <div className="relative group flex items-center gap-3 cursor-pointer">
+              <div className="relative">
+                <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(var(--primary-rgb),0.5)] group-hover:bg-white group-hover:text-black transition-all">
+                  <ShoppingCart className="h-5 w-5" />
+                </div>
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 h-5 w-5 bg-white text-black text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#0f1111] animate-bounce">
+                    {cartItemsCount}
+                  </span>
+                )}
               </div>
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 w-5 bg-white text-black text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#0f1111] animate-bounce">
-                  {cartItemsCount}
-                </span>
-              )}
+              <div className="hidden md:flex flex-col">
+                 <span className="text-[9px] opacity-40 uppercase font-black tracking-widest leading-none mb-1">Your Bag</span>
+                 <span className="text-xs font-bold leading-none">৳{totalAmount.toLocaleString()}</span>
+              </div>
             </div>
-            <div className="hidden md:flex flex-col">
-               <span className="text-[9px] opacity-40 uppercase font-black tracking-widest leading-none mb-1">Your Bag</span>
-               <span className="text-xs font-bold leading-none">৳{totalAmount.toLocaleString()}</span>
-            </div>
-          </Link>
+          </CartDrawer>
         </div>
       </div>
 

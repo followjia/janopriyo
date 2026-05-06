@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     // Fetch store-specific settings based on hostname
     const domain = await getTenantDomain();
-    
+
     if (!domain) {
       return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
@@ -41,10 +41,14 @@ export async function GET(request: Request) {
 
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    
-    // Use store-specific IDs or fallback to global envs
+
+    // Prioritize store-specific IDs from database, fallback to global envs
     const propertyId = settings?.googleAnalyticsId || process.env.GOOGLE_GA4_PROPERTY_ID;
-    const siteUrl = (settings?.domain ? `https://${settings.domain}/` : null) || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL;
+    
+    // siteUrl is critical for Search Console. Prioritize store-specific settings.
+    const siteUrl = settings?.googleSearchConsoleId || 
+                    process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || 
+                    (settings?.domain ? `https://${settings.domain}/` : null);
 
     if (!clientEmail || !privateKey || !propertyId || !siteUrl) {
       console.error('Analytics Configuration Missing for:', domain, { propertyId, siteUrl });
@@ -70,8 +74,8 @@ export async function GET(request: Request) {
         property: `properties/${propertyId}`,
         dateRanges: [{ startDate, endDate: 'today' }],
         dimensions: [
-          { name: 'date' }, 
-          { name: 'deviceCategory' }, 
+          { name: 'date' },
+          { name: 'deviceCategory' },
           { name: 'country' },
           { name: 'sessionDefaultChannelGroup' },
           { name: 'newVsReturning' }
@@ -135,31 +139,31 @@ export async function GET(request: Request) {
     const retention = { new: 0, returning: 0 };
     let totalDurationSeconds = 0;
     let totalSessionsCount = 0;
-    
+
     gaData.rows?.forEach(row => {
       const date = row.dimensionValues?.[0].value;
       const device = row.dimensionValues?.[1].value?.toLowerCase();
       const country = row.dimensionValues?.[2].value;
       const source = row.dimensionValues?.[3].value;
       const userType = row.dimensionValues?.[4].value?.toLowerCase();
-      
+
       const users = parseInt(row.metricValues?.[0].value || '0');
       const sessions = parseInt(row.metricValues?.[1].value || '0');
-      
+
       // Trends
       if (date) {
         const existing = visitorTrendsMap.get(date);
         if (existing) {
-          visitorTrendsMap.set(date, { 
-            date: formatGaDate(date), 
-            visitors: existing.visitors + users, 
-            sessions: existing.sessions + sessions 
+          visitorTrendsMap.set(date, {
+            date: formatGaDate(date),
+            visitors: existing.visitors + users,
+            sessions: existing.sessions + sessions
           });
         } else {
-          visitorTrendsMap.set(date, { 
-            date: formatGaDate(date), 
-            visitors: users, 
-            sessions: sessions 
+          visitorTrendsMap.set(date, {
+            date: formatGaDate(date),
+            visitors: users,
+            sessions: sessions
           });
         }
       }
@@ -173,13 +177,13 @@ export async function GET(request: Request) {
       if (device === 'desktop') devices.desktop += users;
       if (device === 'mobile') devices.mobile += users;
       if (device === 'tablet') devices.tablet += users;
-      
+
       // Countries
       if (country) countriesMap.set(country, (countriesMap.get(country) || 0) + users);
-      
+
       // Sources
       if (source) sourcesMap.set(source, (sourcesMap.get(source) || 0) + users);
-      
+
       // Retention
       if (userType === 'new') retention.new += users;
       if (userType === 'returning') retention.returning += users;
@@ -201,7 +205,7 @@ export async function GET(request: Request) {
     const totalClicks = scData.rows?.reduce((acc, row) => acc + (row.clicks || 0), 0) || 0;
     const averageSessionDuration = totalSessionsCount > 0 ? totalDurationSeconds / totalSessionsCount : 0;
     const avgPosition = (scData.rows?.reduce((acc, row) => acc + (row.position || 0), 0) || 0) / (scData.rows?.length || 1);
-    
+
     return NextResponse.json({
       stats: {
         visitors: totalVisitors,

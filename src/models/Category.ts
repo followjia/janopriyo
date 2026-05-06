@@ -33,7 +33,7 @@ const CategorySchema: Schema<ICategory> = new Schema(
 // Scoped unique index for multi-tenant support
 CategorySchema.index({ slug: 1, domain: 1 }, { unique: true });
 
-CategorySchema.pre('save', function (this: any, next: any) {
+CategorySchema.pre('save', function (this: any) {
   if (!this.slug && this.name) {
     this.slug = this.name
       .toLowerCase()
@@ -42,7 +42,6 @@ CategorySchema.pre('save', function (this: any, next: any) {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
-  next();
 });
 
 const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
