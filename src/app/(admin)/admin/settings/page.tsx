@@ -47,6 +47,7 @@ const settingsSchema = z.object({
   freeDeliveryThreshold: z.number().min(0, 'Threshold cannot be negative').optional(),
   deliveryChargeInsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
   deliveryChargeOutsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
+  theme: z.string().optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -79,6 +80,7 @@ export default function SettingsPage() {
       freeDeliveryThreshold: 0,
       deliveryChargeInsideDhaka: 60,
       deliveryChargeOutsideDhaka: 120,
+      theme: 'default',
     },
   });
 
@@ -120,6 +122,7 @@ export default function SettingsPage() {
                   activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
                   rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
                 },
+                theme: result.data.theme || 'default',
               };
               form.reset(sanitizedData);
             }
@@ -195,6 +198,7 @@ export default function SettingsPage() {
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>
               <TabsTrigger value="loyalty">Loyalty</TabsTrigger>
+              <TabsTrigger value="appearance">Appearance</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4">
@@ -478,6 +482,81 @@ export default function SettingsPage() {
                       <li>Active users earn <strong>{form.watch('subscriptionConfig.rewardPercentage')}%</strong> of every purchase as wallet tokens.</li>
                       <li>Tokens can be used for discounts on any future purchase.</li>
                     </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="appearance" className="space-y-4">
+              <Card className="border-2 border-primary/10 shadow-none overflow-hidden rounded-3xl">
+                <CardHeader className="bg-primary/5 border-b">
+                  <CardTitle>Brand Aesthetics</CardTitle>
+                  <CardDescription>Choose a theme that matches your brand identity.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <FormField
+                    control={form.control}
+                    name="theme"
+                    render={({ field }) => (
+                      <FormItem className="space-y-4">
+                        <FormLabel className="text-base font-bold">Storefront Theme Preset</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-background border-2 border-muted hover:border-primary/50 transition-all text-lg font-medium">
+                              <SelectValue placeholder="Select a theme" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl p-2 max-h-[400px]">
+                            {[
+                              { id: 'default', label: 'Default (System)', color: 'bg-slate-500' },
+                              { id: 'black', label: 'Black and White Theme', color: 'bg-black' },
+                              { id: 'caffeine', label: 'Caffeine Theme', color: 'bg-[#6F4E37]' },
+                              { id: 'claude', label: 'Claude Theme', color: 'bg-[#D97757]' },
+                              { id: 'elegant', label: 'Elegant Luxury Theme', color: 'bg-[#D4AF37]' },
+                              { id: 'marvel', label: 'Marvel Theme', color: 'bg-[#ED1D24]' },
+                              { id: 'material', label: 'Material Design Theme', color: 'bg-[#6200EE]' },
+                              { id: 'midnight', label: 'Midnight Bloom Theme', color: 'bg-[#2D1B69]' },
+                              { id: 'nature', label: 'Nature Theme', color: 'bg-[#2E7D32]' },
+                              { id: 'perplexity', label: 'Perplexity Theme', color: 'bg-[#202124]' },
+                              { id: 'slack', label: 'Slack Theme', color: 'bg-[#4A154B]' },
+                              { id: 'summer', label: 'Summer Theme', color: 'bg-[#FFD700]' },
+                              { id: 'sunset', label: 'Sunset Theme', color: 'bg-[#FD5E53]' },
+                              { id: 'valorant', label: 'Valorant Theme', color: 'bg-[#FF4655]' },
+                              { id: 'green', label: 'Green Theme', color: 'bg-green-500' },
+                              { id: 'red', label: 'Red Theme', color: 'bg-red-500' },
+                              { id: 'rose', label: 'Rose Theme', color: 'bg-rose-500' },
+                              { id: 'orange', label: 'Orange Theme', color: 'bg-orange-500' },
+                              { id: 'blue', label: 'Blue Theme', color: 'bg-blue-500' },
+                              { id: 'yellow', label: 'Yellow Theme', color: 'bg-yellow-500' },
+                              { id: 'violet', label: 'Violet Theme', color: 'bg-violet-500' }
+                            ].map((t) => (
+                              <SelectItem key={t.id} value={t.id} className="rounded-xl h-12">
+                                <div className="flex items-center gap-3">
+                                  <div className={`h-4 w-4 rounded-full ${t.color} border border-black/10`} />
+                                  <span className="font-medium">{t.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-sm">
+                          Switching themes will instantly update your storefront colors, fonts, and overall vibe.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="mt-8 p-6 rounded-3xl bg-muted/30 border-2 border-dashed border-muted flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center">
+                       <Truck className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold">Live Preview (Coming Soon)</h4>
+                      <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">
+                        In the next update, you'll be able to see a live preview of the theme before applying it.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
