@@ -32,6 +32,7 @@ import {
 
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5'];
+const THEME_OPTIONS = ['default', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
 
 const TEMPLATE_CONFIG = [
   { id: 'layout', label: 'Primary Layout' },
@@ -415,6 +416,26 @@ export default function SuperConfigPage() {
                    </Select>
                  </div>
                ))}
+               
+                {/* Theme Selector */}
+                <div className="space-y-2">
+                  <Label className="font-bold text-[10px] uppercase tracking-wider opacity-60 text-primary">Active Brand Theme</Label>
+                  <Select 
+                    value={ui.theme ?? 'default'} 
+                    onValueChange={(v) => updateTemplate('theme', v)}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {THEME_OPTIONS.map(t => (
+                        <SelectItem key={t} value={t} className="rounded-lg capitalize">
+                          {t === 'default' ? 'Default (System)' : `${t} Theme`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
            </CardContent>
         </Card>
 

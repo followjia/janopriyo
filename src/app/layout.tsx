@@ -122,11 +122,14 @@ export default async function RootLayout({
   const isValidGAId = (id?: string) => id ? /^(G-[A-Z0-9]{10}|UA-\d{4,}-\d+)$/.test(id) : false;
   const gaId = settings?.googleAnalyticsId;
 
+  const theme = settings?.uiTemplates?.theme;
+  const themeClass = (theme && theme !== 'default') ? `theme-${theme.toLowerCase()}` : '';
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased min-h-full flex flex-col overflow-x-hidden`}
         suppressHydrationWarning
       >
         <PWARegistry />

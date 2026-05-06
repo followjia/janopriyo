@@ -74,6 +74,7 @@ export interface IGlobalSettings extends Document {
     shopListing: string;
     blogListing: string;
     footer: string;
+    theme: string;
   };
   saasSubscription?: {
     expiryDate: Date;
@@ -168,6 +169,7 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       shopListing: { type: String, default: 'v1' },
       blogListing: { type: String, default: 'v1' },
       footer: { type: String, default: 'v1' },
+      theme: { type: String, default: 'green' },
     },
     saasSubscription: {
       expiryDate: { type: Date, required: true, index: true },
