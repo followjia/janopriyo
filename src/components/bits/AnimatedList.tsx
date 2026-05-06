@@ -144,7 +144,7 @@ const AnimatedList = ({
             >
               <div className={`item group ${isSelected ? 'selected' : ''} ${itemClassName}`}>
                 <div className="flex justify-between items-center gap-4">
-                  <p className="item-text transition-colors group-hover:text-primary">{displayTitle}</p>
+                  <p className="item-text text-foreground transition-colors group-hover:text-primary">{displayTitle}</p>
                   <motion.div
                     animate={{ rotate: isSelected ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
