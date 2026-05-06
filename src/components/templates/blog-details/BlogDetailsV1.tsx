@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ShareButtons } from '@/components/storefront/ShareButtons';
 import Image from 'next/image';
 import { generateHtml } from '@/lib/server-html';
+import FloatingLines from '@/components/ui/FloatingLines';
 
 export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readingTime: number }) {
   if (!blog) return null;
@@ -13,6 +14,21 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
     <div className="min-h-screen bg-background">
       {/* Cinematic Hero Header */}
       <header className="relative pt-12 pb-20 overflow-hidden border-b bg-muted/20">
+        {/* Floating Lines Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+          <FloatingLines 
+            enabledWaves={['top', 'middle', 'bottom']}
+            lineCount={[10, 15, 20]}
+            lineDistance={[8, 6, 4]}
+            bendRadius={5.0}
+            bendStrength={-0.5}
+            interactive={true}
+            parallax={true}
+            linesGradient={['var(--primary)', 'var(--primary)', 'var(--primary)', 'var(--primary)']}
+            mixBlendMode="screen"
+          />
+        </div>
+
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <Link href="/blog">
             <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
