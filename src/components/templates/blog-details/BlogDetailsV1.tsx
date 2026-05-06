@@ -18,7 +18,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
         <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
           <FloatingLines
             enabledWaves={["top", "middle", "bottom"]}
-            lineCount={12}
+            lineCount={8}
             lineDistance={10}
             bendRadius={5}
             bendStrength={-1.5}

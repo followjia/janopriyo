@@ -111,13 +111,14 @@ float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv, bool shouldBend) 
 
   if (shouldBend) {
     vec2 d = screenUv - mouseUv;
-    float influence = exp(-dot(d, d) * bendRadius); // radial falloff around cursor
+    float influence = exp(-dot(d, d) * bendRadius); 
     float bendOffset = (mouseUv.y - screenUv.y) * influence * bendStrength * bendInfluence;
     y += bendOffset;
   }
 
   float m = uv.y - y;
-  return 0.0175 / max(abs(m) + 0.01, 1e-3) + 0.01;
+  // Reduced thickness and intensity for sharper lines
+  return 0.005 / max(abs(m) + 0.001, 1e-4);
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
@@ -153,7 +154,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         baseUv,
         mouseUv,
         interactive
-      ) * 0.2;
+      ) * 0.1;
     }
   }
 
