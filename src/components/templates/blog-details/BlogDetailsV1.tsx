@@ -12,17 +12,14 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
   return (
     <div className="min-h-screen bg-background">
       {/* Cinematic Hero Header */}
-      <header className="relative py-12 overflow-hidden border-b bg-muted/20">
+      <header className="relative pt-12 pb-48 overflow-hidden border-b bg-muted/20">
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <Link href="/blog">
             <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
-              <ArrowLeft className="h-4 w-4" /> Back to Journal
+              <ArrowLeft className="h-4 w-4" /> Back to Blog
             </Button>
           </Link>
-          <div className="space-y-6">
-            <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
-              INSIGHTS
-            </Badge>
+          <div className="space-y-6 mb-12">
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.1]">
               {blog.title}
             </h1>
@@ -45,7 +42,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
         <div className="max-w-4xl mx-auto">
           {/* Featured Image */}
           {blog.thumbnail && (
-            <div className="mb-16 -mt-32 relative z-20 shadow-2xl rounded-[2.5rem] overflow-hidden border border-border/50 aspect-[16/9] shadow-primary/10">
+            <div className="mb-16 -mt-40 relative z-20 shadow-2xl rounded-[2.5rem] overflow-hidden border border-border/50 aspect-[16/9] shadow-primary/10">
               <Image
                 src={blog.thumbnail}
                 alt={blog.title}

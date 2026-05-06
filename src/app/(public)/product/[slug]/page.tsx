@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
-import connectToDatabase from '@/lib/db';
-import Product from '@/models/Product';
 import { ProductDetailsSelector } from '@/components/templates/ServerRegistry';
 import { ProductCard } from '@/components/storefront/ProductCard';
+import { ViewTracker } from '@/components/common/ViewTracker';
 import { getCachedProductBySlug, getCachedSettings } from '@/lib/data-fetching';
 import { notFound } from 'next/navigation';
 import { getTenantDomain } from '@/lib/tenant';
@@ -66,10 +65,13 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     notFound();
   }
 
+
+
   let related = [];
   try {
-    await connectToDatabase();
-    const relatedProducts = await Product.find({
+    const conn = await (await import('@/lib/db')).default();
+    const ProductModel = (await import('@/models/Product')).default;
+    const relatedProducts = await ProductModel.find({
       domain,
       _id: { $ne: product._id },
       isPublished: true,
@@ -121,6 +123,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
       </div>
 
       <div className="p-0 md:p-4">
+        {/* Track View */}
+        <ViewTracker id={product._id.toString()} type="product" />
         {/* Dynamic Product Detail Template Selector */}
         <ProductDetailsSelector style={settings?.uiTemplates?.productDetail || 'v1'} product={product} />
       </div>

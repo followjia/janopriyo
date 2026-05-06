@@ -7,6 +7,7 @@ import Blog from '@/models/Blog';
 import FAQ from '@/models/FAQ';
 import GlobalSettings from '@/models/GlobalSettings';
 import Coupon from '@/models/Coupon';
+import Order from '@/models/Order';
 
 // Helper to serialize MongoDB data
 const serialize = (data: any) => JSON.parse(JSON.stringify(data));
@@ -53,6 +54,92 @@ export const getCachedProductBySlug = (domain: string, slug: string) => {
     },
     ['product-detail', domain, slug],
     { revalidate: 31536000, tags: [CACHE_TAGS.products] }
+  )();
+};
+
+export const getTrendingProducts = (domain: string, limit = 10) => {
+  return unstable_cache(
+    async () => {
+      await connectToDatabase();
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // 1. Get Top Selling products in last 30 days
+      const topSellingItems = await Order.aggregate([
+        { $match: { domain, createdAt: { $gte: thirtyDaysAgo }, status: { $ne: 'Cancelled' } } },
+        { $unwind: '$items' },
+        { $group: { _id: '$items.product', totalSales: { $sum: '$items.quantity' } } },
+        { $sort: { totalSales: -1 } },
+        { $limit: limit }
+      ]);
+
+      const topSellingIds = topSellingItems.map(item => item._id);
+      
+      let trendingProducts = await Product.find({ 
+        _id: { $in: topSellingIds },
+        isPublished: true,
+        domain
+      }).populate('categories').lean();
+
+      // Ensure they are in the order of totalSales
+      trendingProducts.sort((a: any, b: any) => {
+        const aSales = topSellingItems.find(item => item._id.toString() === a._id.toString())?.totalSales || 0;
+        const bSales = topSellingItems.find(item => item._id.toString() === b._id.toString())?.totalSales || 0;
+        return bSales - aSales;
+      });
+
+      // 2. If not enough, fill with high ratings
+      if (trendingProducts.length < limit) {
+        const remaining = limit - trendingProducts.length;
+        const topRated = await Product.find({
+          _id: { $nin: trendingProducts.map(p => p._id) },
+          isPublished: true,
+          domain,
+          ratings: { $gt: 0 }
+        })
+        .populate('categories')
+        .sort({ ratings: -1, numReviews: -1 } as any)
+        .limit(remaining)
+        .lean();
+        trendingProducts = [...trendingProducts, ...topRated] as any;
+      }
+
+      // 3. If still not enough, fill with high views
+      if (trendingProducts.length < limit) {
+        const remaining = limit - trendingProducts.length;
+        const topViewed = await Product.find({
+          _id: { $nin: trendingProducts.map(p => p._id) },
+          isPublished: true,
+          domain,
+          views: { $gt: 0 }
+        })
+        .populate('categories')
+        .sort({ views: -1 } as any)
+        .limit(remaining)
+        .lean();
+        trendingProducts = [...trendingProducts, ...topViewed] as any;
+      }
+
+      // 4. Finally, fill with latest added
+      if (trendingProducts.length < limit) {
+        const remaining = limit - trendingProducts.length;
+        const latest = await Product.find({
+          _id: { $nin: trendingProducts.map(p => p._id) },
+          isPublished: true,
+          domain
+        })
+        .populate('categories')
+        .sort({ createdAt: -1 } as any)
+        .limit(remaining)
+        .lean();
+        trendingProducts = [...trendingProducts, ...latest] as any;
+      }
+
+      return serialize(trendingProducts);
+    },
+    ['trending-products', domain, limit.toString()],
+    { revalidate: 3600, tags: [CACHE_TAGS.products] }
   )();
 };
 

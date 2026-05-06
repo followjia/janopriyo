@@ -9,6 +9,7 @@ export interface IBlog extends Document {
   content: string;
   thumbnail?: string;
   isPublished: boolean;
+  views: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,11 @@ const BlogSchema: Schema = new Schema(
     isPublished: { 
       type: Boolean, 
       default: true 
+    },
+    views: { 
+      type: Number, 
+      default: 0, 
+      min: 0 
     },
   },
   { 

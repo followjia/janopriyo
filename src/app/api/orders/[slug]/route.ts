@@ -73,112 +73,116 @@ export async function PATCH(
     }
     const { status, paymentStatus } = body;
 
-    await connectToDatabase();
+    const conn = await connectToDatabase();
     const domain = await getTenantDomain();
 
     if (!mongoose.Types.ObjectId.isValid(slug)) {
       return NextResponse.json({ message: 'Invalid order id' }, { status: 400 });
     }
 
-    const order = await Order.findOne({ _id: slug, domain });
+    const dbSession = await conn.startSession();
+    dbSession.startTransaction();
 
-    if (!order) {
-      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
-    }
+    try {
+      // Fetch the order within the session
+      const order = await Order.findOne({ _id: slug, domain }).session(dbSession);
 
-    const allowedStatuses = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
-    const allowedPaymentStatuses = ['Pending', 'Paid', 'Failed'];
+      if (!order) {
+        await dbSession.abortTransaction();
+        return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+      }
 
-    if (status) {
+      const allowedStatuses = ['Order Placed', 'Confirmed', 'Paid', 'Ready for Delivery', 'Released for Delivery', 'Cancelled', 'Delivered'];
+      const allowedPaymentStatuses = ['Pending', 'Paid', 'Failed'];
+
+      const updateData: any = {};
+      if (status) {
         if (!allowedStatuses.includes(status)) {
-            return NextResponse.json({ 
-                message: `Invalid status. Allowed values: ${allowedStatuses.join(', ')}` 
-            }, { status: 400 });
+          await dbSession.abortTransaction();
+          return NextResponse.json({ 
+            message: `Invalid status. Allowed values: ${allowedStatuses.join(', ')}` 
+          }, { status: 400 });
         }
-        order.status = status;
-    }
+        updateData.status = status;
+      }
 
-    if (paymentStatus) {
+      if (paymentStatus) {
         if (!allowedPaymentStatuses.includes(paymentStatus)) {
-            return NextResponse.json({ 
-                message: `Invalid payment status. Allowed values: ${allowedPaymentStatuses.join(', ')}` 
-            }, { status: 400 });
+          await dbSession.abortTransaction();
+          return NextResponse.json({ 
+            message: `Invalid payment status. Allowed values: ${allowedPaymentStatuses.join(', ')}` 
+          }, { status: 400 });
         }
-        order.paymentStatus = paymentStatus;
-    }
+        updateData.paymentStatus = paymentStatus;
+      }
 
-    // ----------------------------
-    // Loyalty System: Award Tokens on Success
-    // ----------------------------
-    const isOrderSuccessful = status === 'Delivered';
-    
-    if (isOrderSuccessful && !order.isRewarded && order.user) {
-        let session: mongoose.ClientSession | null = null;
-        try {
-            const conn = await connectToDatabase();
-            session = await conn.startSession();
-            if (!session) throw new Error('Failed to start session');
-            session.startTransaction();
-
-            const user = await User.findById(order.user).session(session);
-            // GlobalSettings lookup must be domain-aware
-            const settings = await GlobalSettings.findOne({ domain }).session(session);
-            const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
-
-            if (user) {
-                // 1. Check for Subscription Activation (if not already active)
-                if (!user.isSubscriptionActive) {
-                    if (order.totalAmount >= subConfig.activationThreshold) {
-                        await User.findByIdAndUpdate(user._id, { isSubscriptionActive: true }, { session });
-                    }
-                } 
-                
-                // 2. Award Tokens
-                const rewardAmount = order.earnedRewardAmount || 0;
-                if ((user.isSubscriptionActive || order.totalAmount >= subConfig.activationThreshold) && rewardAmount > 0) {
-                    // Atomic increment
-                    await User.findByIdAndUpdate(user._id, { 
-                        $inc: { walletBalance: rewardAmount } 
-                    }, { session });
-                    
-                    // Log Wallet Transaction (Earned)
-                    await WalletTransaction.create([{
-                        userId: user._id,
-                        amount: rewardAmount,
-                        type: 'earned',
-                        status: 'completed',
-                        orderId: order._id,
-                        domain: domain, // MUST set domain
-                        description: `Tokens earned from order #${order._id.toString().slice(-6).toUpperCase()}`
-                    }], { session });
-                }
-
-                // 3. Mark order as rewarded
-                await Order.findByIdAndUpdate(order._id, { isRewarded: true }, { session });
-                if (session) await session.commitTransaction();
-                
-                // Refresh local order object for response
-                order.isRewarded = true;
-            }
-        } catch (error) {
-            if (session) await session.abortTransaction();
-            console.error('Failed to award loyalty rewards atomically:', error);
-            // We don't throw here to avoid failing the whole order update, 
-            // but the transaction ensures consistency for the reward part.
-        } finally {
-            if (session) await session.endSession();
+      // 1. Handle Sales Counting logic (Atomic-like within transaction)
+      const saleBecomingValid = ['Confirmed', 'Paid', 'Delivered'].includes(status || order.status);
+      if (saleBecomingValid && !order.isSalesCounted) {
+        const Product = (await import('@/models/Product')).default;
+        for (const item of order.items) {
+          await Product.updateOne(
+            { _id: item.product, domain },
+            { $inc: { totalSales: item.quantity } },
+            { session: dbSession }
+          );
         }
+        updateData.isSalesCounted = true;
+      }
+
+      // 2. Loyalty System: Award Tokens on Success
+      const isOrderSuccessful = (status || order.status) === 'Delivered';
+      if (isOrderSuccessful && !order.isRewarded && order.user) {
+        const user = await User.findById(order.user).session(dbSession);
+        const settings = await GlobalSettings.findOne({ domain }).session(dbSession);
+        const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
+
+        if (user) {
+          if (!user.isSubscriptionActive && order.totalAmount >= subConfig.activationThreshold) {
+            user.isSubscriptionActive = true;
+            await user.save({ session: dbSession });
+          } 
+          
+          const rewardAmount = order.earnedRewardAmount || 0;
+          if ((user.isSubscriptionActive || order.totalAmount >= subConfig.activationThreshold) && rewardAmount > 0) {
+            user.walletBalance = (user.walletBalance || 0) + rewardAmount;
+            await user.save({ session: dbSession });
+            
+            await WalletTransaction.create([{
+              userId: user._id,
+              amount: rewardAmount,
+              type: 'earned',
+              status: 'completed',
+              orderId: order._id,
+              domain: domain,
+              description: `Tokens earned from order #${order._id.toString().slice(-6).toUpperCase()}`
+            }], { session: dbSession });
+          }
+          updateData.isRewarded = true;
+        }
+      }
+
+      // Ensure required fields exist for old data
+      if (order.deliveryCharge === undefined || order.deliveryCharge === null) {
+        updateData.deliveryCharge = 0;
+      }
+
+      // Final update
+      const updatedOrder = await Order.findOneAndUpdate(
+        { _id: slug, domain },
+        { $set: updateData },
+        { session: dbSession, new: true }
+      );
+
+      await dbSession.commitTransaction();
+      return NextResponse.json(updatedOrder);
+
+    } catch (error) {
+      await dbSession.abortTransaction();
+      throw error;
+    } finally {
+      await dbSession.endSession();
     }
-    // ----------------------------
-
-    // Ensure required fields exist for old data
-    if (order.deliveryCharge === undefined || order.deliveryCharge === null) {
-        order.deliveryCharge = 0;
-    }
-
-    await order.save();
-
-    return NextResponse.json(order);
   } catch (error) {
     console.error('Error updating order:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

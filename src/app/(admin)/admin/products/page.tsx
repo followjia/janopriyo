@@ -29,6 +29,8 @@ interface AdminProduct {
   isPublished: boolean;
   images?: string[];
   slug: string;
+  views?: number;
+  totalSales?: number;
 }
 
 function ProductsContent() {
@@ -140,6 +142,8 @@ function ProductsContent() {
               <TableHead>SKU</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Views</TableHead>
+              <TableHead>Sales</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -201,6 +205,12 @@ function ProductsContent() {
                     <span className={(product.stock ?? 0) <= 5 ? 'text-destructive font-semibold' : ''}>
                       {product.stock ?? 0}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-muted-foreground">{product.views ?? 0}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-bold text-primary">{product.totalSales ?? 0}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant={product.isPublished ? 'default' : 'secondary'}>

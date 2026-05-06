@@ -35,6 +35,8 @@ export interface IProduct extends Document {
   isPublished: boolean;
   ratings: number;
   numReviews: number;
+  views: number;
+  totalSales: number;
   domain: string;
   createdAt: Date;
   updatedAt: Date;
@@ -93,6 +95,8 @@ const ProductSchema: Schema<IProduct> = new Schema(
     isPublished: { type: Boolean, default: true },
     ratings: { type: Number, default: 0, min: [0, 'Rating cannot be below 0'], max: [5, 'Rating cannot be above 5'] },
     numReviews: { type: Number, default: 0, min: [0, 'Number of reviews cannot be negative'] },
+    views: { type: Number, default: 0, min: [0, 'Views cannot be negative'] },
+    totalSales: { type: Number, default: 0, min: [0, 'Total sales cannot be negative'] },
   },
   { timestamps: true }
 );

@@ -62,21 +62,75 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: 'No valid update data provided' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    const conn = await connectToDatabase();
     const domain = await getTenantDomain();
     if (!domain) {
       return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
 
-    const result = await Order.updateMany(
-      { _id: { $in: ids }, domain }, // Add domain filter for security
-      { $set: updateData }
-    );
+    const dbSession = await conn.startSession();
+    dbSession.startTransaction();
 
-    return NextResponse.json({ 
-      message: `${result.modifiedCount} orders updated successfully`,
-      count: result.modifiedCount 
-    });
+    let modifiedCount = 0;
+    try {
+      const Product = (await import('@/models/Product')).default;
+      const becomesValid = ['Confirmed', 'Paid', 'Delivered'].includes(status || '');
+
+      for (const id of ids) {
+        const updateObj: any = {};
+        if (status) updateObj.status = status;
+        if (paymentStatus) updateObj.paymentStatus = paymentStatus;
+
+        let order;
+        if (becomesValid) {
+          // Atomic check-then-set for isSalesCounted to prevent race conditions
+          order = await Order.findOneAndUpdate(
+            { _id: id, domain, isSalesCounted: { $ne: true } },
+            { $set: { ...updateObj, isSalesCounted: true } },
+            { session: dbSession, new: true }
+          );
+
+          if (order) {
+            // Only increment if we successfully flipped the isSalesCounted flag
+            for (const item of order.items) {
+              await Product.updateOne(
+                { _id: item.product, domain },
+                { $inc: { totalSales: item.quantity } },
+                { session: dbSession }
+              );
+            }
+            modifiedCount++;
+          } else {
+            // Fallback: update status/paymentStatus even if sales were already counted
+            const fallbackOrder = await Order.findOneAndUpdate(
+              { _id: id, domain },
+              { $set: updateObj },
+              { session: dbSession, new: true }
+            );
+            if (fallbackOrder) modifiedCount++;
+          }
+        } else {
+          // Regular update when not becoming a valid sale
+          const regularOrder = await Order.findOneAndUpdate(
+            { _id: id, domain },
+            { $set: updateObj },
+            { session: dbSession, new: true }
+          );
+          if (regularOrder) modifiedCount++;
+        }
+      }
+
+      await dbSession.commitTransaction();
+      return NextResponse.json({ 
+        message: `${modifiedCount} orders updated successfully`,
+        count: modifiedCount 
+      });
+    } catch (error) {
+      await dbSession.abortTransaction();
+      throw error;
+    } finally {
+      await dbSession.endSession();
+    }
   } catch (error) {
     console.error('Bulk Update Error:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

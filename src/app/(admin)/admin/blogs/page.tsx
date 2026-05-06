@@ -36,6 +36,7 @@ interface BlogListItem {
   thumbnail?: string;
   createdAt: string;
   isPublished: boolean;
+  views?: number;
 }
 
 function BlogsContent() {
@@ -141,6 +142,7 @@ function BlogsContent() {
             <TableRow>
               <TableHead className="font-bold">Thumbnail</TableHead>
               <TableHead className="font-bold">Title</TableHead>
+              <TableHead className="font-bold">Views</TableHead>
               <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Date</TableHead>
               <TableHead className="text-right font-bold">Actions</TableHead>
@@ -149,7 +151,7 @@ function BlogsContent() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     <span>Loading blogs...</span>
@@ -158,7 +160,7 @@ function BlogsContent() {
               </TableRow>
             ) : filteredBlogs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   No blogs found.
                 </TableCell>
               </TableRow>
@@ -192,6 +194,9 @@ function BlogsContent() {
                       {blog.title}
                     </Link>
                     <div className="text-[10px] text-muted-foreground font-mono truncate max-w-[300px]">/{blog.slug}</div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-bold text-primary">{blog.views ?? 0}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant={blog.isPublished ? 'default' : 'secondary'}>

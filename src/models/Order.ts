@@ -43,6 +43,7 @@ export interface IOrder extends Document {
     courierStatus?: string;
   };
   domain: string;
+  isSalesCounted?: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -106,6 +107,7 @@ const OrderSchema: Schema<IOrder> = new Schema(
       lowercase: true,
       default: 'janopriyo.com'
     },
+    isSalesCounted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
