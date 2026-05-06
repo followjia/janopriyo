@@ -3,67 +3,67 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-sans: var(--font-inter);
-  --font-logo: var(--font-orbitron);
+  --active-font-sans: var(--font-inter);
+  --active-font-logo: var(--font-orbitron);
 }
 
 /* Font Selection Classes */
-.font-inter { --font-sans: var(--font-inter); }
-.font-poppins { --font-sans: var(--font-poppins); }
-.font-roboto { --font-sans: var(--font-roboto); }
-.font-montserrat { --font-sans: var(--font-montserrat); }
-.font-playfair { --font-sans: var(--font-playfair); }
-.font-lora { --font-sans: var(--font-lora); }
-.font-outfit { --font-sans: var(--font-outfit); }
-.font-urbanist { --font-sans: var(--font-urbanist); }
-.font-manrope { --font-sans: var(--font-manrope); }
-.font-geist { --font-sans: var(--font-geist-sans); }
-.font-open-sans { --font-sans: var(--font-open-sans); }
-.font-lato { --font-sans: var(--font-lato); }
-.font-oswald { --font-sans: var(--font-oswald); }
-.font-raleway { --font-sans: var(--font-raleway); }
-.font-nunito { --font-sans: var(--font-nunito); }
-.font-ubuntu { --font-sans: var(--font-ubuntu); }
-.font-merriweather { --font-sans: var(--font-merriweather); }
-.font-kanit { --font-sans: var(--font-kanit); }
-.font-quicksand { --font-sans: var(--font-quicksand); }
-.font-josefin-sans { --font-sans: var(--font-josefin-sans); }
-.font-syne { --font-sans: var(--font-syne); }
-.font-space-grotesk { --font-sans: var(--font-space-grotesk); }
-.font-orbitron { --font-sans: var(--font-orbitron); }
+.font-inter { --active-font-sans: var(--font-inter); }
+.font-poppins { --active-font-sans: var(--font-poppins); }
+.font-roboto { --active-font-sans: var(--font-roboto); }
+.font-montserrat { --active-font-sans: var(--font-montserrat); }
+.font-playfair { --active-font-sans: var(--font-playfair); }
+.font-lora { --active-font-sans: var(--font-lora); }
+.font-outfit { --active-font-sans: var(--font-outfit); }
+.font-urbanist { --active-font-sans: var(--font-urbanist); }
+.font-manrope { --active-font-sans: var(--font-manrope); }
+.font-geist { --active-font-sans: var(--font-geist-sans); }
+.font-open-sans { --active-font-sans: var(--font-open-sans); }
+.font-lato { --active-font-sans: var(--font-lato); }
+.font-oswald { --active-font-sans: var(--font-oswald); }
+.font-raleway { --active-font-sans: var(--font-raleway); }
+.font-nunito { --active-font-sans: var(--font-nunito); }
+.font-ubuntu { --active-font-sans: var(--font-ubuntu); }
+.font-merriweather { --active-font-sans: var(--font-merriweather); }
+.font-kanit { --active-font-sans: var(--font-kanit); }
+.font-quicksand { --active-font-sans: var(--font-quicksand); }
+.font-josefin-sans { --active-font-sans: var(--font-josefin-sans); }
+.font-syne { --active-font-sans: var(--font-syne); }
+.font-space-grotesk { --active-font-sans: var(--font-space-grotesk); }
+.font-orbitron { --active-font-sans: var(--font-orbitron); }
 
 /* Logo Font Selection Classes */
-.logo-font-orbitron { --font-logo: var(--font-orbitron); }
-.logo-font-inter { --font-logo: var(--font-inter); }
-.logo-font-poppins { --font-logo: var(--font-poppins); }
-.logo-font-roboto { --font-logo: var(--font-roboto); }
-.logo-font-montserrat { --font-logo: var(--font-montserrat); }
-.logo-font-playfair { --font-logo: var(--font-playfair); }
-.logo-font-lora { --font-logo: var(--font-lora); }
-.logo-font-outfit { --font-logo: var(--font-outfit); }
-.logo-font-urbanist { --font-logo: var(--font-urbanist); }
-.logo-font-manrope { --font-logo: var(--font-manrope); }
-.logo-font-open-sans { --font-logo: var(--font-open-sans); }
-.logo-font-lato { --font-logo: var(--font-lato); }
-.logo-font-oswald { --font-logo: var(--font-oswald); }
-.logo-font-raleway { --font-logo: var(--font-raleway); }
-.logo-font-nunito { --font-logo: var(--font-nunito); }
-.logo-font-ubuntu { --font-logo: var(--font-ubuntu); }
-.logo-font-merriweather { --font-logo: var(--font-merriweather); }
-.logo-font-kanit { --font-logo: var(--font-kanit); }
-.logo-font-quicksand { --font-logo: var(--font-quicksand); }
-.logo-font-josefin-sans { --font-logo: var(--font-josefin-sans); }
-.logo-font-syne { --font-logo: var(--font-syne); }
-.logo-font-space-grotesk { --font-logo: var(--font-space-grotesk); }
-.logo-font-geist { --font-logo: var(--font-geist-sans); }
+.logo-font-orbitron { --active-font-logo: var(--font-orbitron); }
+.logo-font-inter { --active-font-logo: var(--font-inter); }
+.logo-font-poppins { --active-font-logo: var(--font-poppins); }
+.logo-font-roboto { --active-font-logo: var(--font-roboto); }
+.logo-font-montserrat { --active-font-logo: var(--font-montserrat); }
+.logo-font-playfair { --active-font-logo: var(--font-playfair); }
+.logo-font-lora { --active-font-logo: var(--font-lora); }
+.logo-font-outfit { --active-font-logo: var(--font-outfit); }
+.logo-font-urbanist { --active-font-logo: var(--font-urbanist); }
+.logo-font-manrope { --active-font-logo: var(--font-manrope); }
+.logo-font-open-sans { --active-font-logo: var(--font-open-sans); }
+.logo-font-lato { --active-font-logo: var(--font-lato); }
+.logo-font-oswald { --active-font-logo: var(--font-oswald); }
+.logo-font-raleway { --active-font-logo: var(--font-raleway); }
+.logo-font-nunito { --active-font-logo: var(--font-nunito); }
+.logo-font-ubuntu { --active-font-logo: var(--font-ubuntu); }
+.logo-font-merriweather { --active-font-logo: var(--font-merriweather); }
+.logo-font-kanit { --active-font-logo: var(--font-kanit); }
+.logo-font-quicksand { --active-font-logo: var(--font-quicksand); }
+.logo-font-josefin-sans { --active-font-logo: var(--font-josefin-sans); }
+.logo-font-syne { --active-font-logo: var(--font-syne); }
+.logo-font-space-grotesk { --active-font-logo: var(--font-space-grotesk); }
+.logo-font-geist { --active-font-logo: var(--font-geist-sans); }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--active-font-sans);
   --font-mono: var(--font-mono);
-  --font-logo: var(--font-logo);
-  --font-heading: var(--font-sans);
+  --font-logo: var(--active-font-logo);
+  --font-heading: var(--active-font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
