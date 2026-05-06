@@ -30,13 +30,14 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
           />
         </div>
 
-        <div className="w-full mx-auto px-4 max-w-4xl relative z-10">
-          <Link href="/blog">
-            <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
-              <ArrowLeft className="h-4 w-4" /> Back to Blog
-            </Button>
-          </Link>
-          <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <Link href="/blog">
+              <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
+                <ArrowLeft className="h-4 w-4" /> Back to Blog
+              </Button>
+            </Link>
+            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
             {/* Subtle inner glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
 
@@ -53,6 +54,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
                 {readingTime} min read
               </div>
             </div>
+          </div>
           </div>
         </div>
       </header>
