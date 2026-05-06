@@ -83,7 +83,9 @@ export async function POST(req: NextRequest) {
       'freeDeliveryThreshold',
       'deliveryChargeInsideDhaka',
       'deliveryChargeOutsideDhaka',
-      'theme'
+      'theme',
+      'logoUrl',
+      'uiTemplates'
     ];
 
     // Restricted fields - ONLY for super_admin

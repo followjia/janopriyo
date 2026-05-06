@@ -20,6 +20,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+
+const FONT_OPTIONS = [
+  { id: 'inter', label: 'Inter (Modern Sans)' },
+  { id: 'poppins', label: 'Poppins (Round Sans)' },
+  { id: 'roboto', label: 'Roboto (Clean Sans)' },
+  { id: 'montserrat', label: 'Montserrat (Elegant Sans)' },
+  { id: 'playfair', label: 'Playfair Display (Serif)' },
+  { id: 'lora', label: 'Lora (Classic Serif)' },
+  { id: 'outfit', label: 'Outfit (Contemporary Sans)' },
+  { id: 'urbanist', label: 'Urbanist (Geometric Sans)' },
+  { id: 'manrope', label: 'Manrope (Modern Humanist)' },
+  { id: 'open-sans', label: 'Open Sans (Neutral Sans)' },
+  { id: 'lato', label: 'Lato (Friendly Sans)' },
+  { id: 'oswald', label: 'Oswald (Strong/Logo)' },
+  { id: 'raleway', label: 'Raleway (Elegant Sans)' },
+  { id: 'nunito', label: 'Nunito (Soft Round)' },
+  { id: 'ubuntu', label: 'Ubuntu (Technical Sans)' },
+  { id: 'merriweather', label: 'Merriweather (Bold Serif)' },
+  { id: 'kanit', label: 'Kanit (Modern Thai/Bold)' },
+  { id: 'quicksand', label: 'Quicksand (Playful Round)' },
+  { id: 'josefin-sans', label: 'Josefin Sans (Geometric/Logo)' },
+  { id: 'syne', label: 'Syne (Artistic/Trendy)' },
+  { id: 'space-grotesk', label: 'Space Grotesk (Futuristic/Tech)' },
+  { id: 'orbitron', label: 'Orbitron (Futuristic)' },
+  { id: 'geist', label: 'Geist (Next.js Default)' },
+];
 
 const settingsSchema = z.object({
   brandName: z.string().min(2, 'Brand Name is required'),
@@ -47,7 +81,12 @@ const settingsSchema = z.object({
   freeDeliveryThreshold: z.number().min(0, 'Threshold cannot be negative').optional(),
   deliveryChargeInsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
   deliveryChargeOutsideDhaka: z.number().min(0, 'Charge cannot be negative').optional(),
-  theme: z.string().optional(),
+  logoUrl: z.string().nullish().transform(val => val ?? ''),
+  uiTemplates: z.object({
+    theme: z.string().default('green'),
+    logoFont: z.string().default('orbitron'),
+    bodyFont: z.string().default('inter'),
+  }).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -80,7 +119,12 @@ export default function SettingsPage() {
       freeDeliveryThreshold: 0,
       deliveryChargeInsideDhaka: 60,
       deliveryChargeOutsideDhaka: 120,
-      theme: 'default',
+      logoUrl: '',
+      uiTemplates: {
+        theme: 'green',
+        logoFont: 'orbitron',
+        bodyFont: 'inter',
+      },
     },
   });
 
@@ -122,7 +166,12 @@ export default function SettingsPage() {
                   activationThreshold: result.data.subscriptionConfig?.activationThreshold ?? 5000,
                   rewardPercentage: result.data.subscriptionConfig?.rewardPercentage ?? 5,
                 },
-                theme: result.data.theme || 'default',
+                logoUrl: result.data.logoUrl || '',
+                uiTemplates: {
+                  theme: result.data.uiTemplates?.theme || 'green',
+                  logoFont: result.data.uiTemplates?.logoFont || 'orbitron',
+                  bodyFont: result.data.uiTemplates?.bodyFont || 'inter',
+                },
               };
               form.reset(sanitizedData);
             }
@@ -215,8 +264,22 @@ export default function SettingsPage() {
                       <FormItem>
                         <FormLabel>Brand Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Janopriyo Shop" {...field} />
+                          <Input placeholder="Janopriyo" {...field} className="h-12 rounded-xl" />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="logoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Logo URL / Image</FormLabel>
+                        <FormControl>
+                          <Input placeholder="/logo.png" {...field} className="h-12 rounded-xl" />
+                        </FormControl>
+                        <FormDescription>Path to your logo image (e.g. /logo.png)</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -496,7 +559,7 @@ export default function SettingsPage() {
                 <CardContent className="p-6">
                   <FormField
                     control={form.control}
-                    name="theme"
+                    name="uiTemplates.theme"
                     render={({ field }) => (
                       <FormItem className="space-y-4">
                         <FormLabel className="text-base font-bold">Storefront Theme Preset</FormLabel>
@@ -522,6 +585,17 @@ export default function SettingsPage() {
                               { id: 'summer', label: 'Summer Theme', color: 'bg-[#FFD700]' },
                               { id: 'sunset', label: 'Sunset Theme', color: 'bg-[#FD5E53]' },
                               { id: 'valorant', label: 'Valorant Theme', color: 'bg-[#FF4655]' },
+                              { id: 'supabase', label: 'Supabase Theme', color: 'bg-[#3ECF8E]' },
+                              { id: 'amber', label: 'Amber Minimal Theme', color: 'bg-[#FFBF00]' },
+                              { id: 'catppuccin', label: 'Catppuccin Theme', color: 'bg-[#CBA6F7]' },
+                              { id: 'clay', label: 'Claymorphism Theme', color: 'bg-[#91A6FF]' },
+                              { id: 'cyberpunk', label: 'Cyberpunk Theme', color: 'bg-[#FF00FF]' },
+                              { id: 'darkmatter', label: 'Dark Matter Theme', color: 'bg-[#000000]' },
+                              { id: 'ocean', label: 'Ocean Breeze Theme', color: 'bg-[#0077BE]' },
+                              { id: 'quantum', label: 'Quantum Rose Theme', color: 'bg-[#FF1493]' },
+                              { id: 't3', label: 'T3 Chat Theme', color: 'bg-[#E02424]' },
+                              { id: 'tangerine', label: 'Tangerine Theme', color: 'bg-[#F28500]' },
+                              { id: 'vintage', label: 'Vintage Paper Theme', color: 'bg-[#F5F5DC]' },
                               { id: 'green', label: 'Green Theme', color: 'bg-green-500' },
                               { id: 'red', label: 'Red Theme', color: 'bg-red-500' },
                               { id: 'rose', label: 'Rose Theme', color: 'bg-rose-500' },
@@ -541,6 +615,64 @@ export default function SettingsPage() {
                         </Select>
                         <FormDescription className="text-sm">
                           Switching themes will instantly update your storefront colors, fonts, and overall vibe.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Logo Font Selection */}
+                  <FormField
+                    control={form.control}
+                    name="uiTemplates.logoFont"
+                    render={({ field }) => (
+                      <FormItem className="space-y-4 mt-6">
+                        <FormLabel className="text-base font-bold">Logo Typography</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-background border-2 border-muted hover:border-primary/50 transition-all text-lg font-medium">
+                              <SelectValue placeholder="Select a font for logo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl p-2 max-h-[300px]">
+                            {FONT_OPTIONS.map((f) => (
+                              <SelectItem key={f.id} value={f.id} className="rounded-xl h-12">
+                                <span className="font-medium">{f.label}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-sm">
+                          Select the font style for your Brand Name in the logo.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Body Font Selection */}
+                  <FormField
+                    control={form.control}
+                    name="uiTemplates.bodyFont"
+                    render={({ field }) => (
+                      <FormItem className="space-y-4 mt-6">
+                        <FormLabel className="text-base font-bold">Global Body Typography</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-2xl bg-background border-2 border-muted hover:border-primary/50 transition-all text-lg font-medium">
+                              <SelectValue placeholder="Select a font for body" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl p-2 max-h-[300px]">
+                            {FONT_OPTIONS.map((f) => (
+                              <SelectItem key={f.id} value={f.id} className="rounded-xl h-12">
+                                <span className="font-medium">{f.label}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-sm">
+                          This font will be applied to all text across your storefront.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

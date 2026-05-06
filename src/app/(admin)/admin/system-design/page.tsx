@@ -32,7 +32,7 @@ import {
 
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5'];
-const THEME_OPTIONS = ['default', 'black', 'caffeine', 'claude', 'elegant', 'marvel', 'material', 'midnight', 'nature', 'perplexity', 'slack', 'summer', 'sunset', 'valorant', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
+const THEME_OPTIONS = ['default', 'black', 'caffeine', 'claude', 'elegant', 'marvel', 'material', 'midnight', 'nature', 'perplexity', 'slack', 'summer', 'sunset', 'valorant', 'supabase', 'amber', 'catppuccin', 'clay', 'cyberpunk', 'darkmatter', 'ocean', 'quantum', 't3', 'tangerine', 'vintage', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
 
 const TEMPLATE_CONFIG = [
   { id: 'layout', label: 'Primary Layout' },
@@ -45,6 +45,32 @@ const TEMPLATE_CONFIG = [
   { id: 'shopListing', label: 'Shop Page' },
   { id: 'blogListing', label: 'Blog Listing' },
   { id: 'blogDetail', label: 'Blog Detail' },
+];
+
+const FONT_OPTIONS = [
+  { id: 'inter', label: 'Inter (Modern Sans)' },
+  { id: 'poppins', label: 'Poppins (Round Sans)' },
+  { id: 'roboto', label: 'Roboto (Clean Sans)' },
+  { id: 'montserrat', label: 'Montserrat (Elegant Sans)' },
+  { id: 'playfair', label: 'Playfair Display (Serif)' },
+  { id: 'lora', label: 'Lora (Classic Serif)' },
+  { id: 'outfit', label: 'Outfit (Contemporary Sans)' },
+  { id: 'urbanist', label: 'Urbanist (Geometric Sans)' },
+  { id: 'manrope', label: 'Manrope (Modern Humanist)' },
+  { id: 'open-sans', label: 'Open Sans (Neutral Sans)' },
+  { id: 'lato', label: 'Lato (Friendly Sans)' },
+  { id: 'oswald', label: 'Oswald (Strong/Logo)' },
+  { id: 'raleway', label: 'Raleway (Elegant Sans)' },
+  { id: 'nunito', label: 'Nunito (Soft Round)' },
+  { id: 'ubuntu', label: 'Ubuntu (Technical Sans)' },
+  { id: 'merriweather', label: 'Merriweather (Bold Serif)' },
+  { id: 'kanit', label: 'Kanit (Modern Thai/Bold)' },
+  { id: 'quicksand', label: 'Quicksand (Playful Round)' },
+  { id: 'josefin-sans', label: 'Josefin Sans (Geometric/Logo)' },
+  { id: 'syne', label: 'Syne (Artistic/Trendy)' },
+  { id: 'space-grotesk', label: 'Space Grotesk (Futuristic/Tech)' },
+  { id: 'orbitron', label: 'Orbitron (Futuristic)' },
+  { id: 'geist', label: 'Geist (Next.js Default)' },
 ];
 
 export default function SuperConfigPage() {
@@ -112,6 +138,14 @@ export default function SuperConfigPage() {
     });
   };
 
+  const updateGeneralSetting = (key: string, value: any) => {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      [key]: value,
+    });
+  };
+
   const handleRepair = async () => {
     if (!confirm('This will sync all orphaned data (products, orders, etc.) to the current domain. Continue?')) return;
     
@@ -172,6 +206,100 @@ export default function SuperConfigPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         
+        {/* Brand Identity & Typography */}
+        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-red-600 text-white pb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Settings2 className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold">Brand Identity & Typography</CardTitle>
+                <CardDescription className="text-orange-100">Configure your brand name, logo and fonts</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Brand Name */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-orange-500" />
+                  Brand Name
+                </Label>
+                <input 
+                  type="text"
+                  value={settings?.brandName || ''}
+                  onChange={(e) => updateGeneralSetting('brandName', e.target.value)}
+                  className="w-full h-12 px-4 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 focus:ring-0 transition-all outline-none"
+                  placeholder="Enter brand name"
+                />
+              </div>
+
+              {/* Logo URL */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-orange-500" />
+                  Logo URL
+                </Label>
+                <input 
+                  type="text"
+                  value={settings?.logoUrl || ''}
+                  onChange={(e) => updateGeneralSetting('logoUrl', e.target.value)}
+                  className="w-full h-12 px-4 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 focus:ring-0 transition-all outline-none"
+                  placeholder="/logo.png"
+                />
+              </div>
+
+              {/* Logo Font */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Code className="w-4 h-4 text-orange-500" />
+                  Logo Typography
+                </Label>
+                <Select 
+                  value={settings?.uiTemplates?.logoFont || 'orbitron'} 
+                  onValueChange={(v) => updateTemplate('logoFont', v)}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 transition-all">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {FONT_OPTIONS.map(f => (
+                      <SelectItem key={f.id} value={f.id} className="rounded-lg">
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Body Font */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Layout className="w-4 h-4 text-orange-500" />
+                  Body Typography
+                </Label>
+                <Select 
+                  value={settings?.uiTemplates?.bodyFont || 'inter'} 
+                  onValueChange={(v) => updateTemplate('bodyFont', v)}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 transition-all">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {FONT_OPTIONS.map(f => (
+                      <SelectItem key={f.id} value={f.id} className="rounded-lg">
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* 1. Tenant Identification */}
         <Card className="lg:col-span-3 border-2 border-primary/20 shadow-none overflow-hidden rounded-3xl">
            <CardHeader className="bg-primary/5 border-b">
@@ -185,7 +313,7 @@ export default function SuperConfigPage() {
                 <input 
                   id="store-domain"
                   value={settings?.domain || ''} 
-                  onChange={(e) => setSettings({...settings, domain: e.target.value})}
+                  onChange={(e) => setSettings({...(settings ?? {}), domain: e.target.value})}
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
               </div>
@@ -194,7 +322,7 @@ export default function SuperConfigPage() {
                 <input 
                   id="tenant-store-id"
                   value={settings?.storeId || ''} 
-                  onChange={(e) => setSettings({...settings, storeId: e.target.value})}
+                  onChange={(e) => setSettings({...(settings ?? {}), storeId: e.target.value})}
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
               </div>
@@ -203,7 +331,7 @@ export default function SuperConfigPage() {
                 <input 
                   id="gtm-id"
                   value={settings?.googleTagManagerId || ''} 
-                  onChange={(e) => setSettings({...settings, googleTagManagerId: e.target.value})}
+                  onChange={(e) => setSettings({...(settings ?? {}), googleTagManagerId: e.target.value})}
                   placeholder="GTM-XXXXXXX"
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
@@ -213,7 +341,7 @@ export default function SuperConfigPage() {
                 <input 
                   id="ga4-id"
                   value={settings?.googleAnalyticsId || ''} 
-                  onChange={(e) => setSettings({...settings, googleAnalyticsId: e.target.value})}
+                  onChange={(e) => setSettings({...(settings ?? {}), googleAnalyticsId: e.target.value})}
                   placeholder="e.g. 534447077"
                   className="w-full h-12 rounded-xl border px-4 focus:ring-2 focus:ring-primary outline-none text-sm"
                 />
@@ -351,7 +479,7 @@ export default function SuperConfigPage() {
                   onChange={(e) => {
                     const localDate = new Date(e.target.value);
                     setSettings({
-                      ...settings, 
+                      ...(settings ?? {}), 
                       saasSubscription: {
                         ...(settings?.saasSubscription || {}),
                         expiryDate: localDate.toISOString()
@@ -430,7 +558,47 @@ export default function SuperConfigPage() {
                     <SelectContent className="rounded-xl">
                       {THEME_OPTIONS.map(t => (
                         <SelectItem key={t} value={t} className="rounded-lg capitalize">
-                          {t === 'default' ? 'Default (System)' : t === 'black' ? 'Black and White Theme' : t === 'caffeine' ? 'Caffeine Theme' : t === 'claude' ? 'Claude Theme' : t === 'elegant' ? 'Elegant Luxury Theme' : t === 'marvel' ? 'Marvel Theme' : t === 'material' ? 'Material Design Theme' : t === 'midnight' ? 'Midnight Bloom Theme' : t === 'nature' ? 'Nature Theme' : t === 'perplexity' ? 'Perplexity Theme' : t === 'slack' ? 'Slack Theme' : t === 'summer' ? 'Summer Theme' : t === 'sunset' ? 'Sunset Theme' : t === 'valorant' ? 'Valorant Theme' : `${t} Theme`}
+                          {t === 'default' ? 'Default (System)' : t === 'black' ? 'Black and White Theme' : t === 'caffeine' ? 'Caffeine Theme' : t === 'claude' ? 'Claude Theme' : t === 'elegant' ? 'Elegant Luxury Theme' : t === 'marvel' ? 'Marvel Theme' : t === 'material' ? 'Material Design Theme' : t === 'midnight' ? 'Midnight Bloom Theme' : t === 'nature' ? 'Nature Theme' : t === 'perplexity' ? 'Perplexity Theme' : t === 'slack' ? 'Slack Theme' : t === 'summer' ? 'Summer Theme' : t === 'sunset' ? 'Sunset Theme' : t === 'valorant' ? 'Valorant Theme' : t === 'supabase' ? 'Supabase Theme' : t === 'amber' ? 'Amber Minimal Theme' : t === 'catppuccin' ? 'Catppuccin Theme' : t === 'clay' ? 'Claymorphism Theme' : t === 'cyberpunk' ? 'Cyberpunk Theme' : t === 'darkmatter' ? 'Dark Matter Theme' : t === 'ocean' ? 'Ocean Breeze Theme' : t === 'quantum' ? 'Quantum Rose Theme' : t === 't3' ? 'T3 Chat Theme' : t === 'tangerine' ? 'Tangerine Theme' : t === 'vintage' ? 'Vintage Paper Theme' : `${t} Theme`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Logo Font Selector */}
+                <div className="space-y-2">
+                  <Label className="font-bold text-[10px] uppercase tracking-wider opacity-60 text-primary">Logo Typography</Label>
+                  <Select 
+                    value={ui.logoFont ?? 'orbitron'} 
+                    onValueChange={(v) => updateTemplate('logoFont', v)}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl max-h-[300px]">
+                      {FONT_OPTIONS.map(f => (
+                        <SelectItem key={f.id} value={f.id} className="rounded-lg">
+                          {f.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Body Font Selector */}
+                <div className="space-y-2">
+                  <Label className="font-bold text-[10px] uppercase tracking-wider opacity-60 text-primary">Body Typography</Label>
+                  <Select 
+                    value={ui.bodyFont ?? 'inter'} 
+                    onValueChange={(v) => updateTemplate('bodyFont', v)}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl max-h-[300px]">
+                      {FONT_OPTIONS.map(f => (
+                        <SelectItem key={f.id} value={f.id} className="rounded-lg">
+                          {f.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

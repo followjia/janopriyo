@@ -1,14 +1,10 @@
+"use client";
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Orbitron } from 'next/font/google';
-
-const orbitron = Orbitron({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-});
-
+import { useSettings } from '@/components/SettingsProvider';
 
 interface LogoProps {
   className?: string;
@@ -20,12 +16,17 @@ interface LogoProps {
 }
 
 export function Logo({ className, imageClassName, textClassName, showText = true, onClick, sizes }: LogoProps) {
+  const { brandName, logoUrl, uiTemplates } = useSettings();
+  
+  const finalBrandName = brandName || "Janopriyo";
+  const finalLogoUrl = logoUrl || "/logo.png";
+  
   return (
     <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
       <div className={cn("relative flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 size-8 md:size-12", imageClassName)}>
         <Image
-          src="/logo.png"
-          alt="Janopriyo Logo"
+          src={finalLogoUrl}
+          alt={`${finalBrandName} Logo`}
           fill
           sizes={sizes || "(max-width: 768px) 40px, 48px"}
           className="object-contain"
@@ -35,11 +36,10 @@ export function Logo({ className, imageClassName, textClassName, showText = true
       </div>
       {showText && (
         <span className={cn(
-          orbitron.className,
-          "text-xl md:text-2xl uppercase text-primary transition-all group-hover:text-primary/90 font-bold",
+          "text-xl md:text-2xl uppercase text-primary transition-all group-hover:text-primary/90 font-bold font-logo",
           textClassName
         )}>
-          Janopriyo
+          {finalBrandName}
         </span>
       )}
     </Link>

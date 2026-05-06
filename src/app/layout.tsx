@@ -1,5 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { 
+  Geist, 
+  Geist_Mono, 
+  Inter, 
+  Poppins, 
+  Roboto, 
+  Montserrat, 
+  Playfair_Display, 
+  Outfit, 
+  Lora, 
+  Manrope, 
+  Urbanist, 
+  Orbitron,
+  Open_Sans,
+  Lato,
+  Oswald,
+  Raleway,
+  Nunito,
+  Ubuntu,
+  Merriweather,
+  Kanit,
+  Quicksand,
+  Josefin_Sans,
+  Syne,
+  Space_Grotesk
+} from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
@@ -28,7 +53,122 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
+  subsets: ["latin"],
+});
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+});
+
+const lato = Lato({
+  variable: "--font-lato",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const oswald = Oswald({
+  variable: "--font-oswald",
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600", "700"],
+});
+
+const raleway = Raleway({
+  variable: "--font-raleway",
+  subsets: ["latin"],
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+});
+
+const ubuntu = Ubuntu({
+  variable: "--font-ubuntu",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const kanit = Kanit({
+  variable: "--font-kanit",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const quicksand = Quicksand({
+  variable: "--font-quicksand",
+  subsets: ["latin"],
+});
+
+const josefinSans = Josefin_Sans({
+  variable: "--font-josefin-sans",
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+});
+
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -124,12 +264,18 @@ export default async function RootLayout({
 
   const theme = settings?.uiTemplates?.theme;
   const themeClass = (theme && theme !== 'default') ? `theme-${theme.toLowerCase()}` : '';
-  
+
+  const bodyFont = settings?.uiTemplates?.bodyFont || 'inter';
+  const logoFont = settings?.uiTemplates?.logoFont || 'orbitron';
+
+  const fontClass = `font-${bodyFont}`;
+  const logoFontClass = `logo-font-${logoFont}`;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased min-h-full flex flex-col overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${poppins.variable} ${roboto.variable} ${montserrat.variable} ${playfair.variable} ${outfit.variable} ${lora.variable} ${manrope.variable} ${urbanist.variable} ${orbitron.variable} ${openSans.variable} ${lato.variable} ${oswald.variable} ${raleway.variable} ${nunito.variable} ${ubuntu.variable} ${merriweather.variable} ${kanit.variable} ${quicksand.variable} ${josefinSans.variable} ${syne.variable} ${spaceGrotesk.variable} ${themeClass} ${fontClass} ${logoFontClass} antialiased min-h-full flex flex-col overflow-x-hidden`}
         suppressHydrationWarning
       >
         <PWARegistry />
@@ -140,7 +286,7 @@ export default async function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
         )}
-        <Providers>
+        <Providers settings={settings}>
           {showBlocker && <SubscriptionBlocker brandName={settings?.brandName || 'Store'} />}
           {settings?.googleTagManagerId && (
             <GoogleTagManager gtmId={settings.googleTagManagerId} />

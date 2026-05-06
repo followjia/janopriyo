@@ -7,6 +7,7 @@ export interface IGlobalSettings extends Document {
     phone: string;
     address: string;
   };
+  logoUrl?: string;
   socialLinks: {
     facebook?: string;
     twitter?: string;
@@ -75,6 +76,8 @@ export interface IGlobalSettings extends Document {
     blogListing: string;
     footer: string;
     theme: string;
+    logoFont: string;
+    bodyFont: string;
   };
   saasSubscription?: {
     expiryDate: Date;
@@ -94,6 +97,7 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       phone: { type: String },
       address: { type: String },
     },
+    logoUrl: { type: String, default: '/logo.png' },
     socialLinks: {
       facebook: { type: String },
       twitter: { type: String },
@@ -134,9 +138,9 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       activationThreshold: { type: Number, default: 5000 },
       rewardPercentage: { type: Number, default: 5 },
     },
-    domain: { 
-      type: String, 
-      required: [true, 'Domain is required'], 
+    domain: {
+      type: String,
+      required: [true, 'Domain is required'],
       index: true,
       unique: true,
       trim: true,
@@ -170,6 +174,8 @@ const GlobalSettingsSchema: Schema<IGlobalSettings> = new Schema(
       blogListing: { type: String, default: 'v1' },
       footer: { type: String, default: 'v1' },
       theme: { type: String, default: 'green' },
+      logoFont: { type: String, default: 'orbitron' },
+      bodyFont: { type: String, default: 'inter' },
     },
     saasSubscription: {
       expiryDate: { type: Date, required: true, index: true },
