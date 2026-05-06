@@ -104,6 +104,7 @@ export default function EditBlogPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     let processedValue = value;
     // Character limits checking with auto-truncation
     if (name === 'slug' || name === 'metaTitle' || name === 'title') {
