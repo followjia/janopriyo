@@ -142,20 +142,20 @@ const AnimatedList = ({
               onMouseEnter={() => handleItemMouseEnter(index)}
               onClick={() => handleItemClick(item, index)}
             >
-              <div className={`item ${isSelected ? 'selected' : ''} ${itemClassName}`}>
+              <div className={`item group ${isSelected ? 'selected' : ''} ${itemClassName}`}>
                 <div className="flex justify-between items-center gap-4">
-                  <p className="item-text">{displayTitle}</p>
+                  <p className="item-text transition-colors group-hover:text-primary">{displayTitle}</p>
                   <motion.div
                     animate={{ rotate: isSelected ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
                     className="text-primary/50"
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </motion.div>
                 </div>
-                
+
                 <AnimatePresence>
                   {isSelected && displayContent && (
                     <motion.div
@@ -165,7 +165,7 @@ const AnimatedList = ({
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <p className="text-muted-foreground text-sm leading-relaxed">
+                      <p className="text-muted-foreground transition-colors group-hover:text-primary/80 text-sm leading-relaxed">
                         {displayContent}
                       </p>
                     </motion.div>
