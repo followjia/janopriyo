@@ -30,7 +30,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
           />
         </div>
 
-        <div className="container mx-auto px-4 max-w-4xl relative z-10">
+        <div className="w-full mx-auto px-4 max-w-4xl relative z-10">
           <Link href="/blog">
             <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
               <ArrowLeft className="h-4 w-4" /> Back to Blog
