@@ -81,13 +81,13 @@ export default function NavbarV3() {
           <div className="flex items-center gap-8">
             <button
               onClick={() => router.push('/shop')}
-              className="hover:text-primary transition-colors hidden sm:block"
+              className="hover:text-primary transition-all hover:scale-110 hidden sm:block outline-none"
               aria-label="Open shop search"
             >
               <Search className="h-5 w-5 stroke-[1.5]" />
             </button>
 
-            <Link href="/wishlist" className="relative hidden sm:block group">
+            <Link href="/wishlist" className="relative hidden sm:block group hover:scale-110 transition-all">
               <Heart className={`h-5 w-5 stroke-[1.5] group-hover:fill-primary group-hover:text-primary transition-all ${wishlistCount > 0 ? 'fill-primary text-primary' : ''}`} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 h-4 w-4 bg-primary text-white text-[8px] font-black rounded-full flex items-center justify-center">
@@ -99,7 +99,7 @@ export default function NavbarV3() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 px-1 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50 transition-all cursor-pointer outline-none group">
+                  <button className="flex items-center gap-2 px-1 py-1 rounded-full border border-neutral-200 hover:bg-transparent transition-all cursor-pointer outline-none group hover:scale-110">
                     <div className="h-8 w-8 rounded-full overflow-hidden group-hover:scale-110 transition-transform">
                       <img 
                         src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=random`} 
@@ -169,7 +169,7 @@ export default function NavbarV3() {
             )}
 
             <CartDrawer>
-              <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="flex items-center gap-3 group cursor-pointer hover:scale-110 transition-all">
                 <div className="relative">
                   <ShoppingBag className="h-5 w-5 stroke-[1.5] group-hover:text-primary transition-all" />
                   {cartItemsCount > 0 && (

@@ -79,7 +79,7 @@ export default function NavbarV2() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-white hover:bg-primary/20 rounded-full"
+            className="text-white hover:bg-transparent hover:scale-110 transition-all rounded-full"
             onClick={() => router.push('/shop')}
             aria-label="Search"
           >
@@ -87,7 +87,7 @@ export default function NavbarV2() {
           </Button>
 
           <Link href="/wishlist" className="relative group">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-primary/20 rounded-full relative">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-transparent hover:scale-110 transition-all rounded-full relative">
               <Heart className="h-5 w-5 group-hover:fill-primary transition-all" />
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-[9px] font-black text-white rounded-full flex items-center justify-center border-2 border-black animate-in zoom-in duration-300">
@@ -98,8 +98,8 @@ export default function NavbarV2() {
           </Link>
 
           <CartDrawer>
-            <div className="relative group cursor-pointer">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-primary/20 rounded-full relative pointer-events-none">
+            <div className="relative group cursor-pointer hover:scale-110 transition-all">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-transparent rounded-full relative pointer-events-none">
                 <ShoppingCart className="h-5 w-5 group-hover:text-primary transition-all" />
                 {cartItemsCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-4 w-4 bg-white text-[9px] font-black text-black rounded-full flex items-center justify-center border-2 border-black animate-in zoom-in duration-300">
@@ -124,7 +124,7 @@ export default function NavbarV2() {
                       className="object-cover" 
                     />
                   </div>
-                  <span className="hidden sm:block text-xs font-bold text-white/90">
+                  <span className="hidden sm:block text-xs font-bold text-white/90 group-hover:text-primary transition-colors">
                     {session.user?.name?.split(' ')[0]}
                   </span>
                 </button>

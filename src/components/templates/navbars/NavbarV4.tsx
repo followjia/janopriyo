@@ -92,9 +92,9 @@ export default function NavbarV4() {
 
         {/* User & Global Cart Actions */}
         <div className="flex items-center gap-4 md:gap-8 ml-auto lg:ml-0">
-          <Link href="/wishlist" className="relative group hidden sm:flex items-center gap-3">
-             <div className="h-11 w-11 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-white/10">
-                <Heart className={`h-5 w-5 ${wishlistCount > 0 ? 'fill-primary text-primary' : 'text-white'}`} />
+          <Link href="/wishlist" className="relative group hidden sm:flex items-center gap-3 hover:scale-110 transition-all">
+             <div className="h-11 w-11 rounded-xl bg-transparent flex items-center justify-center transition-all border-none">
+                <Heart className={`h-5 w-5 ${wishlistCount > 0 ? 'fill-primary text-primary' : 'text-white'} group-hover:text-primary transition-colors`} />
              </div>
              {wishlistCount > 0 && (
                <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#0f1111] animate-in zoom-in">
@@ -106,7 +106,7 @@ export default function NavbarV4() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 group cursor-pointer outline-none">
+                <button className="flex items-center gap-3 group cursor-pointer outline-none hover:scale-110 transition-all">
                 <div className="h-11 w-11 rounded-xl border-2 border-white/10 overflow-hidden group-hover:border-primary transition-all relative">
                   <Image 
                     src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} 
@@ -115,7 +115,7 @@ export default function NavbarV4() {
                     className="object-cover" 
                   />
                 </div>
-                  <div className="hidden xl:flex flex-col text-left">
+                  <div className="hidden xl:flex flex-col text-left transition-colors group-hover:text-primary">
                      <span className="text-[9px] opacity-40 uppercase font-black tracking-widest leading-none mb-1">Authenticated</span>
                      <span className="text-xs font-bold leading-none truncate max-w-[100px]">{session.user?.name?.split(' ')[0]}</span>
                   </div>
@@ -169,11 +169,11 @@ export default function NavbarV4() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/login" className="flex items-center gap-3 group">
-              <div className="h-11 w-11 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-all border border-white/10">
-                <User className="h-5 w-5" />
+            <Link href="/login" className="flex items-center gap-3 group hover:scale-110 transition-all">
+              <div className="h-11 w-11 rounded-xl bg-transparent flex items-center justify-center transition-all border-none">
+                <User className="h-5 w-5 group-hover:text-primary transition-colors" />
               </div>
-              <div className="hidden xl:flex flex-col">
+              <div className="hidden xl:flex flex-col transition-colors group-hover:text-primary">
                  <span className="text-[9px] opacity-40 uppercase font-black tracking-widest leading-none mb-1">Guest</span>
                  <span className="text-xs font-bold leading-none">Access Store</span>
               </div>
@@ -181,9 +181,9 @@ export default function NavbarV4() {
           )}
 
           <CartDrawer>
-            <div className="relative group flex items-center gap-3 cursor-pointer">
+            <div className="relative group flex items-center gap-3 cursor-pointer hover:scale-110 transition-all">
               <div className="relative">
-                <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(var(--primary-rgb),0.5)] group-hover:bg-white group-hover:text-black transition-all">
+                <div className="h-11 w-11 rounded-xl bg-transparent flex items-center justify-center transition-all group-hover:text-primary">
                   <ShoppingCart className="h-5 w-5" />
                 </div>
                 {cartItemsCount > 0 && (

@@ -63,7 +63,7 @@ export default function NavbarV5() {
           <div className="flex items-center gap-6">
             <button 
               onClick={() => router.push('/shop')}
-              className="h-12 w-12 rounded-2xl bg-white/50 dark:bg-black/50 flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm"
+              className="h-12 w-12 rounded-2xl bg-transparent flex items-center justify-center hover:text-primary hover:scale-110 transition-all outline-none"
               aria-label="Discovery Search"
             >
               <Search className="h-5 w-5" />
@@ -71,7 +71,7 @@ export default function NavbarV5() {
 
             <Link 
                href="/wishlist" 
-               className={`relative hidden sm:flex h-12 w-12 rounded-2xl bg-white/50 dark:bg-black/50 items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm ${wishlistCount > 0 ? 'text-primary' : ''}`}
+               className={`relative hidden sm:flex h-12 w-12 rounded-2xl bg-transparent items-center justify-center hover:text-primary hover:scale-110 transition-all ${wishlistCount > 0 ? 'text-primary' : ''}`}
                aria-label={`Wishlist (${wishlistCount})`}
             >
                <Heart className={`h-5 w-5 ${wishlistCount > 0 ? 'fill-current animate-pulse' : ''}`} />
@@ -84,7 +84,7 @@ export default function NavbarV5() {
 
             <CartDrawer>
               <div 
-                 className="relative group h-14 w-14 rounded-[2rem] bg-primary text-white flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-110 transition-transform cursor-pointer"
+                 className="relative group h-14 w-14 rounded-[2rem] bg-transparent text-foreground flex items-center justify-center hover:scale-110 hover:text-primary transition-all cursor-pointer"
                  aria-label={`Shopping Cart (${cartItemsCount})`}
               >
                  <ShoppingBag className="h-6 w-6" />
@@ -101,7 +101,7 @@ export default function NavbarV5() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 px-2 py-1 rounded-[1.5rem] bg-white/10 hover:bg-white/20 transition-all shadow-lg cursor-pointer outline-none group">
+                  <button className="flex items-center gap-3 px-2 py-1 rounded-[1.5rem] bg-transparent hover:bg-transparent hover:scale-110 transition-all cursor-pointer outline-none group">
                     <div className="h-10 w-10 rounded-[1.2rem] border-2 border-primary/20 overflow-hidden group-hover:scale-110 transition-transform">
                       <img src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} alt="Identity" className="h-full w-full object-cover" />
                     </div>

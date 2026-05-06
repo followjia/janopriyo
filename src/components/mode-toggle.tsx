@@ -14,9 +14,9 @@ export function ModeToggle() {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
-      className="ml-2 border-none"
+      className="bg-transparent hover:bg-transparent hover:scale-110 transition-all outline-none"
       onClick={toggle}
       aria-label="Toggle theme"
     >

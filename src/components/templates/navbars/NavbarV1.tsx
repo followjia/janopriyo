@@ -296,7 +296,7 @@ export default function Navbar() {
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary"
+                className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary hover:scale-110"
                 aria-label="Wishlist"
               >
                 <div className="relative">
@@ -312,7 +312,7 @@ export default function Navbar() {
               {/* Cart */}
               <CartDrawer>
                 <div 
-                  className="flex items-center gap-2 group cursor-pointer hover:text-primary px-2 py-1.5 rounded-full transition-all active:scale-95"
+                  className="flex items-center gap-2 group cursor-pointer hover:text-primary px-2 py-1.5 rounded-full transition-all hover:scale-110 active:scale-95"
                   aria-label="Shopping Cart"
                   role="button"
                 >
@@ -335,7 +335,7 @@ export default function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-all cursor-pointer outline-none group"
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all cursor-pointer outline-none group hover:scale-110"
                       aria-label="Account menu"
                     >
                       <div className="h-8 w-8 rounded-full border-2 border-primary/20 overflow-hidden group-hover:border-primary transition-all">
@@ -345,7 +345,7 @@ export default function Navbar() {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <span className="hidden sm:block text-xs font-bold text-gray-700">
+                      <span className="hidden sm:block text-xs font-bold text-gray-700 group-hover:text-primary transition-colors">
                         {session.user?.name?.split(' ')[0]}
                       </span>
                     </button>

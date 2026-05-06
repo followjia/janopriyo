@@ -70,7 +70,7 @@ export function AIChatbot() {
         variant="ghost" 
         size="icon" 
         onClick={() => setIsOpen(true)}
-        className="h-10 w-10 hover:text-primary transition-all hover:bg-primary/5 active:scale-90"
+        className="h-10 w-10 hover:text-primary transition-all bg-transparent hover:bg-transparent hover:scale-110 active:scale-90"
         aria-label="Open AI chat"
       >
         <MessageCircleQuestion className="h-5 w-5" />
