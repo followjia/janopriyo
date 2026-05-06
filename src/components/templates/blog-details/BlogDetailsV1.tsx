@@ -15,17 +15,17 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
       {/* Cinematic Hero Header */}
       <header className="relative pt-12 pb-20 overflow-hidden border-b bg-muted/20">
         {/* Floating Lines Background */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
           <FloatingLines 
             enabledWaves={["top", "middle", "bottom"]}
-            lineCount={8}
-            lineDistance={8}
-            bendRadius={8}
-            bendStrength={-2}
+            lineCount={12}
+            lineDistance={10}
+            bendRadius={5}
+            bendStrength={-1.5}
             interactive={true}
             parallax={true}
-            animationSpeed={1}
-            linesGradient={['var(--primary)', 'var(--accent)', 'var(--primary)', 'var(--accent)']}
+            animationSpeed={0.8}
+            linesGradient={['var(--primary)', 'var(--primary)']}
             mixBlendMode="normal"
           />
         </div>

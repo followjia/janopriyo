@@ -98,7 +98,7 @@ vec3 getLineColor(float t, vec3 baseColor) {
     gradientColor = mix(c1, c2, f);
   }
   
-  return gradientColor * 0.5;
+  return gradientColor;
 }
 
 float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv, bool shouldBend) {
@@ -242,10 +242,24 @@ function resolveColor(color: string): Vector3 {
     temp.style.color = value;
     temp.style.display = 'none';
     document.body.appendChild(temp);
-    const computedColor = getComputedStyle(temp).color;
+    value = getComputedStyle(temp).color;
     document.body.removeChild(temp);
-    
-    const match = computedColor.match(/rgba?\((\d+)(?:,\s*|\s+)(\d+)(?:,\s*|\s+)(\d+)/);
+  }
+  
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) return new Vector3(0.5, 0.5, 0.5);
+  
+  ctx.fillStyle = value;
+  const resolved = ctx.fillStyle;
+  
+  if (resolved.startsWith('#')) {
+    const hex = resolved.slice(1);
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return new Vector3(r / 255, g / 255, b / 255);
+  } else {
+    const match = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (match) {
       return new Vector3(
         parseInt(match[1]) / 255,
@@ -253,28 +267,9 @@ function resolveColor(color: string): Vector3 {
         parseInt(match[3]) / 255
       );
     }
-    return new Vector3(0.5, 0.5, 0.5);
   }
 
-  if (value.startsWith('#')) {
-    value = value.slice(1);
-  }
-
-  let r = 255;
-  let g = 255;
-  let b = 255;
-
-  if (value.length === 3) {
-    r = parseInt(value[0] + value[0], 16);
-    g = parseInt(value[1] + value[1], 16);
-    b = parseInt(value[2] + value[2], 16);
-  } else if (value.length === 6) {
-    r = parseInt(value.slice(0, 2), 16);
-    g = parseInt(value.slice(2, 4), 16);
-    b = parseInt(value.slice(4, 6), 16);
-  }
-
-  return new Vector3(r / 255, g / 255, b / 255);
+  return new Vector3(0.5, 0.5, 0.5);
 }
 
 export default function FloatingLines({
