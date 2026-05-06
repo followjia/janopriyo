@@ -101,8 +101,13 @@ export default function NavbarV5() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-12 w-12 rounded-[1.5rem] border-2 border-primary/20 overflow-hidden hover:scale-110 transition-transform shadow-lg cursor-pointer">
-                    <img src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} alt="Identity" className="h-full w-full object-cover" />
+                  <button className="flex items-center gap-3 px-2 py-1 rounded-[1.5rem] bg-white/10 hover:bg-white/20 transition-all shadow-lg cursor-pointer outline-none group">
+                    <div className="h-10 w-10 rounded-[1.2rem] border-2 border-primary/20 overflow-hidden group-hover:scale-110 transition-transform">
+                      <img src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} alt="Identity" className="h-full w-full object-cover" />
+                    </div>
+                    <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest pr-2">
+                      {session.user?.name?.split(' ')[0]}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 rounded-[2.5rem] p-4 bg-white/90 backdrop-blur-3xl border-none shadow-2xl">
@@ -119,7 +124,7 @@ export default function NavbarV5() {
                          <LayoutDashboard className="mr-3 h-5 w-5 text-primary" /> Admin Dashboard
                        </DropdownMenuItem>
                        <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-2xl cursor-pointer py-3">
-                         <Settings className="mr-3 h-5 w-5" /> System Design
+                         <Settings className="mr-3 h-5 w-5" /> Infrastructure & Marketing
                        </DropdownMenuItem>
                      </>
                    )}
@@ -146,9 +151,6 @@ export default function NavbarV5() {
                      </>
                    )}
 
-                   <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-2xl cursor-pointer py-3">
-                     <Settings className="mr-3 h-5 w-5" /> Account Studio
-                   </DropdownMenuItem>
                    <DropdownMenuSeparator className="bg-black/5" />
                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-2xl cursor-pointer py-3 text-red-500">
                      <LogOut className="mr-3 h-5 w-5" /> End Experience

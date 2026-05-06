@@ -99,15 +99,20 @@ export default function NavbarV3() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-9 w-9 rounded-full border border-neutral-200 overflow-hidden hover:scale-110 transition-transform cursor-pointer">
-                    <img 
-                      src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=random`} 
-                      alt={session.user?.name || "User Profile"} 
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent("User")}&background=f3f4f6&color=6b7280`;
-                      }}
-                    />
+                  <button className="flex items-center gap-2 px-1 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50 transition-all cursor-pointer outline-none group">
+                    <div className="h-8 w-8 rounded-full overflow-hidden group-hover:scale-110 transition-transform">
+                      <img 
+                        src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || "User")}&background=random`} 
+                        alt={session.user?.name || "User Profile"} 
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent("User")}&background=f3f4f6&color=6b7280`;
+                        }}
+                      />
+                    </div>
+                    <span className="hidden sm:block text-xs font-bold text-neutral-700 pr-2">
+                      {session.user?.name?.split(' ')[0]}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60 rounded-xl p-2 bg-white border-neutral-100 shadow-2xl">
@@ -124,7 +129,7 @@ export default function NavbarV3() {
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-lg cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" /> System Design
+                        <Settings className="mr-2 h-4 w-4" /> Infrastructure & Marketing
                       </DropdownMenuItem>
                     </>
                   )}
@@ -151,9 +156,6 @@ export default function NavbarV3() {
                     </>
                   )}
 
-                  <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-lg cursor-pointer">
-                    <User className="mr-2 h-4 w-4" /> Profile settings
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-500 hover:bg-red-500/10">
                     <LogOut className="mr-2 h-4 w-4" /> End Session

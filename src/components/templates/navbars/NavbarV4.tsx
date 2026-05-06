@@ -106,10 +106,10 @@ export default function NavbarV4() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 group cursor-pointer">
+                <button className="flex items-center gap-3 group cursor-pointer outline-none">
                 <div className="h-11 w-11 rounded-xl border-2 border-white/10 overflow-hidden group-hover:border-primary transition-all relative">
                   <Image 
-                    src={session.user?.image || `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#E2E8F0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="50" font-weight="bold" fill="#475569">${session.user?.name?.split(' ').map((n:any) => n[0]).join('').toUpperCase() || 'U'}</text></svg>`)}`} 
+                    src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} 
                     alt={session.user?.name || 'User'} 
                     fill
                     className="object-cover" 
@@ -135,7 +135,7 @@ export default function NavbarV4() {
                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Console
                      </DropdownMenuItem>
                      <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-xl cursor-pointer hover:bg-white/5">
-                       <Settings className="mr-2 h-4 w-4" /> System Design
+                       <Settings className="mr-2 h-4 w-4" /> Infrastructure & Marketing
                      </DropdownMenuItem>
                    </>
                  )}
@@ -156,15 +156,12 @@ export default function NavbarV4() {
                      <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-xl cursor-pointer hover:bg-primary/20 text-primary">
                        <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
                      </DropdownMenuItem>
-                     <DropdownMenuItem onClick={() => router.push('/dashboard')} className="rounded-xl cursor-pointer hover:bg-white/5">
+                     <DropdownMenuItem onClick={() => router.push('/track-order')} className="rounded-xl cursor-pointer hover:bg-white/5">
                        <Truck className="mr-2 h-4 w-4" /> Track Order
                      </DropdownMenuItem>
                    </>
                  )}
 
-                 <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-xl cursor-pointer hover:bg-white/5">
-                   <User className="mr-2 h-4 w-4" /> Profile Settings
-                 </DropdownMenuItem>
                  <DropdownMenuSeparator className="bg-white/5" />
                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-500 hover:bg-red-500/10">
                    <LogOut className="mr-2 h-4 w-4" /> Terminate Session

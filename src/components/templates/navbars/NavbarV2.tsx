@@ -115,13 +115,18 @@ export default function NavbarV2() {
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-10 w-10 rounded-full border-2 border-primary/50 overflow-hidden hover:scale-110 transition-transform relative cursor-pointer">
-                  <Image 
-                    src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} 
-                    alt={session.user?.name || 'User'} 
-                    fill
-                    className="object-cover" 
-                  />
+                <button className="flex items-center gap-2 group cursor-pointer outline-none">
+                  <div className="h-9 w-9 rounded-full border-2 border-primary/50 overflow-hidden group-hover:scale-110 transition-transform relative">
+                    <Image 
+                      src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || '')}`} 
+                      alt={session.user?.name || 'User'} 
+                      fill
+                      className="object-cover" 
+                    />
+                  </div>
+                  <span className="hidden sm:block text-xs font-bold text-white/90">
+                    {session.user?.name?.split(' ')[0]}
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 bg-black/90 backdrop-blur-3xl text-white border-white/10 shadow-2xl">
@@ -138,7 +143,7 @@ export default function NavbarV2() {
                       <LayoutDashboard className="mr-2 h-4 w-4 text-primary" /> Admin Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/admin/system-design')} className="rounded-xl cursor-pointer hover:bg-primary/20">
-                      <Settings className="mr-2 h-4 w-4" /> System Design
+                      <Settings className="mr-2 h-4 w-4" /> Infrastructure & Marketing
                     </DropdownMenuItem>
                   </>
                 )}
@@ -165,9 +170,6 @@ export default function NavbarV2() {
                   </>
                 )}
 
-                <DropdownMenuItem onClick={() => router.push('/profile')} className="rounded-xl cursor-pointer hover:bg-primary/20">
-                  <User className="mr-2 h-4 w-4" /> Profile
-                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="rounded-xl cursor-pointer text-red-400 hover:bg-red-400/10">
                   <LogOut className="mr-2 h-4 w-4" /> Sign Out

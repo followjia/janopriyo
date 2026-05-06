@@ -335,10 +335,19 @@ export default function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="h-10 w-10 flex items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary outline-none"
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-all cursor-pointer outline-none group"
                       aria-label="Account menu"
                     >
-                      <User className="h-5 w-5" />
+                      <div className="h-8 w-8 rounded-full border-2 border-primary/20 overflow-hidden group-hover:border-primary transition-all">
+                        <img 
+                          src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || 'U')}`} 
+                          alt={session.user?.name || 'User'} 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <span className="hidden sm:block text-xs font-bold text-gray-700">
+                        {session.user?.name?.split(' ')[0]}
+                      </span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2">
@@ -367,7 +376,7 @@ export default function Navbar() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/admin/system-design" className="cursor-pointer">
-                              <Settings className="mr-2 h-4 w-4" /> System Design
+                              <Settings className="mr-2 h-4 w-4" /> Infrastructure & Marketing
                             </Link>
                           </DropdownMenuItem>
                         </>
@@ -402,12 +411,6 @@ export default function Navbar() {
                           </DropdownMenuItem>
                         </>
                       )}
-
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" /> Profile Settings
-                        </Link>
-                      </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => signOut({ callbackUrl: window.location.origin })} className="text-destructive cursor-pointer">
