@@ -134,7 +134,7 @@ export async function DELETE(
 
       try {
         await revalidateTag('categories', 'max');
-    revalidatePath('/');
+        revalidatePath('/');
       } catch (e) {
         console.error('Revalidation error:', e);
       }

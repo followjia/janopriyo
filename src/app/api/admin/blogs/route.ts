@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import connectToDatabase from '@/lib/db';
 import Blog from '@/models/Blog';
 import { auth } from '@/auth';
@@ -80,6 +81,16 @@ export async function POST(req: NextRequest) {
     };
 
     const blog = await Blog.create(blogData);
+
+    // Revalidate paths to show the new blog instantly
+    try {
+      revalidatePath('/');
+      revalidatePath('/blog');
+      revalidateTag('blogs', 'max');
+    } catch (revalidateError) {
+      console.error('[Admin Blog Create revalidatePath] error:', revalidateError);
+    }
+
     return NextResponse.json(blog, { status: 201 });
   } catch (error: any) {
     console.error('[Admin Blog Create POST] error:', error);

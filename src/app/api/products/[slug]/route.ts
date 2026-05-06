@@ -110,7 +110,7 @@ export async function PUT(
       while (attempt < maxRetries) {
         attempt++;
         const currentSlugCandidate = attempt === 1 ? safeUpdate.slug : `${safeUpdate.slug}-${attempt - 1}`;
-        
+
         let actualId = slug;
         if (!mongoose.Types.ObjectId.isValid(slug)) {
           const existingProduct = await Product.findOne({ slug: slug, domain });
@@ -146,7 +146,7 @@ export async function PUT(
         }
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: 'Failed to generate a unique slug after several attempts.',
         error: lastError?.message
       }, { status: 400 });

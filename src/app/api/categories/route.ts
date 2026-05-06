@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || !session.user || !(['admin', 'super_admin'].includes((session.user as any)?.role))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -38,12 +38,12 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    
+
     const domain = await getTenantDomain();
     if (!domain) {
       return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
-    
+
     // Check if slug already exists (if provided) within the domain
     if (slug) {
       const existingCategory = await Category.findOne({ slug, domain });

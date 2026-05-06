@@ -104,27 +104,27 @@ export default function EditBlogPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    // Character limits checking
-    if (name === 'slug' || name === 'metaTitle') {
-        if (value.length > 100) return;
+    let processedValue = value;
+    // Character limits checking with auto-truncation
+    if (name === 'slug' || name === 'metaTitle' || name === 'title') {
+        if (value.length > 100) processedValue = value.slice(0, 100);
     }
     if (name === 'metaDescription') {
-        if (value.length > 200) return;
+        if (value.length > 200) processedValue = value.slice(0, 200);
     }
+
     if (name === 'thumbnail') {
       setImageLoadError(false);
     }
 
     setFormData(prev => {
-      const newData = { ...prev, [name]: value };
+      const newData = { ...prev, [name]: processedValue };
       
       // Auto-generate slug and meta title IF it was empty or matching before
       // Note: we usually don't auto-update on edit if the user has already customized it
       if (name === 'title' && !prev.slug) {
-        newData.slug = generateSlug(value);
-        newData.metaTitle = value.slice(0, 100);
+        newData.slug = generateSlug(processedValue);
+        newData.metaTitle = processedValue;
       }
       
       return newData;

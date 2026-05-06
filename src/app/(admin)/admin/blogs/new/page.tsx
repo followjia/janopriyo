@@ -67,12 +67,13 @@ export default function CreateBlogPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Character limits checking
-    if (name === 'slug' || name === 'metaTitle') {
-        if (value.length > 100) return;
+    let processedValue = value;
+    // Character limits checking with auto-truncation
+    if (name === 'slug' || name === 'metaTitle' || name === 'title') {
+        if (value.length > 100) processedValue = value.slice(0, 100);
     }
     if (name === 'metaDescription') {
-        if (value.length > 200) return;
+        if (value.length > 200) processedValue = value.slice(0, 200);
     }
 
     if (name === 'thumbnail') {
@@ -80,17 +81,17 @@ export default function CreateBlogPage() {
     }
 
     setFormData(prev => {
-      let finalValue = value;
+      let finalValue = processedValue;
       if (name === 'slug') {
-        finalValue = generateSlug(value);
+        finalValue = generateSlug(processedValue);
       }
 
       const newData = { ...prev, [name]: finalValue };
       
       // Auto-generate slug and meta title if the title is being changed
       if (name === 'title') {
-        newData.slug = generateSlug(value);
-        newData.metaTitle = value.slice(0, 100);
+        newData.slug = generateSlug(processedValue);
+        newData.metaTitle = processedValue;
       }
       
       return newData;

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const query: any = { domain };
-    
+
     if (ids) {
       query._id = { $in: ids.split(',') };
     }
