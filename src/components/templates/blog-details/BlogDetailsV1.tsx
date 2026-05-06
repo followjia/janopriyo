@@ -12,7 +12,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
   return (
     <div className="min-h-screen bg-background">
       {/* Cinematic Hero Header */}
-      <header className="relative pt-12 pb-12 overflow-hidden border-b bg-muted/20">
+      <header className="relative pt-12 pb-20 overflow-hidden border-b bg-muted/20">
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <Link href="/blog">
             <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
