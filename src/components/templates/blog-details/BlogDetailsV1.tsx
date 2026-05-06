@@ -24,7 +24,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
             bendStrength={-0.5}
             interactive={true}
             parallax={true}
-            linesGradient={['var(--primary)', 'var(--primary)', 'var(--primary)', 'var(--primary)']}
+            linesGradient={['var(--primary)', 'var(--accent)', 'var(--primary)', 'var(--accent)']}
             mixBlendMode="screen"
           />
         </div>
