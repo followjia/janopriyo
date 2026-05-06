@@ -32,7 +32,7 @@ import {
 
 
 const TEMPLATE_OPTIONS = ['v1', 'v2', 'v3', 'v4', 'v5'];
-const THEME_OPTIONS = ['default', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
+const THEME_OPTIONS = ['default', 'black', 'green', 'red', 'rose', 'orange', 'blue', 'yellow', 'violet'];
 
 const TEMPLATE_CONFIG = [
   { id: 'layout', label: 'Primary Layout' },
@@ -430,7 +430,7 @@ export default function SuperConfigPage() {
                     <SelectContent className="rounded-xl">
                       {THEME_OPTIONS.map(t => (
                         <SelectItem key={t} value={t} className="rounded-lg capitalize">
-                          {t === 'default' ? 'Default (System)' : `${t} Theme`}
+                          {t === 'default' ? 'Default (System)' : t === 'black' ? 'Black and White Theme' : `${t} Theme`}
                         </SelectItem>
                       ))}
                     </SelectContent>
