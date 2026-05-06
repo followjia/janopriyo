@@ -129,7 +129,7 @@ export async function DELETE(
           { session: dbSession }
         );
 
-        await Category.findByIdAndDelete(category._id, { session: dbSession });
+        await Category.findOneAndDelete({ _id: category._id, domain }, { session: dbSession });
       });
 
       try {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  return NextResponse.redirect(`${baseUrl}/checkout`, 303);
+export async function POST(req: NextRequest) {
+  const origin = req.nextUrl.origin;
+  return NextResponse.redirect(`${origin}/checkout`, 303);
 }

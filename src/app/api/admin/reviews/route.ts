@@ -23,15 +23,19 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     await connectToDatabase();
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
     const [reviews, total] = await Promise.all([
-      Review.find({})
+      Review.find({ domain })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate('product', 'name slug')
         .populate('user', 'name email'),
-      Review.countDocuments({})
+      Review.countDocuments({ domain })
     ]);
 
     return NextResponse.json({

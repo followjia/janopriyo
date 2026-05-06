@@ -14,7 +14,9 @@ export const metadata: Metadata = {
 async function getSettings() {
   try {
     await connectToDatabase();
-    const settings = await GlobalSettings.findOne({}).lean();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    const settings = await GlobalSettings.findOne({ domain }).lean();
     if (!settings) {
       return {
         brandName: "Janopriyo Shop",

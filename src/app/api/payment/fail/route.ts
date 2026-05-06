@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
     
     if (orderId) {
       await connectToDatabase();
-      const order = await Order.findById(orderId);
+      const { getTenantDomain } = await import('@/lib/tenant');
+      const domain = await getTenantDomain();
+      const order = await Order.findOne({ _id: orderId, domain });
       if (order) {
         console.info(`Marking order ${orderId} as Failed. Previous status: ${order.paymentStatus}, User: ${order.user}`);
         try {
@@ -38,10 +40,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const origin = req.nextUrl.origin;
     const redirectUrl = orderId 
-      ? `${baseUrl}/checkout/fail?id=${orderId}`
-      : `${baseUrl}/checkout/fail`;
+      ? `${origin}/checkout/fail?id=${orderId}`
+      : `${origin}/checkout/fail`;
       
     return NextResponse.redirect(redirectUrl, 303);
   } catch (error: any) {

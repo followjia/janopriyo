@@ -15,7 +15,9 @@ export async function POST(req: NextRequest) {
       const tran_id = data.tran_id?.toString();
       
       await connectToDatabase();
-      const order = await Order.findOne({ transactionId: tran_id });
+      const { getTenantDomain } = await import('@/lib/tenant');
+      const domain = await getTenantDomain();
+      const order = await Order.findOne({ transactionId: tran_id, domain });
 
       if (order && order.paymentStatus !== 'Paid') {
         order.paymentStatus = 'Paid';

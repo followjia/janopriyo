@@ -36,7 +36,7 @@ export async function GET(
     }
 
     // Authorization: Must be an admin OR the owner of the order
-    const isAdmin = (session.user as any)?.role === 'admin';
+    const isAdmin = ['admin', 'super_admin'].includes((session.user as any)?.role);
     const isOwner = order.user?._id?.toString() === (session.user as any).id;
 
     if (!isAdmin && !isOwner) {
@@ -133,7 +133,7 @@ export async function PATCH(
       // 2. Loyalty System: Award Tokens on Success
       const isOrderSuccessful = (status || order.status) === 'Delivered';
       if (isOrderSuccessful && !order.isRewarded && order.user) {
-        const user = await User.findById(order.user).session(dbSession);
+        const user = await User.findOne({ _id: order.user, domain }).session(dbSession);
         const settings = await GlobalSettings.findOne({ domain }).session(dbSession);
         const subConfig = settings?.subscriptionConfig || { activationThreshold: 5000, rewardPercentage: 5 };
 

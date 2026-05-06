@@ -12,8 +12,9 @@ import { Logo } from '@/components/ui/logo';
 
 async function getGlobalSettings() {
   try {
-    await connectToDatabase();
-    return await GlobalSettings.findOne({}).lean();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    return await GlobalSettings.findOne({ domain }).lean();
   } catch (error) {
     console.error('Error fetching settings for footer:', error);
     return null;

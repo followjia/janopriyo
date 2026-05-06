@@ -23,11 +23,12 @@ export default async function ProductDetailsV4({ product }: { product: any }) {
   try {
     await connectToDatabase();
     const relatedProducts = await Product.find({
+      domain: product.domain,
       _id: { $ne: product._id },
       isPublished: true,
       $or: [
         { categories: { $in: (product.categories ?? []).map((cat: any) => cat._id ?? cat).filter(Boolean) } },
-        { tags: { $in: product.tags ?? [] } },
+        { tags: { $in: (product.tags ?? []).map((tag: any) => tag._id ?? tag).filter(Boolean) } },
       ],
     })
       .populate('categories')

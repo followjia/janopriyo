@@ -16,16 +16,22 @@ export async function GET(req: NextRequest) {
 
     const userId = (session.user as any).id;
     await connectToDatabase();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ eligible: false, message: 'Tenant domain is missing' });
+    }
 
     // Check if user has a delivered order for this product
     const deliveredOrder = await Order.findOne({
       user: userId,
       'items.product': productId,
       status: 'Delivered',
+      domain, // Add domain check
     });
 
     // Check if user already reviewed
-    const existingReview = await Review.findOne({ user: userId, product: productId });
+    const existingReview = await Review.findOne({ user: userId, product: productId, domain });
 
     return NextResponse.json({ 
       eligible: !!deliveredOrder && !existingReview,

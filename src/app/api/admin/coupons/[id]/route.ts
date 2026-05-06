@@ -27,9 +27,13 @@ export async function PUT(
     });
 
     await connectToDatabase();
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const coupon = await Coupon.findByIdAndUpdate(
-      id,
+    const coupon = await Coupon.findOneAndUpdate(
+      { _id: id, domain },
       { $set: updatePayload },
       { new: true, runValidators: true }
     );
@@ -57,8 +61,12 @@ export async function DELETE(
 
     const { id } = await params;
     await connectToDatabase();
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const coupon = await Coupon.findByIdAndDelete(id);
+    const coupon = await Coupon.findOneAndDelete({ _id: id, domain });
 
     if (!coupon) {
       return NextResponse.json({ message: 'Coupon not found' }, { status: 404 });

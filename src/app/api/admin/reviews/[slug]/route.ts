@@ -21,10 +21,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
     }
 
     await connectToDatabase();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
     if (!mongoose.isValidObjectId(slug)) {
       return NextResponse.json({ message: 'Invalid review ID' }, { status: 400 });
     }
-    const review = await Review.findOne({ _id: slug });
+    const review = await Review.findOne({ _id: slug, domain });
 
     if (!review) {
       return NextResponse.json({ message: 'Review not found' }, { status: 404 });
@@ -39,7 +45,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
       const productId = review.product;
       const approvedReviews = await Review.find({
         product: productId,
-        status: 'approved'
+        status: 'approved',
+        domain
       });
 
       const numReviews = approvedReviews.length;
@@ -47,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ sl
         ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
         : 0;
 
-      await Product.findOneAndUpdate({ _id: productId }, {
+      await Product.findOneAndUpdate({ _id: productId, domain }, {
         ratings,
         numReviews
       });
@@ -70,10 +77,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
     }
 
     await connectToDatabase();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
     if (!mongoose.isValidObjectId(slug)) {
       return NextResponse.json({ message: 'Invalid review ID' }, { status: 400 });
     }
-    const review = await Review.findOne({ _id: slug });
+    const review = await Review.findOneAndDelete({ _id: slug, domain });
 
     if (!review) {
       return NextResponse.json({ message: 'Review not found' }, { status: 404 });
@@ -82,13 +95,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
     const productId = review.product;
     const wasApproved = review.status === 'approved';
 
-    await Review.deleteOne({ _id: slug });
-
     // If deleted review was approved, recalculate product ratings
     if (wasApproved) {
       const approvedReviews = await Review.find({
         product: productId,
-        status: 'approved'
+        status: 'approved',
+        domain
       });
 
       const numReviews = approvedReviews.length;
@@ -96,7 +108,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
         ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
         : 0;
 
-      await Product.findOneAndUpdate({ _id: productId }, {
+      await Product.findOneAndUpdate({ _id: productId, domain }, {
         ratings,
         numReviews
       });

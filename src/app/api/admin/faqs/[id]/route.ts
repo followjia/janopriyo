@@ -36,8 +36,12 @@ export async function PATCH(
     }
 
     await connectToDatabase();
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
 
-    const faq = await FAQ.findByIdAndUpdate(id, sanitizedUpdate, { 
+    const faq = await FAQ.findOneAndUpdate({ _id: id, domain }, sanitizedUpdate, { 
       new: true,
       runValidators: true 
     });
@@ -69,7 +73,11 @@ export async function DELETE(
     }
 
     await connectToDatabase();
-    const faq = await FAQ.findByIdAndDelete(id);
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const faq = await FAQ.findOneAndDelete({ _id: id, domain });
 
     if (!faq) {
       return NextResponse.json({ message: 'FAQ not found' }, { status: 404 });

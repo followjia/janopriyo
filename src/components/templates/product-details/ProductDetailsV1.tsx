@@ -31,6 +31,7 @@ export default async function ProductDetailsV1({ product }: { product: any }) {
   try {
     await connectToDatabase();
     const relatedProducts = await Product.find({
+      domain: product.domain, // Add domain filter
       _id: { $ne: product._id },
       isPublished: true,
       $or: [

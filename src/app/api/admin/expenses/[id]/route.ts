@@ -31,9 +31,13 @@ export async function PUT(
     if (description !== undefined) updateData.description = description;
 
     await connectToDatabase();
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const expense = await Expense.findByIdAndUpdate(
-      id, 
+    const expense = await Expense.findOneAndUpdate(
+      { _id: id, domain }, 
       updateData, 
       { new: true, runValidators: true }
     );
@@ -65,7 +69,11 @@ export async function DELETE(
     }
 
     await connectToDatabase();
-    const expense = await Expense.findByIdAndDelete(id);
+    const domain = await (await import('@/lib/tenant')).getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const expense = await Expense.findOneAndDelete({ _id: id, domain });
     if (!expense) {
       return NextResponse.json({ message: 'Expense not found' }, { status: 404 });
     }

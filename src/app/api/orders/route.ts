@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     let user = null;
     if (sessionUser?.user?.id) {
-      user = await User.findById(sessionUser.user.id).session(session);
+      user = await User.findOne({ _id: sessionUser.user.id, domain }).session(session);
     }
 
     let serverComputedTotal = 0;
@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
         // Attempt to update variant stock
         const variantQuery: any = { 
           _id: item.product, 
+          domain, // Add domain filter
           isPublished: true,
           variants: {
             $elemMatch: {
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
         product = await Product.findOneAndUpdate(
           { 
             _id: item.product, 
+            domain, // Add domain filter
             stock: { $gte: item.quantity },
             isPublished: true 
           },
@@ -311,8 +313,8 @@ export async function POST(req: NextRequest) {
 
     // Link transaction to order ID if we had one
     if (walletTxId) {
-      await WalletTransaction.findByIdAndUpdate(
-        walletTxId,
+      await WalletTransaction.findOneAndUpdate(
+        { _id: walletTxId, domain },
         { orderId: newOrder._id },
         { session }
       );
@@ -349,7 +351,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const fetchAll = searchParams.get('all') === 'true';
-    const isAdmin = (session.user as any)?.role === 'admin';
+    const isAdmin = ['admin', 'super_admin'].includes((session.user as any)?.role);
 
     await connectToDatabase();
 

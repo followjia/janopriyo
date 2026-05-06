@@ -17,7 +17,12 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const order = await Order.findById(orderId);
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+    const order = await Order.findOne({ _id: orderId, domain });
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });

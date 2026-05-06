@@ -9,9 +9,25 @@ export async function GET() {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
+
+    // Security check: Ensure admin has access to this domain
+    const isSuperAdmin = (session.user as any).role === 'super_admin';
+    const userDomain = (session.user as any).domain;
+    if (!isSuperAdmin && userDomain !== domain) {
+      return NextResponse.json({ message: 'Unauthorized access to this tenant' }, { status: 403 });
+    }
+
+    const { getCachedSettings } = await import('@/lib/data-fetching');
+    const settings = await getCachedSettings(domain);
+
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    const propertyId = process.env.GOOGLE_GA4_PROPERTY_ID;
+    const propertyId = settings?.googleAnalyticsId || process.env.GOOGLE_GA4_PROPERTY_ID;
 
     if (!clientEmail || !privateKey || !propertyId) {
       return NextResponse.json({ message: 'Google Analytics credentials not configured' }, { status: 500 });

@@ -23,11 +23,16 @@ export async function POST(req: NextRequest) {
 
     if (response?.status === 'VALID' || response?.status === 'VALIDATED') {
       await connectToDatabase();
+      const { getTenantDomain } = await import('@/lib/tenant');
+      const domain = await getTenantDomain();
+      if (!domain) {
+        return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+      }
       
       // Atomic update to mark as paid and sales-counted in one go
       // This prevents multiple SSLCommerz callbacks from double-counting sales
       const order = await Order.findOneAndUpdate(
-        { _id: orderId, isSalesCounted: { $ne: true } },
+        { _id: orderId, domain, isSalesCounted: { $ne: true } },
         { 
           $set: { 
             paymentStatus: 'Paid', 
@@ -57,19 +62,19 @@ export async function POST(req: NextRequest) {
       } else {
         // If findOneAndUpdate returns null, it means isSalesCounted was already true 
         // OR the order ID is invalid. Check if order exists for redirection.
-        const existingOrder = await Order.findById(orderId);
+        const existingOrder = await Order.findOne({ _id: orderId, domain });
         if (!existingOrder) {
           return NextResponse.json({ message: 'Order not found' }, { status: 404 });
         }
       }
 
-      // Redirect to success page
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      return NextResponse.redirect(`${baseUrl}/checkout/success?id=${orderId}`, 303);
+      // Redirect to success page on the same domain
+      const origin = req.nextUrl.origin;
+      return NextResponse.redirect(`${origin}/checkout/success?id=${orderId}`, 303);
     } else {
       console.error('SSLCommerz Validation Failed:', response);
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      return NextResponse.redirect(`${baseUrl}/checkout/fail?id=${orderId}&reason=ValidationFailed`, 303);
+      const origin = req.nextUrl.origin;
+      return NextResponse.redirect(`${origin}/checkout/fail?id=${orderId}&reason=ValidationFailed`, 303);
     }
   } catch (error) {
     console.error('Payment Success Error:', error);

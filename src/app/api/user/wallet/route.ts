@@ -11,8 +11,13 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
+    const { getTenantDomain } = await import('@/lib/tenant');
+    const domain = await getTenantDomain();
+    if (!domain) {
+      return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
+    }
     
-    const transactions = await WalletTransaction.find({ userId: (session.user as any).id })
+    const transactions = await WalletTransaction.find({ userId: (session.user as any).id, domain })
       .sort({ createdAt: -1 })
       .limit(50);
 
