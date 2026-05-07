@@ -11,44 +11,31 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Cinematic Hero Header */}
-      <header className="relative pt-12 pb-20 overflow-hidden border-b">
-        {/* Image Background */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/assets/blog-banner.webp"
-            alt="Blog Background"
-            fill
-            className="object-cover object-center"
-            priority
-          />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
+      {/* Simple Header */}
+      <header className="pt-12 pb-12 border-b bg-muted/20">
+        <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <Link href="/blog">
               <Button variant="ghost" className="mb-8 gap-2 -ml-4 hover:bg-transparent hover:text-primary">
                 <ArrowLeft className="h-4 w-4" /> Back to Blog
               </Button>
             </Link>
-            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
-            {/* Subtle inner glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
-
-            <h1 className="text-3xl md:text-6xl font-black tracking-tighter leading-[1.1] relative z-10">
-              {blog.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-6 pt-4 text-muted-foreground relative z-10">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-                <Calendar className="h-4 w-4 text-primary" />
-                {new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </div>
-              <div className="h-1 w-1 rounded-full bg-border" />
-              <div className="text-xs font-bold uppercase tracking-widest">
-                {readingTime} min read
+            
+            <div className="space-y-6">
+              <h1 className="text-3xl md:text-6xl font-black tracking-tighter leading-[1.1]">
+                {blog.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  {new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </div>
+                <div className="h-1 w-1 rounded-full bg-border" />
+                <div className="text-xs font-bold uppercase tracking-widest">
+                  {readingTime} min read
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </header>
@@ -58,7 +45,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
         <div className="max-w-4xl mx-auto">
           {/* Featured Image */}
           {blog.thumbnail && (
-            <div className="mb-16 -mt-20 md:-mt-40 relative z-20 shadow-2xl rounded-[2.5rem] overflow-hidden border border-border/50 aspect-[16/9] shadow-primary/10">
+            <div className="mb-16 relative shadow-xl rounded-3xl overflow-hidden aspect-[16/9]">
               <Image
                 src={blog.thumbnail}
                 alt={blog.title}
