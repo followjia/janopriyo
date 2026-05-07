@@ -106,8 +106,11 @@ export async function GET(req: NextRequest) {
     const grossProfit = totalRevenue - totalCOGS - totalDeliveryCharge;
     const netProfit = grossProfit - totalExpenses;
 
-    // 5. Total Users
-    const totalUsers = await User.countDocuments({ domain });
+    // 5. Total Customers (Only users with role 'user')
+    const totalUsers = await User.countDocuments({ 
+      domain, 
+      role: 'user' 
+    });
 
     // 6. Pending Orders (Total, not date filtered)
     const pendingOrdersCount = await Order.countDocuments({ domain, status: 'Order Placed', deletedAt: null });
