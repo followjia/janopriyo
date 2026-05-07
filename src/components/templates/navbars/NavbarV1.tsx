@@ -284,12 +284,12 @@ export default function Navbar() {
             <div className="flex items-center justify-end gap-1 flex-1 max-w-[320px]">
 
               {/* Theme Toggle (Left of group) */}
-              <div className="hidden cursor-pointer sm:block">
+              <div className="hidden sm:block">
                 <ModeToggle />
               </div>
 
               {/* AI Chatbot */}
-              <div className="hidden cursor-pointer sm:block">
+              <div className="hidden  sm:block">
                 <AIChatbot />
               </div>
 
