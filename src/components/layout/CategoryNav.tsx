@@ -80,7 +80,7 @@ export function CategoryNav() {
                       className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
                         activeParent === mainCat._id 
                           ? 'bg-primary/10 text-primary' 
-                          : 'hover:bg-muted'
+                          : 'text-foreground/70 hover:bg-muted'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export function CategoryNav() {
                               <Link
                                 key={sub._id}
                                 href={`/shop?category=${sub.slug}`}
-                                className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap"
+                                className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide text-foreground/70 hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap"
                               >
                                 {sub.name}
                               </Link>
