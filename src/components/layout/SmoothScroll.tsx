@@ -25,10 +25,23 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     }
 
     rafId = requestAnimationFrame(raf);
+    
+    // Global fix for nested scrollables (dropdowns, popovers, etc.)
+    // Automatically adds data-lenis-prevent to scrollable elements
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const scrollable = target.closest('.overflow-y-auto, [role="listbox"], [role="dialog"], [role="menu"], .scroll-area');
+      if (scrollable && !scrollable.hasAttribute('data-lenis-prevent')) {
+        scrollable.setAttribute('data-lenis-prevent', 'true');
+      }
+    };
+
+    document.addEventListener('mouseover', handleMouseOver);
 
     return () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();
+      document.removeEventListener('mouseover', handleMouseOver);
     };
   }, []);
 
