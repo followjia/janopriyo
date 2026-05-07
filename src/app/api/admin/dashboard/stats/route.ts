@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       { 
         $match: { 
           domain,
-          status: 'Delivered',
+          status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] },
           createdAt: { $gte: startDate, $lte: endDate },
           deletedAt: null
         } 
@@ -134,7 +134,7 @@ export async function GET(req: NextRequest) {
 
     // 10. Top Selling Products
     const topSellingProducts = await Order.aggregate([
-      { $match: { domain, status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
+      { $match: { domain, status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] }, createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
       { $unwind: '$items' },
       {
         $group: {
@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
 
     // 11. Top Customers
     const topCustomers = await Order.aggregate([
-      { $match: { domain, status: 'Delivered', createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
+      { $match: { domain, status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] }, createdAt: { $gte: startDate, $lte: endDate }, deletedAt: null } },
       {
         $group: {
           _id: '$user',
@@ -205,7 +205,7 @@ export async function GET(req: NextRequest) {
       {
         $match: {
           domain,
-          status: 'Delivered',
+          status: { $in: ['Paid', 'Confirmed', 'Ready for Delivery', 'Released for Delivery', 'Delivered'] },
           createdAt: { $gte: startDate, $lte: endDate },
           deletedAt: null
         }

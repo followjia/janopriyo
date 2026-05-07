@@ -254,8 +254,8 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-700">{(stats?.newUsersCount || 0) + (stats?.returningUsersCount || 0)}</div>
-              <p className="text-xs text-muted-foreground">New + Returning</p>
+              <div className="text-2xl font-bold text-blue-700">{stats?.totalUsers || 0}</div>
+              <p className="text-xs text-muted-foreground">Across all time</p>
             </CardContent>
           </Card>
         </Link>
