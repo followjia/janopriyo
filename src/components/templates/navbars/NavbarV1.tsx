@@ -284,12 +284,12 @@ export default function Navbar() {
             <div className="flex items-center justify-end gap-1 flex-1 max-w-[320px]">
 
               {/* Theme Toggle (Left of group) */}
-              <div className="hidden sm:block">
+              <div className="hidden cursor-pointer sm:block">
                 <ModeToggle />
               </div>
 
               {/* AI Chatbot */}
-              <div className="hidden sm:block">
+              <div className="hidden cursor-pointer sm:block">
                 <AIChatbot />
               </div>
 
@@ -311,7 +311,7 @@ export default function Navbar() {
 
               {/* Cart */}
               <CartDrawer>
-                <div 
+                <div
                   className="flex items-center gap-2 group cursor-pointer hover:text-primary px-2 py-1.5 rounded-full transition-all hover:scale-110 active:scale-95"
                   aria-label="Shopping Cart"
                   role="button"
@@ -334,14 +334,14 @@ export default function Navbar() {
               {status === 'authenticated' && session?.user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button 
+                    <button
                       className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all cursor-pointer outline-none group hover:scale-110"
                       aria-label="Account menu"
                     >
                       <div className="h-8 w-8 rounded-full border-2 border-primary/20 overflow-hidden group-hover:border-primary transition-all">
-                        <img 
-                          src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || 'U')}`} 
-                          alt={session.user?.name || 'User'} 
+                        <img
+                          src={session.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user?.name || 'U')}`}
+                          alt={session.user?.name || 'User'}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -419,8 +419,8 @@ export default function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="h-10 w-10 flex items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary"
                   aria-label="Log in"
                 >

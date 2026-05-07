@@ -23,6 +23,18 @@
   html {
     @apply antialiased;
   }
+
+  button, 
+  [role="button"],
+  a,
+  select,
+  label[for],
+  input[type="submit"],
+  input[type="button"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
 }
 
 /* Fix for Lenis smooth scroll on popups and modals */
