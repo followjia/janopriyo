@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
-import { useDebounce } from '@/hooks/use-debounce';
+import { useDebounce } from '../../hooks/use-debounce';
 
 export function BlogSearch({ defaultValue = '' }: { defaultValue?: string }) {
   const router = useRouter();
