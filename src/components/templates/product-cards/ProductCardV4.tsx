@@ -217,16 +217,24 @@ export default function ProductCardV4({ product, isFlashSale }: ProductCardProps
 
       {/* Boutique Content Section */}
       <div className="pt-6 pb-2 px-2 flex flex-col items-center text-center">
-        <div className="flex items-center gap-2 mb-2">
-           <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-3 w-3 ${i < (product.ratings ?? 0) ? 'fill-primary text-primary' : 'text-neutral-200'}`} />
-              ))}
-           </div>
-           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-             {(product.numReviews ?? 0) > 0 ? `(${product.numReviews} reviews)` : 'No reviews'}
-           </span>
-        </div>
+        {(product.numReviews || 0) > 0 && (
+          <div 
+            className="flex items-center gap-1.5 mb-2"
+            aria-label={`${product.ratings || 0} out of 5 stars, ${product.numReviews || 0} reviews`}
+          >
+              <div className="flex gap-0.5 text-yellow-400">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-3 w-3 ${i < Math.floor(product.ratings || 0) ? 'fill-current' : 'text-muted-foreground'}`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground font-black tracking-widest">
+                ({product.numReviews})
+              </span>
+          </div>
+        )}
         
         <Link href={`/product/${product.slug}`} className="block mb-2">
           <h3 className="text-xl font-serif italic tracking-tight line-clamp-1 hover:text-primary transition-colors">

@@ -295,9 +295,15 @@ export default function Navbar() {
 
               {/* Wishlist */}
               <Link
-                href="/wishlist"
+                href="/dashboard/wishlist"
                 className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer hover:text-primary hover:scale-110"
                 aria-label="Wishlist"
+                onClick={(e) => {
+                  if (status !== 'authenticated') {
+                    e.preventDefault();
+                    toast.error('Please login to view your wishlist');
+                  }
+                }}
               >
                 <div className="relative">
                   <Heart className="h-5 w-5" />

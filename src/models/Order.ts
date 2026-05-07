@@ -14,6 +14,7 @@ export interface IOrderItem {
 export interface IOrder extends Document {
   user?: mongoose.Types.ObjectId;
   items: IOrderItem[];
+  shortId: string;
   totalAmount: number;
   deliveryCharge: number;
   shippingAddress: {
@@ -52,6 +53,7 @@ export interface IOrder extends Document {
 const OrderSchema: Schema<IOrder> = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User' },
+    shortId: { type: String, unique: true, sparse: true, index: true },
     items: [
       {
         product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },

@@ -8,6 +8,7 @@ import { ShoppingBag, Search, User, Heart, Menu, X, LogOut, LayoutDashboard, Set
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
@@ -87,7 +88,16 @@ export default function NavbarV3() {
               <Search className="h-5 w-5 stroke-[1.5]" />
             </button>
 
-            <Link href="/wishlist" className="relative hidden sm:block group hover:scale-110 transition-all">
+            <Link 
+              href="/dashboard/wishlist" 
+              className="relative hidden sm:block group hover:scale-110 transition-all"
+              onClick={(e) => {
+                if (status !== 'authenticated') {
+                  e.preventDefault();
+                  toast.error('Please login to view your wishlist');
+                }
+              }}
+            >
               <Heart className={`h-5 w-5 stroke-[1.5] group-hover:fill-primary group-hover:text-primary transition-all ${wishlistCount > 0 ? 'fill-primary text-primary' : ''}`} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 h-4 w-4 bg-primary text-white text-[8px] font-black rounded-full flex items-center justify-center">
@@ -206,7 +216,17 @@ export default function NavbarV3() {
                 <Search className="h-6 w-6" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">Find</span>
               </button>
-              <button onClick={() => { router.push('/wishlist'); setIsMobileMenuOpen(false); }} className="flex flex-col items-center gap-2">
+              <button 
+                onClick={() => { 
+                  if (status !== 'authenticated') {
+                    toast.error('Please login to view your wishlist');
+                    return;
+                  }
+                  router.push('/dashboard/wishlist'); 
+                  setIsMobileMenuOpen(false); 
+                }} 
+                className="flex flex-col items-center gap-2"
+              >
                 <Heart className="h-6 w-6" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">Saved</span>
               </button>

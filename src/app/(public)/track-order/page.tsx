@@ -22,14 +22,15 @@ export default function TrackOrderPage() {
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/orders/${orderId}`);
+            const res = await fetch(`/api/track-order/${encodeURIComponent(orderId)}`);
             if (res.ok) {
                 const data = await res.json();
                 setOrder(data);
                 toast.success('Order found!');
             } else {
                 setOrder(null);
-                toast.error('Order not found. Please check the ID.');
+                const errorData = await res.json();
+                toast.error(errorData.message || 'Order not found. Please check the ID.');
             }
         } catch (error) {
             toast.error('Failed to track order. Please try again.');

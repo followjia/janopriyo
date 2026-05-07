@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Heart, Eye, MoreVertical, Edit, Trash2, Settings, PlusCircle } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, MoreVertical, Edit, Trash2, Settings, PlusCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -35,6 +35,8 @@ interface ProductCardProps {
     stock: number;
     categories?: any[];
     variants?: any[];
+    ratings?: number;
+    numReviews?: number;
   };
   isFlashSale?: boolean;
 }
@@ -239,6 +241,25 @@ export default function ProductCardV1({ product, isFlashSale }: ProductCardProps
       )}
 
       <div className="flex flex-1 flex-col px-2 md:px-4 py-2 md:py-4 ">
+
+        {(product.numReviews || 0) > 0 && (
+          <div 
+            className="flex items-center gap-2 mb-1"
+            aria-label={`${product.ratings || 0} out of 5 stars, ${product.numReviews || 0} reviews`}
+          >
+            <div className="flex gap-0.5 text-yellow-400">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  aria-hidden="true"
+                  className={`h-3 w-3 ${i < Math.floor(product.ratings || 0) ? 'fill-current' : 'text-muted-foreground'}`}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] text-muted-foreground font-bold">({product.numReviews})</span>
+          </div>
+        )}
+
         <div className="mb-2 h-12 md:h-10">
           <Link
             href={`/product/${product.slug}`}

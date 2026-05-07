@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
@@ -92,7 +93,16 @@ export default function NavbarV4() {
 
         {/* User & Global Cart Actions */}
         <div className="flex items-center gap-4 md:gap-8 ml-auto lg:ml-0">
-          <Link href="/wishlist" className="relative group hidden sm:flex items-center gap-3 hover:scale-110 transition-all">
+          <Link 
+            href="/dashboard/wishlist" 
+            className="relative group hidden sm:flex items-center gap-3 hover:scale-110 transition-all"
+            onClick={(e) => {
+              if (status !== 'authenticated') {
+                e.preventDefault();
+                toast.error('Please login to view your wishlist');
+              }
+            }}
+          >
              <div className="h-11 w-11 rounded-xl bg-transparent flex items-center justify-center transition-all border-none">
                 <Heart className={`h-5 w-5 ${wishlistCount > 0 ? 'fill-primary text-primary' : 'text-white'} group-hover:text-primary transition-colors`} />
              </div>

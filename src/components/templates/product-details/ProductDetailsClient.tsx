@@ -12,7 +12,8 @@ import {
   Edit,
   Trash2,
   Settings,
-  PlusCircle
+  PlusCircle,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ import { addToCart } from '@/store/slices/cartSlice';
 import { toggleWishlist } from '@/store/slices/wishlistSlice';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
+import { Suspense } from 'react';
 import ReviewsSection from '@/components/storefront/ReviewsSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -63,6 +65,9 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [eligibility, setEligibility] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('description');
+  const [shouldScrollToReviewForm, setShouldScrollToReviewForm] = useState(false);
 
   // Derive available options from variants
   const uniqueColors = useMemo(() =>
@@ -110,6 +115,54 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
     setSelectedImage(0);
     setQuantity(1);
   }, [product?._id, uniqueColors, product.variants]);
+
+  // Fetch review eligibility separately to avoid unnecessary re-triggers
+  useEffect(() => {
+    if (!session?.user || !product?._id) {
+        setEligibility(null);
+        return;
+    }
+
+    const controller = new AbortController();
+    setEligibility(null); // Reset to avoid stale UI
+
+    async function checkEligibility() {
+        try {
+            const res = await fetch(`/api/reviews/check-eligibility?productId=${product._id}`, {
+                signal: controller.signal
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setEligibility(data);
+            }
+        } catch (error: any) {
+            if (error.name !== 'AbortError') {
+                console.error('Eligibility Check Error:', error);
+            }
+        }
+    }
+
+    checkEligibility();
+    return () => controller.abort();
+  }, [product?._id, session]);
+
+  // Handle scroll to review form when tab changes and scroll is requested
+  useEffect(() => {
+    if (activeTab === 'reviews' && shouldScrollToReviewForm) {
+        const element = document.getElementById('review-form');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setShouldScrollToReviewForm(false);
+        } else {
+            // If element not yet in DOM, retry briefly
+            const timer = setTimeout(() => {
+                document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setShouldScrollToReviewForm(false);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }
+  }, [activeTab, shouldScrollToReviewForm]);
 
   // Adjust selection if dependencies change and current choice is unavailable
   useEffect(() => {
@@ -366,19 +419,38 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
               </DropdownMenu>
             )}
           </div>
-          {product.rating > 0 && (
-            <div className="flex items-center gap-4 py-2">
+          <div className="flex items-center gap-4 py-2">
+            <div className="flex items-center gap-1">
               <div className="flex gap-0.5 text-yellow-400">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-current' : 'text-muted'}`}
+                    className={`h-4 w-4 ${i < Math.floor(product.ratings || 0) ? 'fill-current' : 'text-muted'}`}
                   />
                 ))}
               </div>
-              <span className="text-sm text-muted-foreground">({product.rating.toFixed(1)} / 5.0)</span>
+              <span className="text-sm font-bold ml-1">{(product.ratings || 0).toFixed(1)}</span>
             </div>
-          )}
+            <Separator orientation="vertical" className="h-4" />
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <span className="font-bold text-foreground">{product.numReviews || 0}</span>
+              <span>Verified Reviews</span>
+            </div>
+            {eligibility?.eligible && (
+              <>
+                <Separator orientation="vertical" className="h-4" />
+                <button 
+                  onClick={() => {
+                    setActiveTab('reviews');
+                    setShouldScrollToReviewForm(true);
+                  }}
+                  className="text-sm font-bold text-primary hover:underline cursor-pointer"
+                >
+                  Write a review
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -525,7 +597,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
       {/* Tabs Section for Description & Reviews */}
       <div className="col-span-full mt-16">
-        <Tabs defaultValue="description" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 mb-8 h-auto">
             <TabsTrigger
               value="description"
@@ -550,7 +622,9 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
           </TabsContent>
 
           <TabsContent value="reviews" className="animate-in fade-in-50 duration-500">
-            <ReviewsSection productId={product._id} />
+            <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+              <ReviewsSection productId={product._id} />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

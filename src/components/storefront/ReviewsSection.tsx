@@ -9,16 +9,28 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+import { useSearchParams } from 'next/navigation';
+
 interface ReviewsSectionProps {
   productId: string;
 }
 
 export default function ReviewsSection({ productId }: ReviewsSectionProps) {
+  const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [eligibility, setEligibility] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ rating: 5, comment: '' });
+
+  useEffect(() => {
+    if (searchParams.get('review') === 'true' && eligibility?.eligible) {
+        const element = document.getElementById('review-form');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+  }, [searchParams, eligibility?.eligible]);
 
   const fetchData = async () => {
     try {
@@ -61,9 +73,10 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
       });
 
       if (res.ok) {
-        toast.success('Review submitted successfully! It will appear after admin approval.');
+        toast.success('Review submitted successfully!');
         setFormData({ rating: 5, comment: '' });
         setEligibility((prev: any) => ({ ...(prev ?? {}), alreadyReviewed: true, eligible: false }));
+        fetchData(); // Refresh reviews list
       } else {
         const error = await res.json();
         toast.error(error.message || 'Failed to submit review');
@@ -126,28 +139,12 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left: Review Form (Conditional) */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="p-6 rounded-2xl border bg-card shadow-sm sticky top-24">
-            <h3 className="text-lg font-bold mb-4">Write a Review</h3>
-            
-            {!eligibility?.eligible ? (
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 flex gap-3 text-orange-800 text-sm">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <p>
-                    {eligibility?.alreadyReviewed 
-                      ? "You have already submitted a review for this product."
-                      : "Only customers who have received a delivered order for this product while logged in can submit reviews."}
-                  </p>
-                </div>
-                {!eligibility?.alreadyReviewed && (
-                  <p className="text-[10px] text-muted-foreground italic">
-                    Log in and check your order history to see if you're eligible. Guest orders are not eligible for reviews.
-                  </p>
-                )}
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+        {eligibility?.eligible && (
+          <div className="lg:col-span-1 space-y-6">
+            <div className="p-6 rounded-2xl border bg-card shadow-sm sticky top-24">
+              <h3 className="text-lg font-bold mb-4">Write a Review</h3>
+              
+              <form id="review-form" onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-bold">Your Rating</label>
                   <div className="flex gap-2">
@@ -185,16 +182,13 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
                   Submit Review
                 </Button>
-                <p className="text-[10px] text-center text-muted-foreground italic">
-                    Your review will be visible after admin moderation.
-                </p>
               </form>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right: Reviews List */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className={eligibility?.eligible ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>
           {reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 border-2 border-dashed rounded-3xl">
               <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">

@@ -9,6 +9,7 @@ import { Search, ShoppingCart, User, Menu, X, Heart, LogOut, LayoutDashboard, Se
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
@@ -86,7 +87,16 @@ export default function NavbarV2() {
             <Search className="h-5 w-5" />
           </Button>
 
-          <Link href="/wishlist" className="relative group">
+          <Link 
+            href="/dashboard/wishlist" 
+            className="relative group"
+            onClick={(e) => {
+              if (status !== 'authenticated') {
+                e.preventDefault();
+                toast.error('Please login to view your wishlist');
+              }
+            }}
+          >
             <Button variant="ghost" size="icon" className="text-white hover:bg-transparent hover:scale-110 transition-all rounded-full relative">
               <Heart className="h-5 w-5 group-hover:fill-primary transition-all" />
               {wishlistCount > 0 && (

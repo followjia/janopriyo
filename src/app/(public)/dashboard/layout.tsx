@@ -8,7 +8,8 @@ import {
     User as UserIcon, 
     Settings, 
     LogOut,
-    Loader2
+    Loader2,
+    Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,6 +77,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   )}
                 >
                   <ShoppingBag className="mr-3 h-4 w-4" /> My Orders
+                </Link>
+                <Link 
+                  href="/dashboard/wishlist" 
+                  className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    "justify-start px-6 h-12 rounded-none border-l-4 w-full",
+                    pathname === '/dashboard/wishlist' ? 'border-primary bg-muted/50' : 'border-transparent'
+                  )}
+                >
+                  <Heart className="mr-3 h-4 w-4" /> Wishlist
                 </Link>
                 <Link 
                   href="/dashboard/profile" 

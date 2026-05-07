@@ -350,6 +350,7 @@ export async function POST(req: NextRequest) {
           paymentStatus: 'Pending',
           status: 'Order Placed',
           transactionId: paymentMethod === 'Online' ? `ORDER-${crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 16)}` : undefined,
+          shortId: crypto.randomBytes(4).toString('hex').toUpperCase(),
           domain, // MUST set the domain
         },
       ],

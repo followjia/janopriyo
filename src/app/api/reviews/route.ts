@@ -5,6 +5,7 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import { auth } from '@/auth';
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { getTenantDomain } from '@/lib/tenant';
 
 const reviewSchema = z.object({
@@ -38,18 +39,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
 
-    // 1. STRICT VERIFICATION: Check if user has a DELIVERED order for this product
-    // And ensure the order was placed while logged in (user field matches)
+    // 1. STRICT VERIFICATION: Check if user has a DELIVERED or PAID order for this product
     const deliveredOrder = await Order.findOne({
       user: userId,
       'items.product': productId,
-      status: 'Delivered',
-      domain, // Add domain check
+      status: { $in: ['Delivered', 'Paid'] },
+      domain, 
     });
 
     if (!deliveredOrder) {
       return NextResponse.json({ 
-        message: 'Review denied. You can only review products from a delivered order placed while logged in.' 
+        message: 'Review denied. You can only review products from a paid or delivered order.' 
       }, { status: 403 });
     }
 
@@ -59,15 +59,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'You have already reviewed this product' }, { status: 400 });
     }
 
-    // 3. Create the review (defaults to pending)
+    // 3. Create the review (Auto-approved for verified purchasers)
     const newReview = await Review.create({
       product: productId,
       user: userId,
       name: session.user.name || 'Anonymous',
       rating,
       comment,
-      domain, // MUST set domain
-      status: 'pending',
+      domain, 
+      status: 'approved',
+    });
+
+    // 4. Update Product ratings and numReviews atomically using aggregation
+    const stats = await Review.aggregate([
+      {
+        $match: {
+          product: new mongoose.Types.ObjectId(productId),
+          status: 'approved',
+          domain
+        }
+      },
+      {
+        $group: {
+          _id: '$product',
+          numReviews: { $sum: 1 },
+          ratings: { $avg: '$rating' }
+        }
+      }
+    ]);
+
+    const { ratings = 0, numReviews = 0 } = stats[0] || {};
+
+    await Product.findOneAndUpdate({ _id: productId, domain }, {
+      ratings: Number(ratings.toFixed(1)),
+      numReviews
     });
 
     return NextResponse.json(newReview, { status: 201 });
@@ -77,9 +102,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET approved reviews for a product
+// GET approved reviews for a product (plus own pending if logged in)
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth();
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('productId');
 
@@ -92,10 +118,16 @@ export async function GET(req: NextRequest) {
     if (!domain) {
       return NextResponse.json({ message: 'Tenant domain is missing' }, { status: 400 });
     }
+
+    const userId = (session?.user as any)?.id;
+
     const reviews = await Review.find({ 
       product: productId, 
-      status: 'approved',
-      domain, // Filter by domain
+      domain,
+      $or: [
+        { status: 'approved' },
+        ...(userId ? [{ user: userId, status: 'pending' }] : [])
+      ]
     })
     .sort({ createdAt: -1 })
     .populate('user', 'name image');

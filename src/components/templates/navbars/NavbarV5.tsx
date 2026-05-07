@@ -8,6 +8,7 @@ import { Search, ShoppingBag, User, Heart, Menu, X, LogOut, LayoutDashboard, Set
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { useSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import {
   DropdownMenu,
@@ -70,9 +71,15 @@ export default function NavbarV5() {
             </button>
 
             <Link 
-               href="/wishlist" 
+               href="/dashboard/wishlist" 
                className={`relative hidden sm:flex h-12 w-12 rounded-2xl bg-transparent items-center justify-center hover:text-primary hover:scale-110 transition-all ${wishlistCount > 0 ? 'text-primary' : ''}`}
                aria-label={`Wishlist (${wishlistCount})`}
+               onClick={(e) => {
+                 if (status !== 'authenticated') {
+                   e.preventDefault();
+                   toast.error('Please login to view your wishlist');
+                 }
+               }}
             >
                <Heart className={`h-5 w-5 ${wishlistCount > 0 ? 'fill-current animate-pulse' : ''}`} />
                {wishlistCount > 0 && (
@@ -193,7 +200,17 @@ export default function NavbarV5() {
                 </Link>
               ))}
               <div className="flex gap-12 pt-10">
-                 <button onClick={() => { router.push('/wishlist'); setMobileMenuOpen(false); }} className="flex flex-col items-center gap-3">
+                 <button 
+                  onClick={() => { 
+                    if (status !== 'authenticated') {
+                      toast.error('Please login to view your wishlist');
+                      return;
+                    }
+                    router.push('/dashboard/wishlist'); 
+                    setMobileMenuOpen(false); 
+                  }} 
+                  className="flex flex-col items-center gap-3"
+                >
                     <Heart className="h-8 w-8" />
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Gallery</span>
                  </button>

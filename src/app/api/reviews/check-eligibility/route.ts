@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const deliveredOrder = await Order.findOne({
       user: userId,
       'items.product': productId,
-      status: 'Delivered',
+      status: { $in: ['Delivered', 'Paid'] },
       domain, // Add domain check
     });
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ 
       eligible: !!deliveredOrder && !existingReview,
       alreadyReviewed: !!existingReview,
-      hasDeliveredOrder: !!deliveredOrder
+      hasEligibleOrder: !!deliveredOrder
     });
   } catch (error) {
     console.error('Check Review Eligibility Error:', error);
