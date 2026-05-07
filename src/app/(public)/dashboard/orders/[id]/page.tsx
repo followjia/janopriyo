@@ -204,7 +204,10 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                                                 <Button 
                                                     size="sm" 
                                                     className="rounded-full font-bold gap-1 px-4"
-                                                    onClick={() => router.push(`/product/${item.product?._id || item.product}?review=true`)}
+                                                    onClick={() => {
+                                                        const slug = item.product?.slug || item.product?._id || item.product;
+                                                        router.push(`/product/${slug}?review=true`);
+                                                    }}
                                                 >
                                                     <Star className="h-3 w-3 fill-current" /> Review
                                                 </Button>

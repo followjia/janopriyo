@@ -29,7 +29,7 @@ export async function GET(
     const domain = await getTenantDomain();
     const order = await Order.findOne({ _id: slug, domain })
       .populate('user', 'name email image')
-      .populate('items.product', 'name price images');
+      .populate('items.product', 'name price images slug');
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
