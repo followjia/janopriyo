@@ -699,25 +699,25 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </CardContent>
-                {isFormValid && (
-                  <CardFooter className="pt-2 border-t animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <Button 
-                      type="submit"
-                      className="w-full h-14 rounded-full font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all" 
-                      disabled={loading}
-                    >
-                      {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
-                      Place Order Now
-                    </Button>
-                  </CardFooter>
-                )}
-                {!isFormValid && (
-                   <CardFooter className="pt-4 border-t bg-muted/30">
+                <CardFooter className="pt-2 border-t flex flex-col gap-3">
+                  <Button 
+                    type="submit"
+                    className={`w-full h-14 rounded-full font-black uppercase tracking-widest text-sm transition-all ${
+                      isFormValid 
+                      ? 'bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95' 
+                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
+                    }`}
+                    disabled={loading || !isFormValid}
+                  >
+                    {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
+                    Place Order Now
+                  </Button>
+                  {!isFormValid && (
                     <p className="text-[10px] font-bold text-muted-foreground text-center w-full uppercase tracking-widest">
                       Please fill all delivery details to proceed
                     </p>
-                  </CardFooter>
-                )}
+                  )}
+                </CardFooter>
               </Card>
             </form>
           </Form>
