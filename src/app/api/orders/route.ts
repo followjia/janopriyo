@@ -103,7 +103,28 @@ export async function POST(req: NextRequest) {
       // Guest Checkout: Find or Create User by Email within the current domain
       user = await User.findOne({ email: shippingAddress.email.toLowerCase(), domain }).session(session);
       
-      if (!user) {
+      if (user) {
+        // If user exists but lacks phone or address, update it
+        let needsUpdate = false;
+        if (!user.phone && shippingAddress.phone) {
+          user.phone = shippingAddress.phone;
+          needsUpdate = true;
+        }
+        if ((!user.addresses || user.addresses.length === 0) && shippingAddress.street) {
+          user.addresses = [{
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            division: shippingAddress.division,
+            country: shippingAddress.country,
+            isDefault: true
+          }];
+          needsUpdate = true;
+        }
+        if (needsUpdate) {
+          await user.save({ session });
+        }
+      } else {
         // Create a new user for this guest
         const [newUser] = await User.create([{
           name: shippingAddress.fullName,

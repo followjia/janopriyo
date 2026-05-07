@@ -273,6 +273,18 @@ export default function CheckoutPage() {
 
   const finalTotal = totalAfterCoupon - walletAmountToUse;
 
+  // Validation check for mandatory fields to show/hide the order button
+  const watchedFields = form.watch();
+  const isFormValid = !!(
+    watchedFields.fullName?.trim() && 
+    watchedFields.phone?.trim() && 
+    watchedFields.email?.trim() && 
+    watchedFields.street?.trim() && 
+    watchedFields.division && 
+    watchedFields.district && 
+    watchedFields.thana
+  );
+
   const potentialReward = (profile?.isSubscriptionActive && settings?.subscriptionConfig)
     ? Math.floor(finalTotal * (settings.subscriptionConfig.rewardPercentage / 100))
     : 0;
@@ -687,16 +699,25 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="pt-2 border-t">
-                  <Button 
-                    type="submit"
-                    className="w-full h-12 rounded-full font-bold uppercase tracking-widest text-xs" 
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingBag className="mr-2 h-4 w-4" />}
-                    Confirm Order
-                  </Button>
-                </CardFooter>
+                {isFormValid && (
+                  <CardFooter className="pt-2 border-t animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <Button 
+                      type="submit"
+                      className="w-full h-14 rounded-full font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all" 
+                      disabled={loading}
+                    >
+                      {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
+                      Place Order Now
+                    </Button>
+                  </CardFooter>
+                )}
+                {!isFormValid && (
+                   <CardFooter className="pt-4 border-t bg-muted/30">
+                    <p className="text-[10px] font-bold text-muted-foreground text-center w-full uppercase tracking-widest">
+                      Please fill all delivery details to proceed
+                    </p>
+                  </CardFooter>
+                )}
               </Card>
             </form>
           </Form>
