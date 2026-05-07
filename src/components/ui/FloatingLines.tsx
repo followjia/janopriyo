@@ -117,8 +117,8 @@ float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv, bool shouldBend) 
   }
 
   float m = uv.y - y;
-  // Reduced thickness and intensity for sharper lines
-  return 0.005 / max(abs(m) + 0.001, 1e-4);
+  // Significantly reduced thickness and intensity for much thinner, sharper lines
+  return 0.0015 / max(abs(m) + 0.0005, 1e-4);
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {

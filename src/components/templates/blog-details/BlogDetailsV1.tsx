@@ -19,7 +19,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
           <FloatingLines
             enabledWaves={["top", "middle", "bottom"]}
             lineCount={12}
-            lineDistance={12}
+            lineDistance={35}
             bendRadius={8}
             bendStrength={-2}
             interactive={true}
