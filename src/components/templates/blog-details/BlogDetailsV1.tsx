@@ -13,18 +13,18 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
   return (
     <div className="min-h-screen bg-background">
       {/* Cinematic Hero Header */}
-      <header className="relative pt-12 pb-20 overflow-hidden border-b bg-muted/20">
+      <header className="relative pt-12 pb-20 overflow-hidden border-b bg-gradient-to-br from-primary/[0.08] via-background to-background">
         {/* Floating Lines Background */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
           <FloatingLines
             enabledWaves={["top", "middle", "bottom"]}
-            lineCount={8}
-            lineDistance={10}
-            bendRadius={5}
-            bendStrength={-1.5}
+            lineCount={12}
+            lineDistance={12}
+            bendRadius={8}
+            bendStrength={-2}
             interactive={true}
             parallax={true}
-            animationSpeed={0.8}
+            animationSpeed={0.6}
             linesGradient={['var(--primary)', 'var(--primary)']}
             mixBlendMode="normal"
           />
