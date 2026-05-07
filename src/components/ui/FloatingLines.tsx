@@ -197,7 +197,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
   }
 
-  fragColor = vec4(col, 1.0);
+  // Calculate alpha based on the brightness of the accumulated color
+  float alpha = min(1.0, max(col.r, max(col.g, col.b)) * 2.5);
+  fragColor = vec4(col, alpha);
 }
 
 void main() {
