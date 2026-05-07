@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import { 
-    Calendar, 
-    ArrowRight, 
-    Newspaper,
-    Search
+import {
+  Calendar,
+  ArrowRight,
+  Newspaper,
+  Search
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Pagination } from '@/components/ui/pagination';
+import { BlogSearch } from '@/components/blog-listing/BlogSearch';
 
 export default function BlogListingV1({
   blogs,
@@ -29,9 +30,6 @@ export default function BlogListingV1({
     <div className="min-h-screen bg-gradient-to-b from-primary/[0.03] via-background to-background">
       <div className="container mx-auto px-4 py-16 md:py-20 max-w-7xl">
         <div className="space-y-5 mb-12 text-center">
-          <Badge variant="outline" className="px-4 py-1 border-primary/30 text-primary font-bold tracking-widest uppercase text-[10px]">
-            Our Journal
-          </Badge>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter">
             Latest Stories & <span className="text-primary italic">Insights</span>
           </h1>
@@ -40,17 +38,9 @@ export default function BlogListingV1({
           </p>
         </div>
 
-        <div className="mb-12 rounded-2xl border bg-card/70 backdrop-blur p-4 md:p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <form className="relative w-full md:max-w-md" action="/blog" method="GET">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="Search by title or topic..."
-              className="flex h-10 w-full rounded-md border border-input bg-background px-9 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </form>
-          <p className="text-sm text-muted-foreground italic md:not-italic">
+        <div className="mb-12 rounded-3xl border bg-card/40 backdrop-blur-xl p-4 md:p-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between border-border/50">
+          <BlogSearch defaultValue={q} />
+          <p className="text-sm text-muted-foreground font-medium bg-muted/30 px-4 py-2 rounded-full border border-border/50">
             Showing <span className="font-bold text-foreground">{totalBlogs}</span> article{totalBlogs === 1 ? '' : 's'}
           </p>
         </div>
@@ -58,34 +48,67 @@ export default function BlogListingV1({
         {featuredBlog && (
           <Link
             href={`/blog/${featuredBlog.slug}`}
-            className="group mb-10 grid md:grid-cols-2 overflow-hidden rounded-[2rem] border bg-card hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500"
+            className="group relative mb-16 flex flex-col lg:flex-row overflow-hidden rounded-[2.5rem] md:rounded-[3.5rem] border bg-card hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] hover:shadow-primary/5 transition-all duration-700 border-border/50"
           >
-            <div className="relative min-h-[260px] bg-muted">
+            <div className="relative lg:w-3/5 min-h-[300px] md:min-h-[450px] lg:min-h-[550px] overflow-hidden bg-muted">
               {featuredBlog.thumbnail ? (
-                <Image
-                  src={featuredBlog.thumbnail}
-                  alt={featuredBlog.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                <>
+                  <Image
+                    src={featuredBlog.thumbnail}
+                    alt={featuredBlog.title}
+                    fill
+                    className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                </>
               ) : (
                 <div className="h-full w-full flex items-center justify-center">
-                  <Newspaper className="h-12 w-12 text-muted-foreground/30" />
+                  <Newspaper className="h-20 w-20 text-muted-foreground/20" />
                 </div>
               )}
+              <div className="absolute top-6 left-6 md:top-10 md:left-10">
+                <Badge className="px-4 py-1.5 bg-primary/90 backdrop-blur-md border-none text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg">
+                  Featured Story
+                </Badge>
+              </div>
             </div>
-            <div className="p-8 md:p-10 flex flex-col justify-center">
-              <Badge className="w-fit mb-4 uppercase tracking-widest text-[10px]">Featured Story</Badge>
-              <h2 className="text-2xl md:text-3xl font-black leading-tight mb-4 group-hover:text-primary transition-colors">
-                {featuredBlog.title}
-              </h2>
-              <p className="text-muted-foreground leading-relaxed line-clamp-3 mb-6">
-                {featuredBlog.metaDescription}
-              </p>
-              <span className="inline-flex items-center gap-2 font-bold text-primary">
-                Read Article <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </span>
+
+            <div className="lg:w-2/5 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-card relative">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
+                  <Calendar className="h-3.5 w-3.5 text-primary" />
+                  {new Date(featuredBlog.createdAt).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tighter group-hover:text-primary transition-colors duration-500">
+                  {featuredBlog.title}
+                </h2>
+
+                <p className="text-muted-foreground text-lg leading-relaxed line-clamp-4 font-medium">
+                  {featuredBlog.metaDescription}
+                </p>
+
+                <div className="pt-4">
+                  <span className="inline-flex items-center gap-3 font-bold text-primary group/btn">
+                    <span className="relative">
+                      Read Full Article
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                    </span>
+                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-2" />
+                  </span>
+                </div>
+              </div>
+
+              {/* Decorative element */}
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                <Newspaper className="h-32 w-32 rotate-12" />
+              </div>
             </div>
           </Link>
         )}
@@ -147,7 +170,7 @@ export default function BlogListingV1({
 
         {totalPages > 1 && (
           <div className="mt-12 pt-8 border-t">
-            <Pagination 
+            <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               baseUrl="/blog"

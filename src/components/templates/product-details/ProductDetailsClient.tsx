@@ -391,7 +391,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
       </div>
 
       {/* Product Info Section */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 lg:h-full">
         <div className="space-y-2">
 
           <div className="flex items-center justify-between gap-4">
@@ -476,83 +476,87 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
 
         <Separator />
 
-        {/* Selection Options */}
-        <div className="space-y-6">
-          {/* Colors Selection */}
-          {uniqueColors.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold uppercase tracking-wider">Color:</span>
-                <span className="text-sm text-primary font-medium">{selectedColor}</span>
+        {/* Dynamic Content Spacer */}
+        <div className="flex-1 space-y-6">
+          {/* Selection Options */}
+          <div className="space-y-6">
+            {/* Colors Selection */}
+            {uniqueColors.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold uppercase tracking-wider">Color:</span>
+                  <span className="text-sm text-primary font-medium">{selectedColor}</span>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {uniqueColors.map((colorName, i) => {
+                    // Find first variant for this color to get thumbnail
+                    const colorVariant = product.variants?.find((v: any) => v.color === colorName);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedColor(colorName)}
+                        className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedColor === colorName
+                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10'
+                          : 'border-muted hover:border-primary/30'
+                          }`}
+                      >
+                        {colorVariant?.image && (
+                          <div className="h-8 w-8 rounded-full overflow-hidden border bg-background">
+                            <img src={colorVariant.image} alt="" className="h-full w-full object-cover" />
+                          </div>
+                        )}
+                        <span className="text-xs font-bold">{colorName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {uniqueColors.map((colorName, i) => {
-                  // Find first variant for this color to get thumbnail
-                  const colorVariant = product.variants?.find((v: any) => v.color === colorName);
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedColor(colorName)}
-                      className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedColor === colorName
-                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10'
-                        : 'border-muted hover:border-primary/30'
-                        }`}
-                    >
-                      {colorVariant?.image && (
-                        <div className="h-8 w-8 rounded-full overflow-hidden border bg-background">
-                          <img src={colorVariant.image} alt="" className="h-full w-full object-cover" />
-                        </div>
-                      )}
-                      <span className="text-xs font-bold">{colorName}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Sizes Selection */}
-          {uniqueSizes.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold uppercase tracking-wider">Size:</span>
-                <span className="text-sm text-primary font-medium">{selectedSize || 'Select a size'}</span>
+            {/* Sizes Selection */}
+            {uniqueSizes.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold uppercase tracking-wider">Size:</span>
+                  <span className="text-sm text-primary font-medium">{selectedSize || 'Select a size'}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {uniqueSizes.map((sizeName, i) => {
+                    const isAvailable = availableSizes.includes(sizeName);
+                    return (
+                      <button
+                        key={i}
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedSize(sizeName)}
+                        className={`min-w-[48px] h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${selectedSize === sizeName
+                          ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
+                          : 'border-muted hover:border-primary/30 text-muted-foreground'
+                          }`}
+                      >
+                        {sizeName}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {uniqueSizes.map((sizeName, i) => {
-                  const isAvailable = availableSizes.includes(sizeName);
-                  return (
-                    <button
-                      key={i}
-                      disabled={!isAvailable}
-                      onClick={() => setSelectedSize(sizeName)}
-                      className={`min-w-[48px] h-12 flex items-center justify-center rounded-xl border-2 font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:scale-100 ${selectedSize === sizeName
-                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10 text-primary'
-                        : 'border-muted hover:border-primary/30 text-muted-foreground'
-                        }`}
-                    >
-                      {sizeName}
-                    </button>
-                  );
-                })}
-              </div>
+            )}
+          </div>
+
+          {/* Regular Attributes */}
+          {product.attributes && product.attributes.length > 0 && (
+            <div className="space-y-3 pt-2">
+              {product.attributes?.map((attr: any, i: number) => (
+                <div key={i} className="flex items-center gap-4">
+                  <span className="text-xs font-bold min-w-[80px] uppercase tracking-wider text-muted-foreground">{attr.key}:</span>
+                  <span className="text-xs font-medium">{attr.value}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Regular Attributes */}
-        {product.attributes && product.attributes.length > 0 && (
-          <div className="space-y-3 pt-2">
-            {product.attributes?.map((attr: any, i: number) => (
-              <div key={i} className="flex items-center gap-4">
-                <span className="text-xs font-bold min-w-[80px] uppercase tracking-wider text-muted-foreground">{attr.key}:</span>
-                <span className="text-xs font-medium">{attr.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t mt-auto">
           <div className="flex items-center border rounded-full overflow-hidden h-12 bg-muted/50">
             <Button
               variant="ghost"
