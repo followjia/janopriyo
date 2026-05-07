@@ -18,7 +18,11 @@ export async function GET() {
     // Security check: Ensure admin has access to this domain
     const isSuperAdmin = (session.user as any).role === 'super_admin';
     const userDomain = (session.user as any).domain;
-    if (!isSuperAdmin && userDomain !== domain) {
+    
+    const cleanUserDomain = userDomain?.replace('www.', '').toLowerCase();
+    const cleanDomain = domain?.replace('www.', '').toLowerCase();
+
+    if (!isSuperAdmin && cleanUserDomain !== cleanDomain) {
       return NextResponse.json({ message: 'Unauthorized access to this tenant' }, { status: 403 });
     }
 

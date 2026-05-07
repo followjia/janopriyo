@@ -33,7 +33,11 @@ export async function GET(request: Request) {
     const isSuperAdmin = (session.user as any).role === 'super_admin';
     const userDomain = (session.user as any).domain;
 
-    if (!isSuperAdmin && userDomain !== domain) {
+    const cleanUserDomain = userDomain?.replace('www.', '').toLowerCase();
+    const cleanDomain = domain?.replace('www.', '').toLowerCase();
+
+    if (!isSuperAdmin && cleanUserDomain !== cleanDomain) {
+      console.warn('Tenant Analytics Access Blocked:', { cleanUserDomain, cleanDomain });
       return NextResponse.json({ message: 'Unauthorized access to this tenant' }, { status: 403 });
     }
 
