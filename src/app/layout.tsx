@@ -259,9 +259,14 @@ export default async function RootLayout({
   // If sub is missing, default to not expired (allow access by default)
   const isExpired = sub ? (sub.status !== 'Active' || (sub.expiryDate && new Date(sub.expiryDate) < new Date())) : false;
 
-  // Allow system-design routes to bypass blocker so they can fix the subscription
-  const isSystemDesign = pathname.toLowerCase().includes('system-design');
-  const showBlocker = isExpired && !isSystemDesign;
+  // Allow critical routes to bypass blocker so admin can login and fix the subscription
+  const isBypassRoute = 
+    pathname.toLowerCase().includes('system-design') || 
+    pathname.toLowerCase().includes('/login') || 
+    pathname.toLowerCase().includes('/register') ||
+    pathname.toLowerCase().includes('/api/auth');
+
+  const showBlocker = isExpired && !isBypassRoute;
 
   // Security Helper: Validate GA ID format (G-XXXX or UA-XXXX)
   const isValidGAId = (id?: string) => id ? /^(G-[A-Z0-9]{10}|UA-\d{4,}-\d+)$/.test(id) : false;
