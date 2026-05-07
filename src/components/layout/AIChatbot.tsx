@@ -66,9 +66,9 @@ export function AIChatbot() {
   return (
     <>
       {/* Navbar Trigger Button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setIsOpen(true)}
         className="h-10 w-10 hover:text-primary transition-all bg-transparent hover:bg-transparent hover:scale-110 active:scale-90"
         aria-label="Open AI chat"
@@ -96,9 +96,9 @@ export function AIChatbot() {
                   <p className="text-[10px] text-primary-foreground/70">Always active for you</p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsOpen(false)}
                 className="h-8 w-8 text-primary-foreground hover:bg-white/10"
               >
@@ -108,8 +108,8 @@ export function AIChatbot() {
 
             {/* Chat Content */}
             <div className="flex-1 overflow-hidden bg-muted/30">
-              <div 
-                className="h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent" 
+              <div
+                className="h-full overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent"
                 ref={scrollRef}
               >
                 <div className="space-y-4">
@@ -131,8 +131,8 @@ export function AIChatbot() {
                       </div>
                       <div className={cn(
                         "p-3 rounded-2xl text-sm shadow-sm",
-                        msg.role === 'user' 
-                          ? "bg-primary text-primary-foreground rounded-tr-none" 
+                        msg.role === 'user'
+                          ? "bg-primary text-primary-foreground rounded-tr-none"
                           : "bg-background text-foreground rounded-tl-none border"
                       )}>
                         {msg.content}
@@ -155,7 +155,7 @@ export function AIChatbot() {
 
             {/* Input Area */}
             <div className="p-4 border-t bg-background">
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
@@ -170,9 +170,9 @@ export function AIChatbot() {
                   className="flex-1 bg-muted/50 border-none rounded-full px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   disabled={isLoading}
                 />
-                <Button 
-                  type="submit" 
-                  size="icon" 
+                <Button
+                  type="submit"
+                  size="icon"
                   disabled={isLoading || !input.trim()}
                   className="rounded-full h-10 w-10 shrink-0 shadow-lg shadow-primary/20"
                 >
