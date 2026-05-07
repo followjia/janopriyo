@@ -48,66 +48,53 @@ export default function BlogListingV1({
         {featuredBlog && (
           <Link
             href={`/blog/${featuredBlog.slug}`}
-            className="group relative mb-16 flex flex-col lg:flex-row overflow-hidden rounded-[2.5rem] md:rounded-[3.5rem] border bg-card hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] hover:shadow-primary/5 transition-all duration-700 border-border/50"
+            className="group grid grid-cols-1 lg:grid-cols-2 rounded-[2rem] md:rounded-[3rem] overflow-hidden border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 mb-16 border-border/50"
           >
-            <div className="relative lg:w-3/5 min-h-[300px] md:min-h-[450px] lg:min-h-[550px] overflow-hidden bg-muted">
+            {/* Left — Image */}
+            <div className="relative aspect-[4/3] lg:aspect-auto overflow-hidden bg-muted min-h-[300px] md:min-h-[450px]">
               {featuredBlog.thumbnail ? (
-                <>
-                  <Image
-                    src={featuredBlog.thumbnail}
-                    alt={featuredBlog.title}
-                    fill
-                    className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
-                    sizes="(max-width: 1024px) 100vw, 60vw"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                </>
+                <Image
+                  src={featuredBlog.thumbnail}
+                  alt={featuredBlog.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
               ) : (
-                <div className="h-full w-full flex items-center justify-center">
-                  <Newspaper className="h-20 w-20 text-muted-foreground/20" />
+                <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground/20">
+                  <Newspaper className="h-20 w-20" />
                 </div>
               )}
-              <div className="absolute top-6 left-6 md:top-10 md:left-10">
-                <Badge className="px-4 py-1.5 bg-primary/90 backdrop-blur-md border-none text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg">
-                  Featured Story
-                </Badge>
-              </div>
+              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
 
-            <div className="lg:w-2/5 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-card relative">
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                  <Calendar className="h-3.5 w-3.5 text-primary" />
-                  {new Date(featuredBlog.createdAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </div>
-
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tighter group-hover:text-primary transition-colors duration-500">
-                  {featuredBlog.title}
-                </h2>
-
-                <p className="text-muted-foreground text-lg leading-relaxed line-clamp-4 font-medium">
-                  {featuredBlog.metaDescription}
-                </p>
-
-                <div className="pt-4">
-                  <span className="inline-flex items-center gap-3 font-bold text-primary group/btn">
-                    <span className="relative">
-                      Read Full Article
-                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-                    </span>
-                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-2" />
-                  </span>
-                </div>
+            {/* Right — Content */}
+            <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 space-y-6">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                <Calendar className="h-3.5 w-3.5 text-primary" />
+                {new Date(featuredBlog.createdAt).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
               </div>
 
-              {/* Decorative element */}
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                <Newspaper className="h-32 w-32 rotate-12" />
+              <h3 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight group-hover:text-primary transition-colors duration-300">
+                {featuredBlog.title}
+              </h3>
+
+              {featuredBlog.metaDescription && (
+                <p className="text-muted-foreground text-lg leading-relaxed line-clamp-3">
+                  {featuredBlog.metaDescription}
+                </p>
+              )}
+
+              <div className="pt-2">
+                <span className="h-11 px-8 rounded-full bg-primary text-primary-foreground font-bold inline-flex items-center gap-2 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/20">
+                  Read Article
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
               </div>
             </div>
           </Link>
