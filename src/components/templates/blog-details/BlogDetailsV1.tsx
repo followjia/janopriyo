@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { ShareButtons } from '@/components/storefront/ShareButtons';
 import Image from 'next/image';
 import { generateHtml } from '@/lib/server-html';
-import FloatingLines from '@/components/ui/FloatingLines';
 
 export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readingTime: number }) {
   if (!blog) return null;
@@ -13,21 +12,19 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
   return (
     <div className="min-h-screen bg-background">
       {/* Cinematic Hero Header */}
-      <header className="relative pt-12 pb-20 overflow-hidden border-b bg-gradient-to-br from-primary/[0.08] via-background to-background">
-        {/* Floating Lines Background */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
-          <FloatingLines
-            enabledWaves={["top", "middle", "bottom"]}
-            lineCount={12}
-            lineDistance={35}
-            bendRadius={8}
-            bendStrength={-2}
-            interactive={true}
-            parallax={true}
-            animationSpeed={0.6}
-            linesGradient={['var(--primary)', 'var(--primary)']}
-            mixBlendMode="normal"
+      <header className="relative pt-12 pb-20 overflow-hidden border-b">
+        {/* Image Background */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/assets/blog-banner.webp"
+            alt="Blog Background"
+            fill
+            className="object-cover object-center"
+            priority
           />
+          {/* Gradient Overlay for blending and text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-primary/30" />
+          <div className="absolute inset-0 bg-black/20 dark:bg-black/40 mix-blend-multiply dark:mix-blend-overlay" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
