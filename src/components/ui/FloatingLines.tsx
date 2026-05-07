@@ -247,30 +247,19 @@ function resolveColor(color: string): Vector3 {
     document.body.removeChild(temp);
   }
   
-  const ctx = document.createElement('canvas').getContext('2d');
+  // Use a 1x1 canvas to let the browser perfectly convert any color format (OKLCH, HSL, HEX) to sRGB
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return new Vector3(0.5, 0.5, 0.5);
   
   ctx.fillStyle = value;
-  const resolved = ctx.fillStyle;
+  ctx.fillRect(0, 0, 1, 1);
+  const data = ctx.getImageData(0, 0, 1, 1).data;
   
-  if (resolved.startsWith('#')) {
-    const hex = resolved.slice(1);
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    return new Vector3(r / 255, g / 255, b / 255);
-  } else {
-    const match = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (match) {
-      return new Vector3(
-        parseInt(match[1]) / 255,
-        parseInt(match[2]) / 255,
-        parseInt(match[3]) / 255
-      );
-    }
-  }
-
-  return new Vector3(0.5, 0.5, 0.5);
+  // Return normalized RGB values (0.0 to 1.0)
+  return new Vector3(data[0] / 255, data[1] / 255, data[2] / 255);
 }
 
 export default function FloatingLines({
