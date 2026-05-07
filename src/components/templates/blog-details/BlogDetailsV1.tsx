@@ -22,9 +22,6 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
             className="object-cover object-center"
             priority
           />
-          {/* Gradient Overlay for blending and text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-primary/30" />
-          <div className="absolute inset-0 bg-black/20 dark:bg-black/40 mix-blend-multiply dark:mix-blend-overlay" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
