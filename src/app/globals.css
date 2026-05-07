@@ -50,7 +50,7 @@ html.lenis {
 @layer base {
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.2) transparent;
+    scrollbar-color: var(--primary) transparent;
   }
 
   ::-webkit-scrollbar {
@@ -63,20 +63,19 @@ html.lenis {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.12);
+    background: var(--primary);
     border-radius: 20px;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     background-clip: content-box;
-    transition: all 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.4);
+    background: var(--primary);
   }
 
   /* Support for Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.25) transparent;
+    scrollbar-color: var(--primary) transparent;
   }
 }
