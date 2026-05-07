@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { getTenantDomain } from "@/lib/tenant";
 import connectToDatabase from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -67,8 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost';
   
-  // Strip port if present (e.g., localhost:3000 -> localhost)
-  const domain = host.split(':')[0];
+  // Use standardized domain resolution
+  const domain = await getTenantDomain();
   
   // Detect protocol safely
   const forwardedProto = headersList.get('x-forwarded-proto');

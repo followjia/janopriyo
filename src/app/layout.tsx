@@ -190,6 +190,11 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       description: settings.metaDescription || settings.brandName || "Your ultimate destination for quality products.",
       manifest: '/manifest.json',
+      icons: {
+        icon: settings.logoUrl || '/favicon.ico',
+        shortcut: settings.logoUrl || '/favicon.ico',
+        apple: settings.logoUrl || '/icon-512x512.png',
+      },
       appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
@@ -255,7 +260,7 @@ export default async function RootLayout({
   const isExpired = sub ? (sub.status !== 'Active' || (sub.expiryDate && new Date(sub.expiryDate) < new Date())) : false;
 
   // Allow system-design routes to bypass blocker so they can fix the subscription
-  const isSystemDesign = pathname.includes('/admin/system-design');
+  const isSystemDesign = pathname.toLowerCase().includes('system-design');
   const showBlocker = isExpired && !isSystemDesign;
 
   // Security Helper: Validate GA ID format (G-XXXX or UA-XXXX)

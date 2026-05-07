@@ -51,6 +51,10 @@ const chartConfig = {
     label: "Gross Profit",
     color: "var(--chart-2)",
   },
+  orders: {
+    label: "Total Sales",
+    color: "#fb923c",
+  },
 } satisfies ChartConfig;
 
 export default function AdminDashboard() {
@@ -134,10 +138,11 @@ export default function AdminDashboard() {
   }, [debouncedDateRange]);
 
   const total = useMemo(() => {
-    if (!data?.chartData) return { revenue: 0, profit: 0 };
+    if (!data?.chartData) return { revenue: 0, profit: 0, orders: 0 };
     return {
       revenue: data.chartData.reduce((acc: number, curr: any) => acc + curr.revenue, 0),
       profit: data.chartData.reduce((acc: number, curr: any) => acc + curr.profit, 0),
+      orders: data.chartData.reduce((acc: number, curr: any) => acc + curr.orders, 0),
     };
   }, [data]);
 
@@ -227,27 +232,27 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Revenue Card */}
-        <Card className="bg-primary/5 border-primary/20 relative overflow-hidden group">
+        {/* Pending Orders Card */}
+        <Card className="bg-orange-500/5 border-orange-500/20 relative overflow-hidden group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+            <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">৳{(stats?.totalRevenue || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Income after discounts</p>
+            <div className="text-2xl font-bold text-orange-700">{stats?.pendingOrdersCount || 0}</div>
+            <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
 
-        {/* Net Profit Card */}
-        <Card className="bg-blue-500/5 border-blue-500/20 relative overflow-hidden group border-2">
+        {/* Total Customers Card */}
+        <Card className="bg-blue-500/5 border-blue-500/20 relative overflow-hidden group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-bold text-blue-700">Net Profit</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-blue-700">৳{(stats?.netProfit || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground font-medium">Earnings after all costs</p>
+            <div className="text-2xl font-bold text-blue-700">{(stats?.newUsersCount || 0) + (stats?.returningUsersCount || 0)}</div>
+            <p className="text-xs text-muted-foreground">New + Returning</p>
           </CardContent>
         </Card>
 
@@ -286,19 +291,19 @@ export default function AdminDashboard() {
                 Comparison between Revenue and Gross Profit
               </CardDescription>
             </div>
-            <div className="flex">
-              {(["revenue", "profit"] as const).map((key) => (
+            <div className="flex overflow-x-auto">
+              {(["revenue", "profit", "orders"] as const).map((key) => (
                 <button
                   key={key}
                   data-active={activeChart === key}
-                  className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                  className="flex flex-1 min-w-[120px] flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
                   onClick={() => setActiveChart(key)}
                 >
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {chartConfig[key].label}
                   </span>
                   <span className="text-lg leading-none font-bold sm:text-2xl">
-                    ৳{total[key].toLocaleString()}
+                    {key === 'orders' ? total[key].toLocaleString() : `৳${total[key].toLocaleString()}`}
                   </span>
                 </button>
               ))}
@@ -332,6 +337,18 @@ export default function AdminDashboard() {
                     <stop
                       offset="95%"
                       stopColor="var(--color-profit)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                  <linearGradient id="fillOrders" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-orders)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-orders)"
                       stopOpacity={0.1}
                     />
                   </linearGradient>
@@ -378,6 +395,14 @@ export default function AdminDashboard() {
                   stroke="var(--color-profit)"
                   strokeWidth={2}
                   hide={activeChart !== "profit"}
+                />
+                <Area
+                  dataKey="orders"
+                  type="natural"
+                  fill="url(#fillOrders)"
+                  stroke="var(--color-orders)"
+                  strokeWidth={2}
+                  hide={activeChart !== "orders"}
                 />
               </AreaChart>
             </ChartContainer>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, Mail } from 'lucide-react';
+import { ShieldAlert, MessageCircle, Globe } from 'lucide-react';
 
 interface SubscriptionBlockerProps {
   brandName: string;
@@ -29,8 +29,13 @@ export default function SubscriptionBlocker({ brandName, expiryDate }: Subscript
             <p className="text-sm text-slate-600">
                 To restore access to your storefront and dashboard, please contact the platform administrator to renew your subscription.
             </p>
-            <div className="flex items-center justify-center gap-2 text-primary font-bold">
-                <Mail className="h-4 w-4" /> support@janopriyo.com
+            <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-green-600 font-bold">
+                    <MessageCircle className="h-4 w-4" /> WhatsApp: +8801919011101
+                </div>
+                <div className="flex items-center justify-center gap-2 text-blue-600 font-bold">
+                    <Globe className="h-4 w-4" /> Visit: www.jiapixel.com
+                </div>
             </div>
         </div>
 

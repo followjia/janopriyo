@@ -22,8 +22,27 @@ export async function GET() {
           phone: "+8801234567890",
           address: "Dhaka, Bangladesh"
         },
+        socialLinks: {
+          facebook: '',
+          twitter: '',
+          instagram: '',
+          youtube: '',
+          linkedin: '',
+          tiktok: '',
+          whatsapp: ''
+        },
         marqueeText: "Welcome to Janopriyo Shop!",
-        socialLinks: {}
+        metaTitle: process.env.NEXT_PUBLIC_STORE_NAME || "Janopriyo Shop",
+        metaDescription: "The most popular online shop in Bangladesh.",
+        logoUrl: "/logo.png",
+        freeDeliveryThreshold: 0,
+        deliveryChargeInsideDhaka: 60,
+        deliveryChargeOutsideDhaka: 120,
+        uiTemplates: {
+          theme: 'green',
+          logoFont: 'orbitron',
+          bodyFont: 'inter',
+        }
       });
     }
 

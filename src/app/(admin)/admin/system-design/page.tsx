@@ -264,10 +264,10 @@ export default function SuperConfigPage() {
                   <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectContent className="rounded-2xl min-w-[300px] max-h-[450px] shadow-2xl border-2 border-orange-500/10">
                     {FONT_OPTIONS.map(f => (
-                      <SelectItem key={f.id} value={f.id} className="rounded-lg">
-                        {f.label}
+                      <SelectItem key={f.id} value={f.id} className="rounded-xl py-3 focus:bg-orange-50 transition-colors">
+                        <span className="font-medium text-sm">{f.label}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -287,10 +287,10 @@ export default function SuperConfigPage() {
                   <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-2 border-gray-100 focus:border-orange-500 transition-all">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectContent className="rounded-2xl min-w-[300px] max-h-[450px] shadow-2xl border-2 border-orange-500/10">
                     {FONT_OPTIONS.map(f => (
-                      <SelectItem key={f.id} value={f.id} className="rounded-lg">
-                        {f.label}
+                      <SelectItem key={f.id} value={f.id} className="rounded-xl py-3 focus:bg-orange-50 transition-colors">
+                        <span className="font-medium text-sm">{f.label}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -350,7 +350,7 @@ export default function SuperConfigPage() {
         </Card>
 
         {/* 2. SEO & Tracking */}
-        <Card className="lg:col-span-1 border-2 shadow-none overflow-hidden rounded-3xl">
+        <Card className="lg:col-span-3 border-2 shadow-none overflow-hidden rounded-3xl">
            <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="flex items-center gap-2">
                  <BarChart3 className="h-5 w-5 text-primary" /> Advanced Tracking
@@ -387,7 +387,7 @@ export default function SuperConfigPage() {
         </Card>
 
         {/* 3. AI Intelligence */}
-        <Card className="lg:col-span-2 border-2 border-purple-500/20 shadow-none overflow-hidden rounded-3xl">
+        <Card className="lg:col-span-3 border-2 border-purple-500/20 shadow-none overflow-hidden rounded-3xl">
            <CardHeader className="bg-purple-500/5 border-b">
               <CardTitle className="flex items-center gap-2">
                  <Settings2 className="h-5 w-5 text-purple-600" /> AI Bot Configuration
@@ -555,10 +555,15 @@ export default function SuperConfigPage() {
                     <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectContent className="rounded-2xl min-w-[300px] max-h-[450px] shadow-2xl border-2 border-primary/10">
                       {THEME_OPTIONS.map(t => (
-                        <SelectItem key={t} value={t} className="rounded-lg capitalize">
-                          {t === 'default' ? 'Default (System)' : t === 'black' ? 'Black and White Theme' : t === 'caffeine' ? 'Caffeine Theme' : t === 'claude' ? 'Claude Theme' : t === 'elegant' ? 'Elegant Luxury Theme' : t === 'marvel' ? 'Marvel Theme' : t === 'material' ? 'Material Design Theme' : t === 'midnight' ? 'Midnight Bloom Theme' : t === 'nature' ? 'Nature Theme' : t === 'perplexity' ? 'Perplexity Theme' : t === 'slack' ? 'Slack Theme' : t === 'summer' ? 'Summer Theme' : t === 'sunset' ? 'Sunset Theme' : t === 'valorant' ? 'Valorant Theme' : t === 'supabase' ? 'Supabase Theme' : t === 'amber' ? 'Amber Minimal Theme' : t === 'catppuccin' ? 'Catppuccin Theme' : t === 'clay' ? 'Claymorphism Theme' : t === 'cyberpunk' ? 'Cyberpunk Theme' : t === 'darkmatter' ? 'Dark Matter Theme' : t === 'ocean' ? 'Ocean Breeze Theme' : t === 'quantum' ? 'Quantum Rose Theme' : t === 't3' ? 'T3 Chat Theme' : t === 'tangerine' ? 'Tangerine Theme' : t === 'vintage' ? 'Vintage Paper Theme' : `${t} Theme`}
+                        <SelectItem key={t} value={t} className="rounded-xl py-3 capitalize focus:bg-primary/5 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="h-3 w-3 rounded-full bg-primary/20 border border-primary/30" />
+                            <span className="font-medium text-sm">
+                              {t === 'default' ? 'Default (System)' : t === 'black' ? 'Black and White Theme' : t === 'caffeine' ? 'Caffeine Theme' : t === 'claude' ? 'Claude Theme' : t === 'elegant' ? 'Elegant Luxury Theme' : t === 'marvel' ? 'Marvel Theme' : t === 'material' ? 'Material Design Theme' : t === 'midnight' ? 'Midnight Bloom Theme' : t === 'nature' ? 'Nature Theme' : t === 'perplexity' ? 'Perplexity Theme' : t === 'slack' ? 'Slack Theme' : t === 'summer' ? 'Summer Theme' : t === 'sunset' ? 'Sunset Theme' : t === 'valorant' ? 'Valorant Theme' : t === 'supabase' ? 'Supabase Theme' : t === 'amber' ? 'Amber Minimal Theme' : t === 'catppuccin' ? 'Catppuccin Theme' : t === 'clay' ? 'Claymorphism Theme' : t === 'cyberpunk' ? 'Cyberpunk Theme' : t === 'darkmatter' ? 'Dark Matter Theme' : t === 'ocean' ? 'Ocean Breeze Theme' : t === 'quantum' ? 'Quantum Rose Theme' : t === 't3' ? 'T3 Chat Theme' : t === 'tangerine' ? 'Tangerine Theme' : t === 'vintage' ? 'Vintage Paper Theme' : `${t} Theme`}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -575,10 +580,10 @@ export default function SuperConfigPage() {
                     <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl max-h-[300px]">
+                    <SelectContent className="rounded-2xl min-w-[280px] max-h-[450px] shadow-2xl border-2 border-primary/10">
                       {FONT_OPTIONS.map(f => (
-                        <SelectItem key={f.id} value={f.id} className="rounded-lg">
-                          {f.label}
+                        <SelectItem key={f.id} value={f.id} className="rounded-xl py-3 focus:bg-primary/5 transition-colors">
+                          <span className="font-medium text-sm">{f.label}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -595,10 +600,10 @@ export default function SuperConfigPage() {
                     <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-2 border-primary/20 hover:border-primary transition-all">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl max-h-[300px]">
+                    <SelectContent className="rounded-2xl min-w-[280px] max-h-[450px] shadow-2xl border-2 border-primary/10">
                       {FONT_OPTIONS.map(f => (
-                        <SelectItem key={f.id} value={f.id} className="rounded-lg">
-                          {f.label}
+                        <SelectItem key={f.id} value={f.id} className="rounded-xl py-3 focus:bg-primary/5 transition-colors">
+                          <span className="font-medium text-sm">{f.label}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -177,6 +177,7 @@ export default function SettingsPage() {
             }
           } else {
             console.error('Settings validation failed:', result.error);
+            console.log('Raw settings data received:', data);
             toast.error('Received invalid settings from server');
           }
         } else {
@@ -242,7 +243,7 @@ export default function SettingsPage() {
       <Form {...form}>
         <form id="settings-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[480px]">
+            <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="social">Social</TabsTrigger>

@@ -226,13 +226,19 @@ export const getCachedFAQs = (domain: string) => {
  * In a multi-tenant environment, this resolves settings based on the domain (hostname).
  */
 export const getCachedSettings = (hostname: string = 'localhost') => {
+  // Normalize hostname: strip port and 'www.'
+  let domain = hostname.split(':')[0].toLowerCase();
+  if (domain.startsWith('www.')) {
+    domain = domain.replace('www.', '');
+  }
+
   return unstable_cache(
     async () => {
       await connectToDatabase();
       
       // Find settings for this specific domain
       // If not found, fallback to the 'main' store or first record
-      let settings = await GlobalSettings.findOne({ domain: hostname }).lean();
+      let settings = await GlobalSettings.findOne({ domain }).lean();
       
       if (!settings) {
         settings = await GlobalSettings.findOne({ storeId: 'main' }).lean() || await GlobalSettings.findOne().lean();
@@ -240,7 +246,7 @@ export const getCachedSettings = (hostname: string = 'localhost') => {
 
       return serialize(settings);
     },
-    ['settings-by-domain', hostname],
+    ['settings-by-domain', domain], // Use normalized domain as cache key
     { tags: [CACHE_TAGS.settings], revalidate: 3600 }
   )();
 };
