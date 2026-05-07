@@ -48,7 +48,7 @@ export default function BlogListingV1({
         {featuredBlog && (
           <Link
             href={`/blog/${featuredBlog.slug}`}
-            className="group grid grid-cols-1 lg:grid-cols-2 rounded-[2rem] md:rounded-[3rem] overflow-hidden border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 mb-16 border-border/50"
+            className="group grid grid-cols-1 lg:grid-cols-2 overflow-hidden border bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 mb-16 border-border/50"
           >
             {/* Left — Image */}
             <div className="relative aspect-[4/3] lg:aspect-auto overflow-hidden bg-muted min-h-[300px] md:min-h-[450px]">
@@ -112,7 +112,7 @@ export default function BlogListingV1({
               <Link
                 key={blog._id}
                 href={`/blog/${blog.slug}`}
-                className="group flex flex-col bg-card border rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 border-border/50"
+                className="group flex flex-col bg-card border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 border-border/50"
               >
                 <div className="aspect-[16/10] overflow-hidden relative bg-muted">
                   {blog.thumbnail ? (

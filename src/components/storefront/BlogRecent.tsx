@@ -48,7 +48,7 @@ export function BlogRecent({ blogs }: BlogRecentProps) {
         {/* Single Blog — Split Layout */}
         <Link
           href={`/blog/${blog.slug}`}
-          className="group grid grid-cols-1 lg:grid-cols-2 rounded-3xl overflow-hidden border bg-card hover:shadow-2xl transition-all duration-500"
+          className="group grid grid-cols-1 lg:grid-cols-2 overflow-hidden border bg-card hover:shadow-2xl transition-all duration-500"
         >
           {/* Left — Image */}
           <div className="relative aspect-[4/3] lg:aspect-auto overflow-hidden bg-muted min-h-[300px]">
