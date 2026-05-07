@@ -289,7 +289,7 @@ export default function Navbar() {
               </div>
 
               {/* AI Chatbot */}
-              <div className="hidden  sm:block">
+              <div className="hidden sm:block">
                 <AIChatbot />
               </div>
 
