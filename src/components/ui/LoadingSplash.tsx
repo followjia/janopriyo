@@ -4,8 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/logo";
 import { useState, useEffect } from "react";
 
-export default function LoadingSplash() {
-  const words = ["Janopriyo", "Quality", "Trust", "Shop"];
+export default function LoadingSplash({ 
+  logoUrl, 
+  brandName 
+}: { 
+  logoUrl?: string; 
+  brandName?: string; 
+}) {
+  const defaultWords = ["Quality", "Trust", "Shop", "Value"];
+  const words = brandName ? [brandName, ...defaultWords] : ["Janopriyo", ...defaultWords];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -13,7 +20,7 @@ export default function LoadingSplash() {
       setIndex((prev) => (prev + 1) % words.length);
     }, 2000);
     return () => clearInterval(timer);
-  }, []);
+  }, [words.length]);
 
   return (
     <div 
@@ -39,6 +46,7 @@ export default function LoadingSplash() {
         >
           <Logo 
             showText={false} 
+            src={logoUrl}
             sizes="(max-width: 768px) 200px, 300px"
             imageClassName="size-28 md:size-36" 
             className="pointer-events-none relative z-10"

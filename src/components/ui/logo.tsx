@@ -13,13 +13,14 @@ interface LogoProps {
   showText?: boolean;
   onClick?: () => void;
   sizes?: string;
+  src?: string;
 }
 
-export function Logo({ className, imageClassName, textClassName, showText = true, onClick, sizes }: LogoProps) {
-  const { brandName, logoUrl, uiTemplates } = useSettings();
+export function Logo({ className, imageClassName, textClassName, showText = true, onClick, sizes, src }: LogoProps) {
+  const { brandName, logoUrl } = useSettings();
   
   const finalBrandName = brandName || "Janopriyo";
-  const finalLogoUrl = logoUrl || "/logo.png";
+  const finalLogoUrl = src || logoUrl || "/logo.png";
   
   return (
     <Link href="/" className={cn("flex items-center group", className)} onClick={onClick}>
