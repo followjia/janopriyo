@@ -21,7 +21,8 @@ import {
   Phone,
   MapPin,
   ShoppingBag,
-  CreditCard
+  CreditCard,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
