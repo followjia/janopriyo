@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'super_admin' | 'admin' | 'user';
   image?: string;
   phone?: string;
+  lastActive?: Date;
   googleId?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
@@ -62,6 +63,7 @@ const UserSchema: Schema<IUser> = new Schema(
     googleId: { type: String },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date },
+    lastActive: { type: Date, default: Date.now },
     isSubscriptionActive: { type: Boolean, default: false },
     walletBalance: { type: Number, default: 0, min: 0 },
     addresses: [

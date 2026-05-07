@@ -37,6 +37,7 @@ const orderSchema = z.object({
   shippingAddress: z.object({
     fullName: z.string().min(2, 'Full name is required'),
     phone: z.string().min(10, 'Invalid phone number'),
+    email: z.string().email('Invalid email address'),
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
@@ -98,6 +99,29 @@ export async function POST(req: NextRequest) {
     let user = null;
     if (sessionUser?.user?.id) {
       user = await User.findOne({ _id: sessionUser.user.id, domain }).session(session);
+    } else {
+      // Guest Checkout: Find or Create User by Email within the current domain
+      user = await User.findOne({ email: shippingAddress.email.toLowerCase(), domain }).session(session);
+      
+      if (!user) {
+        // Create a new user for this guest
+        const [newUser] = await User.create([{
+          name: shippingAddress.fullName,
+          email: shippingAddress.email.toLowerCase(),
+          phone: shippingAddress.phone,
+          domain,
+          role: 'user',
+          addresses: [{
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            division: shippingAddress.division,
+            country: shippingAddress.country,
+            isDefault: true
+          }]
+        }], { session });
+        user = newUser;
+      }
     }
 
     let serverComputedTotal = 0;
@@ -292,7 +316,7 @@ export async function POST(req: NextRequest) {
     const [newOrder] = (await Order.create(
       [
         {
-          user: user?._id || undefined,
+          user: user?._id,
           items: validatedItems,
           deliveryCharge: serverComputedDeliveryCharge,
           totalAmount: baseTotal,

@@ -11,9 +11,32 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Loader2, User as UserIcon } from 'lucide-react';
+import { 
+  MoreHorizontal, 
+  Loader2, 
+  User as UserIcon, 
+  Eye, 
+  ShieldAlert, 
+  Calendar,
+  Phone,
+  MapPin,
+  ShoppingBag,
+  CreditCard
+} from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface UserData {
   _id: string;
@@ -21,30 +44,43 @@ interface UserData {
   email: string;
   role: string;
   image?: string;
+  phone?: string;
+  addresses?: any[];
   createdAt: string;
+  lastActive?: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate?: string;
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/admin/users');
-        if (!response.ok) throw new Error('Failed to fetch users');
-        const data = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const openUserDetails = (user: UserData) => {
+    setSelectedUser(user);
+    setIsDetailsOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500">
@@ -65,6 +101,7 @@ export default function UsersPage() {
               <TableHead className="w-[80px]">Avatar</TableHead>
               <TableHead className="font-bold">Name</TableHead>
               <TableHead className="font-bold">Email</TableHead>
+              <TableHead className="font-bold">Orders</TableHead>
               <TableHead className="font-bold">Role</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
               <TableHead className="text-right font-bold">Actions</TableHead>
@@ -73,7 +110,7 @@ export default function UsersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-48 text-center">
+                <TableCell colSpan={7} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-muted-foreground font-medium">Loading user data...</p>
@@ -82,7 +119,7 @@ export default function UsersPage() {
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-48 text-center">
+                <TableCell colSpan={7} className="h-48 text-center">
                   <p className="text-muted-foreground">No users found.</p>
                 </TableCell>
               </TableRow>
@@ -90,13 +127,15 @@ export default function UsersPage() {
               users.map((user) => (
                 <TableRow key={user._id} className="hover:bg-muted/30 transition-colors">
                   <TableCell>
-                    {user.image ? (
+                    {user.image && user.image !== '' ? (
                       <div className="relative h-10 w-10 rounded-full overflow-hidden border">
-                        <Image 
+                        <img 
                           src={user.image} 
                           alt={user.name} 
-                          fill 
-                          className="object-cover"
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                          }}
                         />
                       </div>
                     ) : (
@@ -106,19 +145,29 @@ export default function UsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="font-semibold text-slate-900">{user.name}</div>
+                    <button 
+                      onClick={() => openUserDetails(user)}
+                      className="font-semibold text-slate-900 hover:text-primary transition-colors text-left"
+                    >
+                      {user.name}
+                    </button>
                   </TableCell>
                   <TableCell className="text-slate-600">{user.email}</TableCell>
                   <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-700">{user.totalOrders} Orders</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">৳{user.totalSpent.toLocaleString()}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <Badge 
-                      variant={user.role === 'admin' || user.role === 'super_admin' ? 'default' : 'outline'}
+                      variant={user.role === 'admin' ? 'default' : 'outline'}
                       className={`
                         capitalize px-3 py-0.5 rounded-full font-bold text-[10px] tracking-wider
-                        ${user.role === 'super_admin' ? 'bg-purple-600 hover:bg-purple-700' : ''}
                         ${user.role === 'admin' ? 'bg-blue-600 hover:bg-blue-700' : ''}
                       `}
                     >
-                      {user.role.replace('_', ' ')}
+                      {user.role}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm">
@@ -129,9 +178,21 @@ export default function UsersPage() {
                     })}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openUserDetails(user)} className="cursor-pointer">
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive cursor-pointer">
+                          <ShieldAlert className="mr-2 h-4 w-4" /> Suspend User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -139,6 +200,115 @@ export default function UsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* User Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-2">
+              User Profile
+              <Badge className="bg-primary/10 text-primary border-none">{selectedUser?.role}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              {/* Left Column: Info */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl">
+                  <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                    <img 
+                      src={selectedUser.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random`} 
+                      alt={selectedUser.name} 
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="font-black text-xl leading-tight">{selectedUser.name}</h2>
+                    <p className="text-muted-foreground text-sm">{selectedUser.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-2 bg-primary/5 rounded-lg">
+                      <Phone className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-medium text-slate-700">{selectedUser.phone || 'No phone provided'}</span>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm">
+                    <div className="p-2 bg-primary/5 rounded-lg mt-0.5">
+                      <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-700">Address</span>
+                      <span className="text-muted-foreground">
+                        {selectedUser.addresses && selectedUser.addresses.length > 0 
+                          ? `${selectedUser.addresses[0].street || ''}, ${selectedUser.addresses[0].city || ''}, ${selectedUser.addresses[0].state || ''}`
+                          : 'No address added'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-2 bg-primary/5 rounded-lg">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-700">Last Visit</span>
+                      <span className="text-muted-foreground">
+                        {selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleString() : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="p-2 bg-primary/5 rounded-lg">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-700">Member Since</span>
+                      <span className="text-muted-foreground">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Order Stats */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Order Statistics</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                    <ShoppingBag className="h-5 w-5 text-primary mb-2" />
+                    <div className="text-2xl font-black text-primary">{selectedUser.totalOrders}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-tighter text-primary/60">Total Orders</div>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                    <CreditCard className="h-5 w-5 text-orange-500 mb-2" />
+                    <div className="text-2xl font-black text-orange-600">৳{selectedUser.totalSpent.toLocaleString()}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-tighter text-orange-400">Total Spent</div>
+                  </div>
+                </div>
+                
+                {selectedUser.lastOrderDate && (
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-500">Last Order Date</span>
+                      <span className="text-sm font-black text-slate-700">
+                        {new Date(selectedUser.lastOrderDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <Button className="w-full rounded-xl font-bold py-6 shadow-lg shadow-primary/20">
+                    View Full Order History
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

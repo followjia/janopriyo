@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
+import Order from '@/models/Order'; // Import to ensure model is registered
 import { getTenantDomain } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
@@ -16,9 +17,39 @@ export async function GET(req: NextRequest) {
     await connectToDatabase();
     const domain = await getTenantDomain();
 
-    const users = await User.find({ domain })
-      .select('name email role image createdAt')
-      .sort({ createdAt: -1 });
+    // Aggregate users with their order stats
+    const users = await User.aggregate([
+      { 
+        $match: { 
+          domain,
+          role: { $ne: 'super_admin' } // Hide super admins
+        } 
+      },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'userOrders'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          role: 1,
+          image: 1,
+          createdAt: 1,
+          phone: 1,
+          addresses: 1,
+          lastActive: 1,
+          totalOrders: { $size: '$userOrders' },
+          totalSpent: { $sum: '$userOrders.totalAmount' },
+          lastOrderDate: { $max: '$userOrders.createdAt' }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
 
     return NextResponse.json(users);
   } catch (error) {

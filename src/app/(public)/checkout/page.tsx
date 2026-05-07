@@ -36,6 +36,7 @@ import {
 const checkoutSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   phone: z.string().min(11, 'Invalid phone number'),
+  email: z.string().email('Invalid email address').min(1, 'Email is required'),
   street: z.string().min(5, 'Street address is required'),
   division: z.string().min(1, 'Division is required'),
   district: z.string().min(1, 'District is required'),
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
     defaultValues: {
       fullName: '',
       phone: '',
+      email: '',
       street: '',
       division: '',
       district: '',
@@ -95,6 +97,7 @@ export default function CheckoutPage() {
             form.reset({
               fullName: profileData.name || '',
               phone: profileData.phone || '',
+              email: profileData.email || '',
               street: profileData.address || '',
               division: profileData.division || '',
               district: profileData.district || '',
@@ -136,6 +139,7 @@ export default function CheckoutPage() {
         shippingAddress: {
             fullName: values.fullName,
             phone: values.phone,
+            email: values.email,
             street: values.street,
             city: values.thana,
             state: values.district,
@@ -396,6 +400,19 @@ export default function CheckoutPage() {
                         <FormLabel>Mobile Number</FormLabel>
                         <FormControl>
                           <Input placeholder="017XXXXXXXX" {...field} className="h-11 focus-visible:ring-primary/20" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="example@mail.com" {...field} className="h-11 focus-visible:ring-primary/20" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
