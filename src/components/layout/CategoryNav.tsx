@@ -50,7 +50,7 @@ export function CategoryNav() {
         setActiveParent(null);
       }}
     >
-      <button className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.2em] hover:text-primary transition-colors h-full px-1 group">
+      <button className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.2em] text-foreground/70 hover:text-primary transition-colors h-full px-1 group">
         Categories
         <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isHovered ? 'rotate-180' : ''}`} />
       </button>
