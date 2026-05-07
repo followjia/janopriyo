@@ -116,23 +116,23 @@ export default function CheckoutPage() {
 
   const submissionSucceededRef = useRef(false);
 
+  const [canRedirect, setCanRedirect] = useState(false);
+
+  // Delay the redirect permission to allow Redux state to fully settle
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    // Only redirect if hydration is complete and the cart is truly empty
-    // We add a small delay to ensure the Redux state has fully settled from localStorage
-    if (isHydrated && items.length === 0 && !loading && !submissionSucceededRef.current) {
-      timeoutId = setTimeout(() => {
-        if (items.length === 0) {
-          router.push('/shop');
-        }
-      }, 500);
+    if (isHydrated) {
+      const timer = setTimeout(() => setCanRedirect(true), 2000);
+      return () => clearTimeout(timer);
     }
+  }, [isHydrated]);
 
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isHydrated, items.length, router, loading]);
+  useEffect(() => {
+    // Only redirect if hydration is complete, the grace period (canRedirect) has passed, 
+    // and the cart is still truly empty.
+    if (canRedirect && isHydrated && items.length === 0 && !loading && !submissionSucceededRef.current) {
+      router.push('/shop');
+    }
+  }, [canRedirect, isHydrated, items.length, router, loading]);
 
   const onSubmit = async (values: CheckoutValues) => {
     setLoading(true);
