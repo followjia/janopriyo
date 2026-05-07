@@ -31,11 +31,11 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
                 <ArrowLeft className="h-4 w-4" /> Back to Blog
               </Button>
             </Link>
-            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/15 backdrop-blur-lg border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
+            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
             {/* Subtle inner glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
 
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.1] relative z-10">
+            <h1 className="text-3xl md:text-6xl font-black tracking-tighter leading-[1.1] relative z-10">
               {blog.title}
             </h1>
             <div className="flex flex-wrap items-center gap-6 pt-4 text-muted-foreground relative z-10">
@@ -58,7 +58,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
         <div className="max-w-4xl mx-auto">
           {/* Featured Image */}
           {blog.thumbnail && (
-            <div className="mb-16 -mt-40 relative z-20 shadow-2xl rounded-[2.5rem] overflow-hidden border border-border/50 aspect-[16/9] shadow-primary/10">
+            <div className="mb-16 -mt-20 md:-mt-40 relative z-20 shadow-2xl rounded-[2.5rem] overflow-hidden border border-border/50 aspect-[16/9] shadow-primary/10">
               <Image
                 src={blog.thumbnail}
                 alt={blog.title}
