@@ -31,7 +31,7 @@ export default function BlogDetailsV1({ blog, readingTime }: { blog: any, readin
                 <ArrowLeft className="h-4 w-4" /> Back to Blog
               </Button>
             </Link>
-            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
+            <div className="space-y-6 mb-12 p-8 md:p-12 rounded-[2.5rem] bg-background/15 backdrop-blur-lg border border-border/50 shadow-2xl shadow-primary/5 relative overflow-hidden group">
             {/* Subtle inner glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
 
