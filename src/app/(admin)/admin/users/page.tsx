@@ -212,98 +212,100 @@ export default function UsersPage() {
           </DialogHeader>
 
           {selectedUser && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              {/* Left Column: Info */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl">
-                  <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-white shadow-sm">
+            <div className="flex flex-col gap-6 pt-4">
+              {/* Header Info */}
+              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-white shadow-xl flex-shrink-0 bg-primary/10 flex items-center justify-center">
+                  {selectedUser.image ? (
                     <img 
-                      src={selectedUser.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random`} 
+                      src={selectedUser.image} 
                       alt={selectedUser.name} 
                       className="h-full w-full object-cover"
+                      onError={(e) => { (e.target as any).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random`; }}
                     />
+                  ) : (
+                    <UserIcon className="h-10 w-10 text-primary" />
+                  )}
+                </div>
+                <div className="text-center md:text-left space-y-1">
+                  <h2 className="font-black text-2xl tracking-tight text-slate-900">{selectedUser.name}</h2>
+                  <p className="text-muted-foreground font-medium">{selectedUser.email}</p>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
+                    <Badge className="bg-primary/10 text-primary border-none font-bold">{selectedUser.role}</Badge>
+                    <Badge variant="outline" className="font-bold">ID: {selectedUser._id.slice(-6).toUpperCase()}</Badge>
                   </div>
-                  <div>
-                    <h2 className="font-black text-xl leading-tight">{selectedUser.name}</h2>
-                    <p className="text-muted-foreground text-sm">{selectedUser.email}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Contact Section */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Contact Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-4 p-4 rounded-2xl border bg-white hover:border-primary/30 transition-colors">
+                      <div className="p-2.5 bg-blue-50 rounded-xl">
+                        <Phone className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Phone Number</p>
+                        <p className="text-sm font-bold text-slate-700">{selectedUser.phone || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4 p-4 rounded-2xl border bg-white hover:border-primary/30 transition-colors">
+                      <div className="p-2.5 bg-emerald-50 rounded-xl">
+                        <MapPin className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Shipping Address</p>
+                        <p className="text-sm font-bold text-slate-700 leading-snug">
+                          {selectedUser.addresses && selectedUser.addresses.length > 0 
+                            ? `${selectedUser.addresses[0].street || ''}, ${selectedUser.addresses[0].city || ''}, ${selectedUser.addresses[0].state || ''}`
+                            : 'No address saved yet'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid gap-3">
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="p-2 bg-primary/5 rounded-lg">
-                      <Phone className="h-4 w-4 text-primary" />
+                {/* Stats Section */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Order Statistics</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex flex-col items-center text-center">
+                      <ShoppingBag className="h-6 w-6 text-orange-500 mb-2" />
+                      <span className="text-2xl font-black text-orange-600">{selectedUser.totalOrders}</span>
+                      <span className="text-[10px] font-bold uppercase text-orange-400">Total Orders</span>
                     </div>
-                    <span className="font-medium text-slate-700">{selectedUser.phone || 'No phone provided'}</span>
+                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center">
+                      <CreditCard className="h-6 w-6 text-primary mb-2" />
+                      <span className="text-xl font-black text-primary">৳{selectedUser.totalSpent.toLocaleString()}</span>
+                      <span className="text-[10px] font-bold uppercase text-primary/60">Total Spent</span>
+                    </div>
                   </div>
-                  <div className="flex items-start gap-3 text-sm">
-                    <div className="p-2 bg-primary/5 rounded-lg mt-0.5">
-                      <MapPin className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-700">Address</span>
-                      <span className="text-muted-foreground">
-                        {selectedUser.addresses && selectedUser.addresses.length > 0 
-                          ? `${selectedUser.addresses[0].street || ''}, ${selectedUser.addresses[0].city || ''}, ${selectedUser.addresses[0].state || ''}`
-                          : 'No address added'}
+                  
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-400">LAST VISIT</span>
+                      <span className="font-black text-slate-700">
+                        {selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleDateString() : 'Never'}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="p-2 bg-primary/5 rounded-lg">
-                      <Calendar className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-700">Last Visit</span>
-                      <span className="text-muted-foreground">
-                        {selectedUser.lastActive ? new Date(selectedUser.lastActive).toLocaleString() : 'N/A'}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-400">LAST ORDER</span>
+                      <span className="font-black text-slate-700">
+                        {selectedUser.lastOrderDate ? new Date(selectedUser.lastOrderDate).toLocaleDateString() : 'No orders'}
                       </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="p-2 bg-primary/5 rounded-lg">
-                      <Calendar className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-700">Member Since</span>
-                      <span className="text-muted-foreground">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Order Stats */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Order Statistics</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                    <ShoppingBag className="h-5 w-5 text-primary mb-2" />
-                    <div className="text-2xl font-black text-primary">{selectedUser.totalOrders}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-tighter text-primary/60">Total Orders</div>
-                  </div>
-                  <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                    <CreditCard className="h-5 w-5 text-orange-500 mb-2" />
-                    <div className="text-2xl font-black text-orange-600">৳{selectedUser.totalSpent.toLocaleString()}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-tighter text-orange-400">Total Spent</div>
-                  </div>
-                </div>
-                
-                {selectedUser.lastOrderDate && (
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-500">Last Order Date</span>
-                      <span className="text-sm font-black text-slate-700">
-                        {new Date(selectedUser.lastOrderDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <Button className="w-full rounded-xl font-bold py-6 shadow-lg shadow-primary/20">
-                    View Full Order History
-                  </Button>
-                </div>
+              <div className="pt-2">
+                <Button className="w-full h-14 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 group">
+                  VIEW FULL ORDER HISTORY
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </div>
             </div>
           )}
