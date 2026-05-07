@@ -49,7 +49,9 @@ export const proxy = auth(async (req) => {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('x-pathname', nextUrl.pathname);
+  return response;
 });
 
 export const config = {

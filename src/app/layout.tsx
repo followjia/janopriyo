@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { 
-  Geist, 
-  Geist_Mono, 
-  Inter, 
-  Poppins, 
-  Roboto, 
-  Montserrat, 
-  Playfair_Display, 
-  Outfit, 
-  Lora, 
-  Manrope, 
-  Urbanist, 
+import {
+  Geist,
+  Geist_Mono,
+  Inter,
+  Poppins,
+  Roboto,
+  Montserrat,
+  Playfair_Display,
+  Outfit,
+  Lora,
+  Manrope,
+  Urbanist,
   Orbitron,
   Open_Sans,
   Lato,
@@ -242,7 +242,7 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const hostname = headersList.get('host') || 'localhost';
-  const pathname = headersList.get('x-invoke-path') || '';
+  const pathname = headersList.get('x-pathname') || '';
   const settings = await getCachedSettings(hostname);
 
   let jsonLd = null;
